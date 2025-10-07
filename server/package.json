@@ -1,0 +1,24 @@
+{
+  "name": "microshop",
+  "private": true,
+  "workspaces": [
+    "gateway",
+    "services/users"
+  ],
+  "scripts": {
+    "dev:gateway": "npm --workspace gateway run dev",
+    "dev:users": "npm --workspace services/users run dev",
+
+    "start:gateway": "npm --workspace gateway run start",
+    "start:users": "npm --workspace services/users run start",
+
+    "dev:all": "concurrently -n gateway,users -c green,blue \"npm run dev:gateway\" \"npm run dev:users\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.1.0"
+  }
+}

@@ -1,26 +1,82 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv"
-dotenv.config({quiet: true})
-const jwtSecretKey = process.env.JWT_SECRET_KEY
+import dotenv from "dotenv";
+dotenv.config({quiet:true});
 
-const signToken = (payload) => {
+const generateAccessTokenAndSetCookie = async (res, userId) => {
+  const token = await new Promise((resolve, reject) => {
+    jwt.sign(
+      { userId },
+      process.env.ACCESS_TOKEN_SECRET_KEY,
+      { expiresIn: "15m" },
+      (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      }
+    );
+  });
+
+  res.cookie("accessToken", token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 15 * 60 * 1000,
+  });
+
+  return token;
+};
+
+const generateRefreshTokenAndSetCookie = async (res, userId) => {
+  const token = await new Promise((resolve, reject) => {
+    jwt.sign(
+      { userId },
+      process.env.REFRESH_TOKEN_SECRET_KEY,
+      { expiresIn: "7d" },
+      (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      }
+    );
+  });
+
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return token;
+};
+
+const verifyRefreshToken = async (refreshToken) => {
   return new Promise((resolve, reject) => {
-    const options = { expiresIn: "20m" };
-    jwt.sign(payload, jwtSecretKey, options, (err, token) => {
-      if (err) return reject(err);
-      return resolve(token);
-    });
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET_KEY,
+      (err, payload) => {
+        if (err) return reject(err);
+        return resolve(payload);
+      }
+    );
   });
 };
 
-const verifyToken = (token) => {
-    return new Promise((resolve, reject) => {
-        jwt.verify(token, jwtSecretKey, (err, payload) =>{
-            if (err) return reject(err)
-            return resolve(payload)
-        })
-    })
-}
+const verifyAccessToken = async (accessToken) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET_KEY,
+      (err, payload) => {
+        if (err) return reject(err);
+        return resolve(payload);
+      }
+    );
+  });
+};
 
-
-export {signToken, verifyToken}
+export {
+  generateAccessTokenAndSetCookie,
+  generateRefreshTokenAndSetCookie,
+  verifyRefreshToken,
+  verifyAccessToken,
+};

@@ -1,37 +1,48 @@
 import CreateError from "http-errors";
-import { signToken } from "../helpers/jwt.helper.js";
+import { generateAccessTokenAndSetCookie, generateRefreshTokenAndSetCookie } from "../helpers/jwt.helper.js";
 import { comparePassword, hashPassword } from "../helpers/password.helper.js";
 import UserModel from "../models/UserModel.js";
+import { filterFieldUser } from "../helpers/filterField.js";
 
 const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
     if (!username || !password)
-      throw new CreateError.BadRequest("Username or password is missing");
+      throw new CreateError.BadRequest("Vui lòng nhập username và password");
 
-    const user = await UserModel.findOne({ username });
-    if (!user) throw new CreateError.NotFound("User does not exist");
+    const foundUser = await UserModel.getUserByUserName(username)
+    if (!foundUser) throw new CreateError.NotFound("Người dùng không tồn tại");
 
-    const isCorrectPassword = await comparePassword(password, user.password);
+    // const isCorrectPassword = await comparePassword(password, foundUser.password_hash);
 
-    if (!isCorrectPassword) throw new CreateError("Password is not correct");
+    const isCorrectPassword = password === foundUser.password_hash;
 
-    await signToken({ userId: user._id });
+    if (!isCorrectPassword) throw new CreateError("Mật khẩu không đúng");
+
+    // generate token and set cookie
+    const accessToken = await generateAccessTokenAndSetCookie(
+      res,
+      foundUser.id
+    );
+    const refreshToken = await generateRefreshTokenAndSetCookie(
+      res,
+      foundUser.id
+    );
+
+    const refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await UserModel.setRefreshToken(foundUser.id, refreshToken, refreshTokenExpiresAt)
 
     return res.status(200).json({
-      message: "Login successfully",
+      message: "Đăng nhập thành công",
       success: true,
-      user: {
-        ...user._doc,
-        password: undefined,
-      },
+      user: filterFieldUser(foundUser),
+      accessToken
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 
 export { login };

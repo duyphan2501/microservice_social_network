@@ -1,1 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap&family=Outfit:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900');
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #85ff76 ;
+  --color-secondary: #03d9fe;
+  --color-dark: #0b0b0b;
+  --color-background: #ebeff2;
+  --color-highlight: #db4c2e;
+  --color-darkblue: #002B5B;
+}
+
+.remember-me .MuiFormControlLabel-label {
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    color: rgb(27, 18, 18);
+}
+
+.container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%; 
+    padding: 0 12px;
+  }
+}
+
+* {
+    font-family: "Inter", sans-serif !important;
+}
+
+.title {
+    font-family: "Barlow Condensed", sans-serif !important;
+}
+
+.subtitle {
+    font-family: "Poppins", sans-serif !important;
+}
+
+.money {
+  font-family: "Outfit" !important;
+}
+
+/* Loại bỏ chiều cao cố định của slide */
+.productSwiper .swiper-wrapper .swiper-slide {
+  height: auto;
+}
+
+/* Bật stretch để các slide có chiều cao đồng đều */
+.productSwiper .swiper-wrapper {
+  align-items: stretch !important;
+  padding-bottom: 25px;
+}
+
+.productSwiper .swiper-scrollbar {
+  margin-bottom: -4px;
+}
+
+.imageSwiper .swiper-pagination-bullet {
+  background: #000;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 6px;
+}
+
+.scroll-x::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scroll::-webkit-scrollbar-track, .scroll-x::-webkit-scrollbar-track {
+  background: none; /* màu nền của track (phần thanh cuộn rãnh) */
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background-color: #d4d2d2; /* màu của thanh kéo */
+  border-radius: 10px;
+  height: 3px !important;
+}
+
+.scroll-x::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color); /* màu của thanh kéo */
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: black !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: black !important;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-darkblue) !important; 
+  cursor: pointer;
+}
+
+.MuiPaginationItem-root.Mui-selected {
+  background-color: #000 !important;
+}
+
+
+

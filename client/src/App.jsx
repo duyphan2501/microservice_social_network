@@ -1,7 +1,17 @@
+import Sidebar from "./Layout/Sidebar";
+import ChatPage from "./pages/ChatPage";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
 function App() {
   return (
     <>
-      <h1 class="text-3xl font-bold underline">Hello world!</h1>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Sidebar />}>
+            <Route path={"/inbox"} element={<ChatPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }

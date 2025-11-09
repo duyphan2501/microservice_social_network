@@ -14,6 +14,7 @@ app.use(morgan("tiny"));
 
 const PORT = process.env.GATEWAY_PORT || 8000;
 const USER_TARGET = process.env.USER_TARGET || "http://localhost:3001";
+const CHAT_TARGET = process.env.CHAT_TARGET || "http://localhost:3002";
 
 app.get("/health", (_, res) => res.json({ ok: true, service: "gateway" }));
 
@@ -23,6 +24,14 @@ app.use(
     target: USER_TARGET,
     changeOrigin: true,
     pathRewrite: { "^/api/v1/user": "" },
+  })
+);
+app.use(
+  "/api/v1/chat",
+  createProxyMiddleware({
+    target: CHAT_TARGET,
+    changeOrigin: true,
+    pathRewrite: { "^/api/v1/chat": "" },
   })
 );
 

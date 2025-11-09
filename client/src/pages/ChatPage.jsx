@@ -53,10 +53,11 @@ const conversations = [
 
 const ChatPage = () => {
   const user = useUserStore((state) => state.user);
+  if (!user) return;
   const [chatUser, setChatUser] = useState(null);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] lg:h-screen">
+    <div className="flex h-[calc(100vh-64px)] lg:h-screen max-h-screen">
       {/* left */}
       <section className="md:w-90 border-r border-gray-300 ">
         <div className="flex flex-col gap-2 p-5">

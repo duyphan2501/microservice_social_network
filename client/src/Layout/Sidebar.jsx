@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
-
 // Navigation Item Component
 const NavItem = ({
   icon,
@@ -207,82 +206,102 @@ const Sidebar = () => {
               ))}
             </nav>
 
-        {/* Bottom Section */}
-        <div className="p-3 border-t border-gray-200 space-y-1">
-          <NavItem
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+            {/* Bottom Section */}
+            <div className="p-3 border-t border-gray-200 space-y-1">
+              <NavItem
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                }
+                label="More"
+                isCollapsed={isCollapsed}
+                href="/settings"
+              />
+
+              <NavItem
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                }
+                label="Also from Meta"
+                isCollapsed={isCollapsed}
+                href="/meta"
+              />
+
+              {/* Toggle Button */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
               >
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            }
-            label="More"
-            isCollapsed={isCollapsed}
-            href="/settings"
-          />
-
-          {/* Toggle Button */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
-          >
-            <div className="w-6 h-6 flex items-center justify-center">
-              {isCollapsed ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              )}
+                <div className="w-6 h-6 flex items-center justify-center">
+                  {isCollapsed ? (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  )}
+                </div>
+                {!isCollapsed && <span className="text-base">Collapse</span>}
+              </button>
             </div>
-            {!isCollapsed && <span className="text-base">Collapse</span>}
-          </button>
-        </div>
-      </aside>
+          </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
-        {[0, 1, 2, 3].map((index) => (
-          <a
-            key={index}
-            href={navItems[index].href}
-            className="flex items-center justify-center w-12 h-12"
+          {/* Main Content */}
+          <main
+            className={`flex-1 overflow-auto bg-gray-50 pb-16 lg:pb-0 transition-all duration-300 ${
+              isCollapsed ? "lg:ml-20" : "lg:ml-64"
+            }`}
           >
-            <div className="w-6 h-6">{navItems[index].icon}</div>
-          </a>
-        ))}
-      </nav>
-      <main
-        className={`flex-1 ${
-          isCollapsed ? "lg:ml-20" : "lg:ml-64"
-        } transition-all duration-300`}
-      >
-        <Outlet />
-      </main>
-    </div>
-  )};
-    </>)
+            <Outlet />
+          </main>
+
+          {/* Mobile Bottom Navigation */}
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
+            {[0, 1, 2, 3].map((index) => (
+              <a
+                key={index}
+                href={navItems[index].href}
+                className="flex items-center justify-center w-12 h-12"
+              >
+                <div className="w-6 h-6">{navItems[index].icon}</div>
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default Sidebar;

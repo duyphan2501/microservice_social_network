@@ -13,6 +13,12 @@ const UserModel = {
     return rows.length > 0 ? rows[0] : null;
   },
 
+  getUserById: async (userId) => {
+    const query = "SELECT * FROM users WHERE id = ? LIMIT 1";
+    const [rows] = await pool.query(query, [userId]);
+    return rows.length > 0 ? rows[0] : null;
+  },
+
   setRefreshToken: async (userId, token, tokenExpiresAt) => {
     const query = `
     UPDATE users 

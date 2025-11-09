@@ -82,8 +82,7 @@ const ChatMain = ({ chatUser }) => {
       sent_at: new Date().toISOString(),
       images: imageUrls,
     };
-    console.log(newMessage);
-
+    
     setMessages((prev) => [...prev, newMessage]);
 
     // Giả sử bạn có API, tại đây bạn sẽ:

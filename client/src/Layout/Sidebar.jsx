@@ -54,42 +54,7 @@ const Sidebar = () => {
       label: "Search",
       href: "/search",
     },
-    {
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="12" r="4" />
-          <line x1="21.17" y1="8" x2="12" y2="8" />
-          <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
-          <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
-        </svg>
-      ),
-      label: "Explore",
-      href: "/explore",
-    },
-    {
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-        >
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-        </svg>
-      ),
-      label: "Reels",
-      href: "/reels",
-    },
+
     {
       icon: (
         <svg
@@ -212,23 +177,6 @@ const Sidebar = () => {
             href="/settings"
           />
 
-          <NavItem
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            }
-            label="Also from Meta"
-            isCollapsed={isCollapsed}
-            href="/meta"
-          />
-
           {/* Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -262,31 +210,9 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main
-        className={`flex-1 overflow-auto bg-gray-50 pb-20 lg:pb-0 transition-all duration-300 ${
-          isCollapsed ? "lg:ml-20" : "lg:ml-64"
-        }`}
-      >
-        <div className="max-w-2xl mx-auto p-6">
-          <h2 className="text-2xl font-bold mb-4">Feed</h2>
-          <div className="bg-white rounded-lg shadow p-6 mb-4">
-            <p className="text-gray-600">
-              Your Instagram feed content will appear here...
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 mb-4">
-            <p className="text-gray-600">Posts from people you follow...</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600">Stories and more...</p>
-          </div>
-        </div>
-      </main>
-
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
-        {[0, 1, 2, 3, 6, 7].map((index) => (
+        {[0, 1, 2, 3].map((index) => (
           <a
             key={index}
             href={navItems[index].href}

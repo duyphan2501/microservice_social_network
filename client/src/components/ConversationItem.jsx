@@ -8,7 +8,7 @@ const ConversationItem = ({ user, last_message, isYou = false }) => {
           <img src="https://img.daisyui.com/images/profile/demo/gordon@192.webp" />
         </div>
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-1">
+      <div className="md:flex flex-1 flex-col justify-center gap-1 hidden ">
         <p className="font-medium text-sm">{user.full_name}</p>
         <div className="flex items-center gap-2 text-nowrap">
           <p className="text-gray-500 line-clamp-1">

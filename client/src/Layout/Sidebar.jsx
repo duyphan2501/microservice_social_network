@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 
 // Navigation Item Component
 const NavItem = ({
@@ -264,24 +265,11 @@ const Sidebar = () => {
 
       {/* Main Content */}
       <main
-        className={`flex-1 overflow-auto bg-gray-50 pb-20 lg:pb-0 transition-all duration-300 ${
+        className={`flex-1 overflow-auto bg-gray-50 pb-16 lg:pb-0 transition-all duration-300 ${
           isCollapsed ? "lg:ml-20" : "lg:ml-64"
         }`}
       >
-        <div className="max-w-2xl mx-auto p-6">
-          <h2 className="text-2xl font-bold mb-4">Feed</h2>
-          <div className="bg-white rounded-lg shadow p-6 mb-4">
-            <p className="text-gray-600">
-              Your Instagram feed content will appear here...
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 mb-4">
-            <p className="text-gray-600">Posts from people you follow...</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-600">Stories and more...</p>
-          </div>
-        </div>
+        <Outlet />
       </main>
 
       {/* Mobile Bottom Navigation */}

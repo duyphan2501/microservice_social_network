@@ -91,9 +91,9 @@ const ChatMain = ({ chatUser }) => {
   };
 
   return (
-    <>
+    <section className="h-full">
       {chatUser ? (
-          <section className="h-screen flex flex-col">
+          <section className="h-full flex flex-col">
             <div className="">
               <ChatHeader user={chatUser} />
             </div>
@@ -117,7 +117,7 @@ const ChatMain = ({ chatUser }) => {
             </div>
           </section>
       ) : (
-          <section className="size-full flex justify-center items-center">
+          <section className="h-full flex justify-center items-center">
             <div className="flex flex-col justify-center items-center gap-1">
               <div className="p-4 rounded-full bg-black text-white size-20">
                 <MessageCircleMore size={50} />
@@ -128,7 +128,7 @@ const ChatMain = ({ chatUser }) => {
             </div>
           </section>
       )}
-    </>
+    </section>
   );
 };
 

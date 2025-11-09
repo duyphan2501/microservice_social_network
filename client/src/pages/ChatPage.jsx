@@ -56,17 +56,17 @@ const ChatPage = () => {
   const [chatUser, setChatUser] = useState(null);
 
   return (
-    <div className="flex">
+    <div className="flex h-[calc(100vh-64px)] lg:h-screen">
       {/* left */}
-      <section className="w-90 min-h-screen border-r border-gray-300 ">
+      <section className="md:w-90 border-r border-gray-300 ">
         <div className="flex flex-col gap-2 p-5">
           <div className="mt-5 flex justify-between items-center">
-            <h5 className="font-semibold text-2xl">{user.username}</h5>
-            <span className="hover:text-gray-700 active:text-gray-800 cursor-pointer">
+            <h5 className="font-semibold text-2xl hidden md:block">{user.username}</h5>
+            <span className="hover:-translate-y-[0.5px] cursor-pointer">
               <SquarePen /> 
             </span>
           </div>
-          <div className="">
+          <div className="hidden md:block">
             <input
               type="text"
               className="focus:outline-0 bg-gray-100 rounded-lg p-2 w-full"
@@ -74,7 +74,7 @@ const ChatPage = () => {
             />
           </div>
           {/* name of each tab group should be unique */}
-          <div className="tabs tabs-box">
+          <div className="tabs tabs-box hidden md:block">
             <input
               type="radio"
               name="my_tabs_1"

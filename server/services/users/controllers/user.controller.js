@@ -77,18 +77,17 @@ const refreshToken = async (req, res, next) => {
     // Verify refresh token
     const payload = await verifyRefreshToken(refreshToken);
     const userId = payload.userId;
-
     // Kiểm tra token còn hạn trong DB
-    const user = await UserModel.checkRefreshToken(userId, refreshToken)
+    const user = await UserModel.checkRefreshToken(userId, refreshToken);
 
     if (!user)
       throw CreateError.Unauthorized("Invalid or expired refresh token");
 
     // generate new token
-    const accessToken = await generateAccessTokenAndSetCookie(res, user._id);
+    const accessToken = await generateAccessTokenAndSetCookie(res, user.id);
     const newRefreshToken = await generateRefreshTokenAndSetCookie(
       res,
-      user._id
+      user.id
     );
 
     // save token in db

@@ -30,7 +30,7 @@ const generateRefreshTokenAndSetCookie = async (res, userId) => {
     jwt.sign(
       { userId },
       process.env.REFRESH_TOKEN_SECRET_KEY,
-      { expiresIn: "7d" },
+      { expiresIn: "14d" },
       (err, token) => {
         if (err) reject(err);
         else resolve(token);

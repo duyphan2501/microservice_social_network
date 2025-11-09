@@ -6,6 +6,7 @@ import Verification from "./pages/Auth/Verification";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ChatPage from "./pages/ChatPage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Home from "./pages/Home";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import { ToastContainer } from "react-toastify";
 
@@ -22,6 +23,7 @@ function App() {
             <Route path={"reset-password/:token"} element={<ResetPassword />} />
           </Route>
           <Route path="/" element={<Sidebar />}>
+            <Route index element={<Home />} />
             <Route path={"inbox"} element={<ChatPage />} />
           </Route>
         </Routes>

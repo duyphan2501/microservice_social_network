@@ -1,5 +1,5 @@
 
-POST http://localhost:3000/api/v1/users/login
+POST http://localhost:3000/api/v1/user/login
 Content-Type: application/json
 
 {

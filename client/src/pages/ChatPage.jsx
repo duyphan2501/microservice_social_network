@@ -1,8 +1,8 @@
 import { useState } from "react";
 import ConversationItem from "../components/ConversationItem";
-import useUserStore from "../stores/userStore";
 import {  SquarePen } from "lucide-react";
 import ChatMain from "../components/ChatMain";
+import useUserStore from "../stores/useUserStore";
 
 const conversations = [
   {

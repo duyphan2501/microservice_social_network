@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import axiosPrivate from "../API/axiosInstance.js";
 import { MyContext } from "../Context/MyContext.jsx";
-import useUserStore from "../store/useUserStore.js";
+import useUserStore from "../stores/useUserStore.js";
 
 const useAxiosPrivate = () => {
   const { refreshToken } = useUserStore();

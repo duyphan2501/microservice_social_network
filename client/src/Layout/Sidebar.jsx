@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
+import useSocketStore from "../stores/useSocketStore";
 // Navigation Item Component
 const NavItem = ({
   icon,
@@ -35,9 +36,11 @@ const Sidebar = () => {
   const location = useLocation();
   const user = useUserStore((state) => state.user);
   const [isLoading, setIsLoading] = useState(true);
+  const { connectAllSockets, disconnectAllSockets } = useSocketStore();
 
   useEffect(() => {
     let isMounted = true;
+
     const refresh = async () => {
       if (user || !persist) {
         setIsLoading(false);
@@ -62,6 +65,30 @@ const Sidebar = () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = false;
+
+    if (!user) return;
+
+    if (!isMounted) {
+      connectAllSockets();
+      isMounted = true;
+    }
+
+    const handleTabClose = () => {
+      disconnectAllSockets();
+    };
+
+    // Gắn sự kiện khi mở tab
+    window.addEventListener("beforeunload", handleTabClose);
+
+    // Cleanup khi unmount
+    return () => {
+      window.removeEventListener("beforeunload", handleTabClose);
+      disconnectAllSockets();
+    };
+  }, [user, connectAllSockets, disconnectAllSockets]);
 
   const navItems = [
     {

@@ -13,7 +13,6 @@ const useUserStore = create((set, get) => {
       const res = await API.post(`/user/login`, user);
       set({ user: res.data.user, accessToken: res.data.accessToken });
       toast.success(res.data.message);
-      get().connectSocket();
       return { success: true, loginUser: res.data.user };
     } catch (error) {
       if (error.response) {
@@ -40,7 +39,6 @@ const useUserStore = create((set, get) => {
         user: res.data.user,
         accessToken: res.data.accessToken,
       });
-      get().connectSocket();
       return { accessToken: res.data.accessToken };
     } catch (error) {
       throw error;
@@ -148,7 +146,6 @@ const useUserStore = create((set, get) => {
     try {
       const res = await API.delete(`/user/logout`);
       toast.info(res.data.message);
-      get().disconnectSocket();
       set({ user: null, accessToken: null });
       return true;
     } catch (error) {
@@ -189,31 +186,20 @@ const useUserStore = create((set, get) => {
     }
   };
 
-  const connectSocket = () => {
-    const { user, socket, accessToken } = get();
-    if (!user || socket.connected || !accessToken) return;
-    const newSocket = io(CHAT_SERVICE_URL, {
-      withCredentials: true,
-      auth: {
-        token: accessToken
-      },
-    });
-    newSocket.connect();
-    set({ socket: newSocket });
-    newSocket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
-  };
-
-  const disconnectSocket = () => {
-    if (get().socket?.connected) get().socket.disconnect();
+  const getUserInfo = async (userId, axiosPrivate) => {
+    try {
+      const res = await axiosPrivate.get(`/user/get-info/${userId}`);
+      return res.data.user;
+    } catch (error) {
+      const message = error.response?.data?.message;
+      console.error(error);
+      toast.error(message);
+    }
   };
 
   return {
     user: null,
     accessToken: null,
-    socket: { connected: false },
-    onlineUsers: [],
     isLoading: {
       login: false,
       refresh: false,
@@ -234,8 +220,7 @@ const useUserStore = create((set, get) => {
     logout,
     updatePersonalInfo,
     changePassword,
-    connectSocket,
-    disconnectSocket,
+    getUserInfo,
   };
 });
 

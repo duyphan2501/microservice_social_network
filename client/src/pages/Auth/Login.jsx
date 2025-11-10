@@ -27,7 +27,9 @@ const Login = () => {
     e.preventDefault();
     if (isLoading.login) return;
     const { loginUser, success } = await login(user);
-    if (success) navigate("/");
+    if (success) {
+      navigate("/");
+    }
     else {
       if (loginUser && !loginUser?.isVerified) {
         setVerifyUser(loginUser);

@@ -1,4 +1,3 @@
-import CreateError from "http-errors";
 import {
   generateAccessTokenAndSetCookie,
   generateRefreshTokenAndSetCookie,
@@ -7,21 +6,23 @@ import {
 import { comparePassword, hashPassword } from "../helpers/password.helper.js";
 import UserModel from "../models/UserModel.js";
 import { filterFieldUser } from "../helpers/filterField.js";
+import createHttpError from "http-errors";
 
 const login = async (req, res, next) => {
   try {
     const { account, password } = req.body;
 
     if (!account || !password)
-      throw new CreateError.BadRequest("Vui lòng nhập đủ thông tin");
-
-    const isEmail = account.includes("@");
+      throw new createHttpError.BadRequest("Vui lòng nhập đủ thông tin");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmail = emailRegex.test(account);
 
     const foundUser = !isEmail
       ? await UserModel.getUserByUserName(account)
       : await UserModel.getUserByEmail(account);
 
-    if (!foundUser) throw new CreateError.NotFound("Người dùng không tồn tại");
+    if (!foundUser)
+      throw new createHttpError.NotFound("Người dùng không tồn tại");
 
     if (!foundUser.is_verified) {
       return res.status(401).json({
@@ -37,7 +38,7 @@ const login = async (req, res, next) => {
 
     const isCorrectPassword = password === foundUser.password_hash;
 
-    if (!isCorrectPassword) throw new CreateError("Mật khẩu không đúng");
+    if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 
     // generate token and set cookie
     const accessToken = await generateAccessTokenAndSetCookie(
@@ -72,7 +73,8 @@ const login = async (req, res, next) => {
 const refreshToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) throw CreateError.BadRequest("Refresh token is missing");
+    if (!refreshToken)
+      throw createHttpError.BadRequest("Refresh token is missing");
 
     // Verify refresh token
     const payload = await verifyRefreshToken(refreshToken);
@@ -81,7 +83,7 @@ const refreshToken = async (req, res, next) => {
     const user = await UserModel.checkRefreshToken(userId, refreshToken);
 
     if (!user)
-      throw CreateError.Unauthorized("Invalid or expired refresh token");
+      throw createHttpError.Unauthorized("Invalid or expired refresh token");
 
     // generate new token
     const accessToken = await generateAccessTokenAndSetCookie(res, user.id);
@@ -111,4 +113,47 @@ const refreshToken = async (req, res, next) => {
   }
 };
 
-export { login, refreshToken };
+const logout = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    // clear cookie
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    };
+    res.clearCookie("accessToken", options);
+    res.clearCookie("refreshToken", options);
+
+    // update db
+    await UserModel.setRefreshToken(null, null);
+
+    return res.status(200).json({
+      message: "Đăng xuất thành công",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getUserInfo = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) throw createHttpError.BadRequest("Thiếu mã người dùng");
+
+    const foundUser = await UserModel.getUserById(userId);
+
+    if (!foundUser) throw createHttpError.NotFound("Người dùng không tồn tại");
+
+    return res.status(200).json({
+      message: "Lấy thông tin người dùng thành công",
+      user: filterFieldUser(foundUser),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { login, refreshToken, logout, getUserInfo };

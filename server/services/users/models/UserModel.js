@@ -30,9 +30,20 @@ const UserModel = {
   },
 
   checkRefreshToken: async (userId, refreshToken) => {
-    const query = "SELECT * FROM users WHERE id = ? AND refresh_token = ? AND refresh_token_expires_at > NOW() LIMIT 1";
+    const query =
+      "SELECT * FROM users WHERE id = ? AND refresh_token = ? AND refresh_token_expires_at > NOW() LIMIT 1";
     const [rows] = await pool.query(query, [userId, refreshToken]);
     return rows.length > 0 ? rows[0] : null;
+  },
+
+  updateLastActive: async (userId, timestamp) => {
+    const query = `
+    UPDATE users 
+    SET last_active_at = ?
+    WHERE id = ?
+  `;
+    const [result] = await pool.query(query, [timestamp, userId]);
+    return result.affectedRows;
   },
 };
 

@@ -5,6 +5,7 @@ import { checkConnection } from "./database/connectDB.js";
 import router from "./routes/user.route.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import cookieParser from "cookie-parser";
+import { startConsumer } from "./messages/consumer.js";
 dotenv.config({ quite: true });
 
 const app = express();
@@ -23,4 +24,5 @@ app.use(errorHandler);
 app.listen(PORT, async () => {
   console.log(`Users service on ${PORT}`);
   await checkConnection();
+  await startConsumer()
 });

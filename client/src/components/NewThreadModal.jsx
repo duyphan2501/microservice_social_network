@@ -1,18 +1,26 @@
 import React, { useState } from "react";
 import { MoreHorizontal, Image, Smile, MapPin, AlignLeft } from "lucide-react";
+import MediaUpload from "./MediaUpload";
 
 // Component: NewThreadModal
 const NewThreadModal = ({ isOpen, onClose, onPost }) => {
   const [content, setContent] = useState("");
   const [topic, setTopic] = useState("");
+  const [media, setMedia] = useState([]);
 
   if (!isOpen) return null;
 
   const handlePost = () => {
-    if (content.trim()) {
-      onPost({ content, topic, timestamp: new Date() });
+    if (content.trim() || media.length > 0) {
+      onPost({
+        content,
+        topic,
+        media: media.map((m) => ({ url: m.url, type: m.type })),
+        timestamp: new Date(),
+      });
       setContent("");
       setTopic("");
+      setMedia([]);
       onClose();
     }
   };
@@ -25,14 +33,7 @@ const NewThreadModal = ({ isOpen, onClose, onPost }) => {
             Cancel
           </button>
           <h2 className="text-lg font-semibold">New thread</h2>
-          <div className="flex gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-              <AlignLeft className="w-5 h-5" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
-          </div>
+          <button className="w-16"></button>
         </div>
 
         <div className="p-6">
@@ -44,7 +45,7 @@ const NewThreadModal = ({ isOpen, onClose, onPost }) => {
 
             <div className="flex-grow">
               <div className="mb-4">
-                <div className="font-semibold mb-2">ducx3452025</div>
+                <div className="font-semibold mb-2">Your Username</div>
 
                 {topic && (
                   <div className="text-sm text-gray-500 mb-2">{topic}</div>
@@ -66,23 +67,7 @@ const NewThreadModal = ({ isOpen, onClose, onPost }) => {
                   autoFocus
                 />
 
-                <div className="flex gap-3 mt-3">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <Image className="w-5 h-5 text-gray-400" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <span className="text-gray-400 text-lg">GIF</span>
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <Smile className="w-5 h-5 text-gray-400" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <AlignLeft className="w-5 h-5 text-gray-400" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                  </button>
-                </div>
+                <MediaUpload onMediaChange={setMedia} />
               </div>
 
               <div className="flex items-center gap-2 text-gray-400">
@@ -93,14 +78,10 @@ const NewThreadModal = ({ isOpen, onClose, onPost }) => {
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-          <button className="flex items-center gap-2 text-gray-500">
-            <AlignLeft className="w-5 h-5" />
-            <span className="text-sm">Reply options</span>
-          </button>
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end">
           <button
             onClick={handlePost}
-            disabled={!content.trim()}
+            disabled={!content.trim() && media.length === 0}
             className="px-6 py-2 bg-black text-white rounded-lg font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-800 transition"
           >
             Post

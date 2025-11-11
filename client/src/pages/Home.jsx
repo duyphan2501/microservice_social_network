@@ -9,56 +9,78 @@ const Home = () => {
   const [posts, setPosts] = useState([
     {
       id: 1,
-      username: "hoangsonaty",
-      time: "1h",
-      content: `Không phải ai mạnh mẽ cũng cứu được người khác chỉ người đủ bình tĩnh mới làm được điều đó."
-
-Trần nhà đổ sập, trong tích tắc, người anh trong clip không mất bình tĩnh. Anh kiểm tra em đầu tiên, cầm theo điện thoại để sẵn liên lạc, công em ra khỏi khu vực nguy hiểm, thậm chí còn rút phích điện từng bước đều tĩnh táo, bản lĩnh.`,
-      clip: true,
-      image:
-        "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80",
-      likes: 450,
-      comments: 4,
-      reposts: 2,
-      shares: 2,
-      hasThread: false,
+      username: "duy",
+      time: "3h",
+      content: "đế vương phải có long ngai!",
+      media: [
+        {
+          url: "https://scontent.fsgn5-9.fna.fbcdn.net/v/t39.30808-6/578266243_846771654960260_4697044188393644855_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeGNPuq7uts0rWdNU8ch_pMmNxOPbnVOGIU3E49udU4YhfabT90M516KqwHUc83Pu_Jmcg2SsxThkLgBCAw6LpOM&_nc_ohc=cRPUaR6qsKYQ7kNvwFBnJ-b&_nc_oc=Adlt5FX1A0I0wm3FnfMGuZ8YbSKO9pZMlwZd16Zpq4tgVPlYQgMvdLuUNzBCROzMhrg&_nc_zt=23&_nc_ht=scontent.fsgn5-9.fna&_nc_gid=vifG91P9yYnrVvjuod11_w&oh=00_AfgV96CzLO2AM4Pf3ZAy0JSpKT1WvVOUG1s_ese27ke_pw&oe=6916A766",
+          type: "image",
+        },
+      ],
+      likes: 60,
+      comments: 2,
+      reposts: 4,
+      shares: 0,
     },
     {
       id: 2,
       username: "duy",
       time: "10h",
-      content: `Mấy con gà biết gì`,
-      clip: false,
-      image:
-        "https://scontent-hkg4-1.xx.fbcdn.net/v/t39.30808-6/578269758_846776851626407_3728077980494014080_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeFEvuEtZHjW1x5r_EteGtkuHV-PI6TnlbgdX48jpOeVuBQRR-1vjqoGKlkUWa3etKZMndQ3UPyROA09y-BD1Qep&_nc_ohc=UjolMurNCVkQ7kNvwGzqspn&_nc_oc=AdlH2CNVxt3Z1TW7gyPRZ7h-LtUbW6AXz45ElUBVwJtiYYnvnpqr_wm6qauzZFC8AVOuhVQPX9pj2TIoyhD8W9m0&_nc_zt=23&_nc_ht=scontent-hkg4-1.xx&_nc_gid=lukB1H51RfZbjTidHJ4WDQ&oh=00_AfgTBtff5xO37vUBZwxX9mGzN62cV64a7zNdKv7vbBwgvw&oe=691653F3",
+      content: "gà",
+      media: [
+        {
+          url: "https://scontent-hkg4-1.xx.fbcdn.net/v/t39.30808-6/577589201_2636352886722699_2463702600817763023_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeHZsFBQ7gD5W20exarSqltnTSrhEpciusVNKuESlyK6xYvHCWMou-GpSzzDa4IFJImPJmklU5r2bSSq1Lyyu5Dt&_nc_ohc=NCnnRsn4DW8Q7kNvwFer0OQ&_nc_oc=AdmUi3AL4Nyo4ZmztKcrwFIYpmdosScuHCw7dCiSfUvKoR-TKwX7hkyo-It8kc90huleImxkWcXmQxx4r23jVrBB&_nc_zt=23&_nc_ht=scontent-hkg4-1.xx&_nc_gid=N7AvmLWv0d_QiHpSIztKmw&oh=00_AfirYzt-5YPHaiL39nyHa856DSHJv3zh2PCrwCcloB0fpQ&oe=69166105",
+          type: "image",
+        },
+      ],
       likes: 450,
       comments: 4,
       reposts: 2,
       shares: 2,
-      hasThread: false,
+    },
+    {
+      id: 3,
+      username: "meomaybe",
+      time: "2h",
+      content: "Mẹ mày béo vcl, t xài 2 tấm hình còn chưa đủ",
+      media: [
+        {
+          url: "https://files.catbox.moe/pv2fm6.png",
+          type: "image",
+        },
+        {
+          url: "https://files.catbox.moe/hfhbro.png",
+          type: "image",
+        },
+      ],
+      likes: 447,
+      comments: 2,
+      reposts: 37,
+      shares: 4,
     },
   ]);
 
   const handleNewPost = (newPost) => {
     const post = {
       id: posts.length + 1,
-      username: "ducx3452025",
+      username: "You",
       time: "Just now",
       content: newPost.content,
+      media: newPost.media,
       likes: 0,
       comments: 0,
       reposts: 0,
       shares: 0,
-      hasThread: false,
     };
     setPosts([post, ...posts]);
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-start justify-center pt-4 ">
-      <div className="w-full max-w-2xl">
-        {/* New Post Section */}
-        <div className="border-b border-gray-200 px-4 py-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto pt-4">
+        {/* New Post Button */}
+        <div className="bg-white rounded-2xl border border-gray-200 px-4 py-4 mb-4">
           <div className="flex gap-3">
             <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0" />
             <button
@@ -67,21 +89,22 @@ Trần nhà đổ sập, trong tích tắc, người anh trong clip không mất
             >
               What's new?
             </button>
-            <button className="px-6 py-2 text-gray-400 font-semibold text-sm">
-              Post
-            </button>
           </div>
         </div>
 
         {/* Posts Feed */}
-        <div>
+        <div className="space-y-4">
           {posts.map((post) => (
-            <ThreadPost key={post.id} post={post} />
+            <div
+              key={post.id}
+              className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+            >
+              <ThreadPost post={post} />
+            </div>
           ))}
         </div>
       </div>
 
-      {/* New Thread Modal */}
       <NewThreadModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

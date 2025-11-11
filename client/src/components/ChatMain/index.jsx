@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import ChatFooter from "./ChatFooter";
 import ChatHeader from "./ChatHeader";
 import MessageItem from "../MessageItem";
-import useUserStore from "../../stores/userStore";
 import { MessageCircleMore } from "lucide-react";
+import useUserStore from "../../stores/useUserStore";
 
 // Dữ liệu tin nhắn giả lập
 const mockMessages = [
@@ -82,8 +82,7 @@ const ChatMain = ({ chatUser }) => {
       sent_at: new Date().toISOString(),
       images: imageUrls,
     };
-    console.log(newMessage);
-
+    
     setMessages((prev) => [...prev, newMessage]);
 
     // Giả sử bạn có API, tại đây bạn sẽ:

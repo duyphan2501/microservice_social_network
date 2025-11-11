@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
-
+import { useContext, useEffect, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import useUserStore from "../stores/useUserStore";
+import { MyContext } from "../Context/MyContext";
+import useSocketStore from "../stores/useSocketStore";
 // Navigation Item Component
 const NavItem = ({
   icon,
@@ -27,6 +29,66 @@ const NavItem = ({
 // Sidebar Component
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const { refreshToken } = useUserStore();
+  const { persist } = useContext(MyContext);
+  const navigator = useNavigate();
+  const location = useLocation();
+  const user = useUserStore((state) => state.user);
+  const [isLoading, setIsLoading] = useState(true);
+  const { connectAllSockets, disconnectAllSockets } = useSocketStore();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const refresh = async () => {
+      if (user || !persist) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        await refreshToken();
+      } catch (error) {
+        if (
+          isMounted &&
+          ["/addresses", "/my-account"].includes(location.pathname)
+        ) {
+          toast.info("Bạn cần phải đăng nhập trước!");
+          navigator("/login", { replace: true });
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    refresh();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = false;
+
+    if (!user) return;
+
+    if (!isMounted) {
+      connectAllSockets();
+      isMounted = true;
+    }
+
+    const handleTabClose = () => {
+      disconnectAllSockets();
+    };
+
+    // Gắn sự kiện khi mở tab
+    window.addEventListener("beforeunload", handleTabClose);
+
+    // Cleanup khi unmount
+    return () => {
+      window.removeEventListener("beforeunload", handleTabClose);
+      disconnectAllSockets();
+    };
+  }, [user, connectAllSockets, disconnectAllSockets]);
 
   const navItems = [
     {
@@ -116,121 +178,156 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          isCollapsed ? "w-20" : "w-64"
-        } border-r border-gray-200 bg-white transition-all duration-300 flex-col fixed h-full z-50 hidden lg:flex`}
-      >
-        {/* Logo */}
-        <div className="h-24 flex items-center px-6 border-b border-gray-200">
-          {isCollapsed ? (
-            <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
-              <path
-                d="M24 0C10.7 0 0 10.7 0 24s10.7 24 24 24 24-10.7 24-24S37.3 0 24 0zm0 43.2C13.4 43.2 4.8 34.6 4.8 24S13.4 4.8 24 4.8 43.2 13.4 43.2 24 34.6 43.2 24 43.2z"
-                fill="currentColor"
-              />
-              <circle cx="24" cy="24" r="6" fill="currentColor" />
-            </svg>
-          ) : (
-            <h1
-              className="text-2xl font-semibold"
-              style={{ fontFamily: "Brush Script MT, cursive" }}
-            >
-              PhanNhutDuy
-            </h1>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1">
-          {navItems.map((item, index) => (
-            <NavItem
-              key={index}
-              icon={item.icon}
-              label={item.label}
-              isActive={item.isActive}
-              isCollapsed={isCollapsed}
-              href={item.href}
-            />
-          ))}
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="p-3 border-t border-gray-200 space-y-1">
-          <NavItem
-            icon={
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            }
-            label="More"
-            isCollapsed={isCollapsed}
-            href="/settings"
-          />
-
-          {/* Toggle Button */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+    <>
+      {isLoading ? (
+        <>
+          <div className="fixed inset-0 z-50  opacity-30"></div>
+          <div className="fixed inset-0 z-60 bg-white flex items-center justify-center">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="size-20 border-6 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-700">Đang tải thông tin...</p>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex h-screen">
+          {/* Sidebar */}
+          <aside
+            className={`${
+              isCollapsed ? "w-20" : "w-64"
+            } border-r border-gray-200 bg-white transition-all duration-300 flex-col fixed h-full z-50 hidden lg:flex`}
           >
-            <div className="w-6 h-6 flex items-center justify-center">
+            {/* Logo */}
+            <div className="h-24 flex items-center px-6 border-b border-gray-200">
               {isCollapsed ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <polyline points="9 18 15 12 9 6" />
+                <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+                  <path
+                    d="M24 0C10.7 0 0 10.7 0 24s10.7 24 24 24 24-10.7 24-24S37.3 0 24 0zm0 43.2C13.4 43.2 4.8 34.6 4.8 24S13.4 4.8 24 4.8 43.2 13.4 43.2 24 34.6 43.2 24 43.2z"
+                    fill="currentColor"
+                  />
+                  <circle cx="24" cy="24" r="6" fill="currentColor" />
                 </svg>
               ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
+                <h1
+                  className="text-2xl font-semibold"
+                  style={{ fontFamily: "Brush Script MT, cursive" }}
                 >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
+                  PhanNhutDuy
+                </h1>
               )}
             </div>
-            {!isCollapsed && <span className="text-base">Collapse</span>}
-          </button>
-        </div>
-      </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
-        {[0, 1, 2, 3].map((index) => (
-          <a
-            key={index}
-            href={navItems[index].href}
-            className="flex items-center justify-center w-12 h-12"
+            {/* Navigation */}
+            <nav className="flex-1 py-4 px-3 space-y-1">
+              {navItems.map((item, index) => (
+                <NavItem
+                  key={index}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={item.isActive}
+                  isCollapsed={isCollapsed}
+                  href={item.href}
+                />
+              ))}
+            </nav>
+
+            {/* Bottom Section */}
+            <div className="p-3 border-t border-gray-200 space-y-1">
+              <NavItem
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </svg>
+                }
+                label="More"
+                isCollapsed={isCollapsed}
+                href="/settings"
+              />
+
+              <NavItem
+                icon={
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                }
+                label="Also from Meta"
+                isCollapsed={isCollapsed}
+                href="/meta"
+              />
+
+              {/* Toggle Button */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+              >
+                <div className="w-6 h-6 flex items-center justify-center">
+                  {isCollapsed ? (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  )}
+                </div>
+                {!isCollapsed && <span className="text-base">Collapse</span>}
+              </button>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main
+            className={`flex-1 overflow-auto bg-gray-50 pb-16 lg:pb-0 transition-all duration-300 ${
+              isCollapsed ? "lg:ml-20" : "lg:ml-64"
+            }`}
           >
-            <div className="w-6 h-6">{navItems[index].icon}</div>
-          </a>
-        ))}
-      </nav>
-      <main
-        className={`flex-1 ${
-          isCollapsed ? "lg:ml-20" : "lg:ml-64"
-        } transition-all duration-300`}
-      >
-        <Outlet />
-      </main>
-    </div>
+            <Outlet />
+          </main>
+
+          {/* Mobile Bottom Navigation */}
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
+            {[0, 1, 2, 3].map((index) => (
+              <a
+                key={index}
+                href={navItems[index].href}
+                className="flex items-center justify-center w-12 h-12"
+              >
+                <div className="w-6 h-6">{navItems[index].icon}</div>
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -6,20 +6,32 @@ import dotenv from "dotenv";
 
 dotenv.config({ quiet: true });
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173"],
+  credentials: true
+}));
 app.use(morgan("tiny"));
 
 const PORT = process.env.GATEWAY_PORT || 8000;
-const USERS_TARGET = process.env.USERS_TARGET || "http://localhost:3001";
+const USER_TARGET = process.env.USER_TARGET || "http://localhost:3001";
+const CHAT_TARGET = process.env.CHAT_TARGET || "http://localhost:3002";
 
 app.get("/health", (_, res) => res.json({ ok: true, service: "gateway" }));
 
 app.use(
-  "/api/v1/users",
+  "/api/v1/user",
   createProxyMiddleware({
-    target: USERS_TARGET,
+    target: USER_TARGET,
     changeOrigin: true,
-    pathRewrite: { "^/api/v1/users": "" },
+    pathRewrite: { "^/api/v1/user": "" },
+  })
+);
+app.use(
+  "/api/v1/chat",
+  createProxyMiddleware({
+    target: CHAT_TARGET,
+    changeOrigin: true,
+    pathRewrite: { "^/api/v1/chat": "" },
   })
 );
 

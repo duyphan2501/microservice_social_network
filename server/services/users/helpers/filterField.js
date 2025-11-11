@@ -8,6 +8,7 @@ const filterFieldUser = (user) => {
         avatar_url: user.avatar_url,
         bio: user.bio,
         last_active_at: user.last_active_at,
+        is_verified:  user.is_verified
     }
 }
 

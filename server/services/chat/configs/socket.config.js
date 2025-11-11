@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import ENV from "../helpers/env.helper.js";
 import socketAuth from "../middlewares/socketAuth.js";
 import { sendQueue } from "../messages/rabbitMQ.js";
+import MessageModel from "../models/message.model.js";
 
 const app = express();
 app.use(express.json());
@@ -31,6 +32,47 @@ io.on("connection", (socket) => {
     );
 
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+    // SỰ KIỆN 1: THAM GIA PHÒNG CHAT
+    socket.on("join_conversation", (conversationId) => {
+      socket.join(conversationId);
+      console.log(`User ${socket.userId} joined room ${conversationId}`);
+    });
+
+    // SỰ KIỆN 2: GỬI TIN NHẮN MỚI
+    socket.on("send_message", async (messageData) => {
+      // messageData: { conversationId, senderId, content, type, mediaUrls }
+
+      try {
+        // Sử dụng hàm DAO để lưu vào DB (Cần import messageDAO)
+        const messageId = await MessageModel.saveNewMessage(messageData);
+
+        const savedMessage = await MessageModel.getMessageById(messageId);
+
+        // Phát tin nhắn ĐÃ LƯU trở lại cho TẤT CẢ client trong phòng chat đó
+        io.to(messageData.conversationId).emit("receive_message", savedMessage);
+      } catch (error) {
+        console.error("Error handling send_message:", error);
+        // Có thể emit một sự kiện lỗi về client nếu cần
+        socket.emit("message_error", { message: "Failed to send message" });
+      }
+    });
+
+    // SỰ KIỆN 3: CẬP NHẬT TRẠNG THÁI (DELIVERED / READ)
+    socket.on("update_message_status", async (data) => {
+      const { conversationId, messageId, userId, status } = data;
+
+      try {
+        await MessageModel.markMessageStatus(messageId, userId, status);
+        // Thông báo cho TẤT CẢ client biết trạng thái đã thay đổi
+        io.to(conversationId).emit("status_updated", {
+          messageId,
+          status,
+        });
+      } catch (error) {
+        console.error("Error handling update_message_status:", error);
+      }
+    });
 
     socket.on("disconnect", async () => {
       console.log(

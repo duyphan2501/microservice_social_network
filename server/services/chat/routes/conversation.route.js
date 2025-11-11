@@ -1,9 +1,17 @@
-import express from "express"
-import checkAuth from "../middlewares/checkAuth.js"
-import { getConversations } from "../controllers/conversation.controller.js"
+import express from "express";
+import checkAuth from "../middlewares/checkAuth.js";
+import {
+  getConversationMessages,
+  getConversations,
+} from "../controllers/conversation.controller.js";
 
-const conversationRouter = express.Router()
+const conversationRouter = express.Router();
 
-conversationRouter.get("/:userId", checkAuth, getConversations)
+conversationRouter.get("/:userId", getConversations);
+conversationRouter.get(
+  "/:conversationId/messages",
+  checkAuth,
+  getConversationMessages
+);
 
-export default conversationRouter
+export default conversationRouter;

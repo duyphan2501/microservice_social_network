@@ -43,9 +43,10 @@ const Sidebar = () => {
 
     const refresh = async () => {
       if (user || !persist) {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
         return;
       }
+
       try {
         await refreshToken();
       } catch (error) {
@@ -60,12 +61,13 @@ const Sidebar = () => {
         if (isMounted) setIsLoading(false);
       }
     };
+
     refresh();
+
     return () => {
       isMounted = false;
     };
-  }, []);
-
+  }, []); 
   useEffect(() => {
     let isMounted = false;
 

@@ -126,7 +126,7 @@ const logout = async (req, res) => {
     res.clearCookie("refreshToken", options);
 
     // update db
-    await UserModel.setRefreshToken(null, null);
+    await UserModel.setRefreshToken(userId, null, null);
 
     return res.status(200).json({
       message: "Đăng xuất thành công",

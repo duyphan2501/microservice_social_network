@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Heart, ArrowLeft, MoreHorizontal } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Fake API data
 const MOCK_COMMENTS = [
@@ -12,7 +13,7 @@ const MOCK_COMMENTS = [
     avatar: "https://i.pravatar.cc/150?img=1",
     time: "6 giờ",
     content:
-      "T đi nhớ răng khôn xin bsi cái răng về trêu con. Vừa giờ ra nó báo ơi me ơi răng con chó à 🤣",
+      "T đi nhổ răng khôn xin bsi cái răng về trêu con. Vừa giờ ra nó báo ơi me ơi răng con chó à 🤣",
     likes: 1400,
     replies: [],
   },
@@ -94,11 +95,22 @@ const Comment = ({
 }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(comment.likes);
-  const [showReplies, setShowReplies] = useState(level === 0);
+  const [showReplies, setShowReplies] = useState(false);
 
   const handleLike = () => {
     setLiked(!liked);
     setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+  };
+
+  const handleShowReplies = () => {
+    setShowReplies(true);
+    // Auto-open reply input when showing replies
+    onReply(comment.id);
+  };
+
+  const handleReplyClick = () => {
+    // Only open reply input, don't show replies
+    onReply(comment.id);
   };
 
   const hasReplies = comment.replies && comment.replies.length > 0;
@@ -176,17 +188,17 @@ const Comment = ({
             <span className="text-gray-500 text-xs">{likeCount}</span>
           )}
           <button
-            onClick={() => onReply(comment.id)}
+            onClick={handleReplyClick}
             className="text-gray-500 text-xs font-semibold hover:text-gray-700 transition"
           >
             Trả lời
           </button>
         </div>
 
-        {/* Show replies button for root comments */}
+        {/* Show replies button for root comments - Hide when reply input is showing */}
         {level === 0 && hasReplies && !showReplies && (
           <button
-            onClick={() => setShowReplies(true)}
+            onClick={handleShowReplies}
             className="text-gray-600 text-sm font-semibold mt-3 ml-3 hover:text-gray-800 transition"
           >
             — Xem {comment.replies.length} phản hồi
@@ -201,18 +213,6 @@ const Comment = ({
           >
             — Ẩn phản hồi
           </button>
-        )}
-
-        {/* Reply input for nested comments */}
-        {showReplyInput === comment.id && level > 0 && (
-          <div className="mt-3 flex gap-2 ml-3">
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder={`Trả lời ${comment.username}...`}
-              className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         )}
 
         {/* Nested replies */}
@@ -231,6 +231,62 @@ const Comment = ({
             ))}
           </div>
         )}
+
+        {/* Reply input for level 0 - shown separately when not showing replies */}
+        {level === 0 && showReplyInput === comment.id && !showReplies && (
+          <div className="mt-3 flex gap-2 ml-3">
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder={`Trả lời ${comment.username}...`}
+              className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button className="text-gray-400">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Reply input shown at the end of replies for level 0 when replies are visible */}
+        {showReplies && level === 0 && showReplyInput === comment.id && (
+          <div className="relative flex gap-3 ml-11 mt-4">
+            <div className="absolute left-5 top-0 w-0.5 bg-gray-200 h-10" />
+            <div className="absolute left-5 top-5 w-6 h-0.5 bg-gray-200" />
+
+            <div className="relative z-10 ml-11">
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
+            </div>
+            <input
+              type="text"
+              placeholder={`Trả lời ${comment.username}...`}
+              className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button className="text-gray-400">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Reply input for nested comments (level > 0) */}
+        {showReplyInput === comment.id && level > 0 && (
+          <div className="mt-3 flex gap-2 ml-3">
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder={`Trả lời ${comment.username}...`}
+              className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button className="text-gray-400">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -244,6 +300,7 @@ const CommentPage = () => {
   const [likeCount, setLikeCount] = useState(post.likes);
   const [replyingTo, setReplyingTo] = useState(null);
   const [commentText, setCommentText] = useState("");
+  const navigate = useNavigate();
 
   const handleLike = () => {
     setLiked(!liked);
@@ -251,7 +308,10 @@ const CommentPage = () => {
   };
 
   const handleReply = (commentId) => {
-    setReplyingTo(replyingTo === commentId ? null : commentId);
+    // Only set, never toggle off
+    if (replyingTo !== commentId) {
+      setReplyingTo(commentId);
+    }
   };
 
   const buildCommentTree = (comments) => {
@@ -302,7 +362,10 @@ const CommentPage = () => {
       <div className="max-w-2xl mx-auto pt-4">
         {/* Inline Header */}
         <div className="bg-white rounded-t-2xl border border-gray-200 px-4 py-3 flex items-center justify-between">
-          <button className="p-2 hover:bg-gray-100 rounded-full -ml-2">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 hover:bg-gray-100 rounded-full"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="text-center flex-grow">

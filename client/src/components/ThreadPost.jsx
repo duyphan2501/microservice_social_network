@@ -1,16 +1,10 @@
 import React, { useState } from "react";
-import {
-  Heart,
-  MessageCircle,
-  Repeat2,
-  Send,
-  MoreHorizontal,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// Component: ThreadPost
 const ThreadPost = ({ post }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const navigate = useNavigate();
 
   const handleLike = () => {
     setLiked(!liked);
@@ -18,17 +12,10 @@ const ThreadPost = ({ post }) => {
   };
 
   return (
-    <article className="border-b border-gray-200 px-4 py-4 hover:bg-gray-50 transition">
+    <article className="px-4 py-4 hover:bg-gray-50 transition border-b border-gray-200">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 relative">
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black rounded-full border-2 border-white flex items-center justify-center">
-              <span className="text-white text-xs">+</span>
-            </div>
-          </div>
-          {post.hasThread && (
-            <div className="w-0.5 bg-gray-200 flex-grow my-2 min-h-[40px]" />
-          )}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500" />
         </div>
 
         <div className="flex-grow min-w-0">
@@ -38,25 +25,55 @@ const ThreadPost = ({ post }) => {
               <span className="text-gray-500 text-sm">{post.time}</span>
             </div>
             <button className="p-1 hover:bg-gray-200 rounded-lg">
-              <MoreHorizontal className="w-5 h-5 text-gray-500" />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
             </button>
           </div>
 
           <p className="text-[15px] mb-3 whitespace-pre-line">{post.content}</p>
 
-          {post.clip && (
-            <div className="text-sm text-gray-600 mb-2">
-              ClipD: Anh 96 <span className="text-blue-500">Translate</span>
-            </div>
-          )}
-
-          {post.image && (
-            <div className="mb-3 rounded-2xl overflow-hidden">
-              <img
-                src={post.image}
-                alt="Post content"
-                className="w-full object-cover max-h-[500px]"
-              />
+          {/* Media Display */}
+          {post.media && post.media.length > 0 && (
+            <div
+              className={`grid gap-2 mb-3 ${
+                post.media.length === 1
+                  ? "grid-cols-1"
+                  : post.media.length === 2
+                  ? "grid-cols-2"
+                  : post.media.length === 3
+                  ? "grid-cols-3"
+                  : "grid-cols-2"
+              }`}
+            >
+              {post.media.map((item, index) => (
+                <div
+                  key={index}
+                  className={`rounded-2xl overflow-hidden bg-gray-100 ${
+                    post.media.length === 1
+                      ? "max-h-[600px]"
+                      : post.media.length === 3 && index === 0
+                      ? "col-span-3 max-h-[400px]"
+                      : "aspect-square"
+                  }`}
+                >
+                  {item.type === "video" ? (
+                    <video
+                      src={item.url}
+                      className="w-full h-full object-cover"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={`Post media ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           )}
 
@@ -65,32 +82,69 @@ const ThreadPost = ({ post }) => {
               onClick={handleLike}
               className="flex items-center gap-2 hover:opacity-70 transition group"
             >
-              <Heart
+              <svg
                 className={`w-5 h-5 ${
                   liked ? "fill-red-500 text-red-500" : "text-gray-700"
                 } group-hover:scale-110 transition-transform`}
-              />
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
               {likeCount > 0 && (
                 <span className="text-gray-600 text-sm">{likeCount}</span>
               )}
             </button>
 
-            <button className="flex items-center gap-2 hover:opacity-70 transition group">
-              <MessageCircle className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+            <button
+              onClick={() => navigate(`/post/${post.id}/comments`)}
+              className="flex items-center gap-2 hover:opacity-70 transition group"
+            >
+              <svg
+                className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
               {post.comments > 0 && (
                 <span className="text-gray-600 text-sm">{post.comments}</span>
               )}
             </button>
 
             <button className="flex items-center gap-2 hover:opacity-70 transition group">
-              <Repeat2 className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+              <svg
+                className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <polyline points="17 1 21 5 17 9" />
+                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                <polyline points="7 23 3 19 7 15" />
+                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
               {post.reposts > 0 && (
                 <span className="text-gray-600 text-sm">{post.reposts}</span>
               )}
             </button>
 
             <button className="flex items-center gap-2 hover:opacity-70 transition group">
-              <Send className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+              <svg
+                className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
               {post.shares > 0 && (
                 <span className="text-gray-600 text-sm">{post.shares}</span>
               )}
@@ -101,7 +155,5 @@ const ThreadPost = ({ post }) => {
     </article>
   );
 };
-
-
 
 export default ThreadPost;

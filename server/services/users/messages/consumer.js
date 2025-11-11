@@ -18,6 +18,9 @@ const startConsumer = async () => {
       );
       if (affectedRows === 0)
         throw new Error("Update last active failed, user id =", payload.userId);
+      console.log(
+        `Updated last active user id = ${payload.userId}, timestamp = ${formattedTimeVN}`
+      );
     });
   } catch (error) {
     console.error(error);

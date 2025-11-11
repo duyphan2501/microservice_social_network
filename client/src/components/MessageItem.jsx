@@ -1,69 +1,109 @@
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, CheckCheck } from "lucide-react";
 import { useState } from "react";
 
-const MessageItem = ({ message, currentUser }) => {
+const MessageItem = ({ message, currentUser, chatUser }) => {
   const isMe = message.sender_id === currentUser.id;
-  const [selectedIndex, setSelectedIndex] = useState(null);
 
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const images =
+    message.media?.filter((item) => item.media_file_type === "image") || [];
+
+  // Hàm định dạng thời gian
   const formatTime = (timeStr) => {
     const date = new Date(timeStr);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const renderStatusIcon = () => {
+    if (!isMe || !message.status) return null;
+    let icon;
+    switch (message.status) {
+      case "read":
+        icon = <CheckCheck size={14} className="text-blue-500 ml-1" />;
+      case "delivered":
+        icon = <CheckCheck size={14} className="text-gray-400 ml-1" />;
+      case "sent":
+      default:
+        icon = <Check size={14} className="text-gray-400 ml-1" />;
+    }
+    return (
+      <div className="flex items-center gap-1">
+        {icon}
+        <p>{message.status}</p>
+      </div>
+    );
+  };
+
+  // Các hàm xử lý modal xem ảnh
   const openModal = (index) => setSelectedIndex(index);
   const closeModal = () => setSelectedIndex(null);
   const prevImage = () => {
     if (selectedIndex !== null)
-      setSelectedIndex(
-        (selectedIndex - 1 + message.images.length) % message.images.length
-      );
+      setSelectedIndex((selectedIndex - 1 + images.length) % images.length);
   };
   const nextImage = () => {
     if (selectedIndex !== null)
-      setSelectedIndex((selectedIndex + 1) % message.images.length);
+      setSelectedIndex((selectedIndex + 1) % images.length);
   };
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) closeModal();
   };
 
-  const displayedImages = message.images?.slice(0, 6) || [];
+  // Chỉ hiển thị tối đa 6 ảnh trong khung chat
+  const displayedImages = images.slice(0, 6);
 
   return (
     <>
       <div className={`chat ${isMe ? "chat-end" : "chat-start"} mb-3`}>
-        {!isMe && <div className="chat-image avatar">
-          <div className="w-8 rounded-full">
-            <img src={"https://img.daisyui.com/images/profile/demo/gordon@192.webp"} alt="" />
+        {/* Avatar của người gửi */}
+        {!isMe && (
+          <div className="chat-image avatar">
+            <div className="w-8 rounded-full">
+              <img
+                src={
+                  // Sử dụng avatar_url nếu có, nếu không thì dùng ảnh mặc định
+                  chatUser.avatar_url && chatUser.avatar_url !== ""
+                    ? chatUser.avatar_url
+                    : "https://img.daisyui.com/images/profile/demo/gordon@192.webp"
+                }
+                alt=""
+              />
+            </div>
           </div>
-        </div>}
+        )}
+
+        {/* Bong bóng chat */}
         <div
           className={`chat-bubble rounded-t-2xl flex flex-col gap-2 ${
             isMe
-              ? "chat-bubble-neutral rounded-bl-2xl"
-              : "chat-bubble rounded-br-2xl"
+              ? "chat-bubble-neutral rounded-bl-2xl" // Màu cho tin nhắn của mình
+              : "chat-bubble rounded-br-2xl" // Màu cho tin nhắn của người khác
           } max-w-xs sm:max-w-sm md:max-w-md`}
         >
+          {/* Nội dung tin nhắn (text) */}
           {message.content && <p>{message.content}</p>}
 
+          {/* Hiển thị ảnh nếu có */}
           {displayedImages.length > 0 && (
             <div className="flex flex-wrap gap-2 relative">
               {displayedImages.map((img, i) => {
-                const isLastAndMore = i === 5 && message.images.length > 6;
+                const isLastAndMore = i === 5 && images.length > 6;
                 return (
                   <div key={i} className="relative">
                     <img
-                      src={img}
+                      src={img.media_url}
                       alt={`img-${i}`}
-                      className="max-w-[150px] max-h-[150px] sm:max-w-[200px] sm:max-h-[200px] object-cover rounded-lg border border-gray-300 cursor-pointer hover:opacity-80"
-                      onClick={() => openModal(i)}
+                      className="max-w-[150px] max-h-[150px] sm:max-w-[200px] sm:max-h-[200px] object-cover border border-gray-300 cursor-pointer hover:opacity-80 rounded-lg"
+                      onClick={() => openModal(i)} // Mở modal khi click
                     />
+                    {/* Overlay hiển thị số lượng ảnh còn lại nếu nhiều hơn 6 */}
                     {isLastAndMore && (
                       <div
-                        className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-xl font-bold rounded-lg cursor-pointer"
+                        className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-xl font-bold cursor-pointer rounded-lg"
                         onClick={() => openModal(i)}
                       >
-                        +{message.images.length - 6}
+                        +{images.length - 6}
                       </div>
                     )}
                   </div>
@@ -73,11 +113,14 @@ const MessageItem = ({ message, currentUser }) => {
           )}
         </div>
 
-        <div className="chat-footer opacity-70 text-xs mt-1">
+        {/* Thời gian gửi và Trạng thái */}
+        <div className="chat-footer opacity-70 text-xs mt-1 flex items-center">
           {formatTime(message.sent_at)}
+          {renderStatusIcon()}
         </div>
       </div>
 
+      {/* Modal xem ảnh full màn hình */}
       {selectedIndex !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 p-4"
@@ -92,8 +135,8 @@ const MessageItem = ({ message, currentUser }) => {
           </button>
 
           <div className="relative flex items-center justify-between w-full mx-auto">
-            {/* Nút prev nằm sát bên trái màn hình (trong container giới hạn max-w) */}
-            {message.images.length > 1 && (
+            {/* Nút prev */}
+            {images.length > 1 && (
               <button
                 className="p-2 bg-white text-black bg-opacity-50 rounded-full hover:bg-opacity-80 z-10 cursor-pointer hover:bg-gray-200 active:bg-gray-300"
                 onClick={prevImage}
@@ -102,17 +145,17 @@ const MessageItem = ({ message, currentUser }) => {
               </button>
             )}
 
-            {/* Ảnh - linh hoạt hơn, sử dụng max-w-full và max-h-[90vh] để đảm bảo vừa màn hình */}
+            {/* Ảnh đang xem */}
             <div className="flex-1 flex justify-center w-[90vw]">
               <img
-                src={message.images[selectedIndex]}
+                src={images[selectedIndex].media_url}
                 alt="preview"
-                className="max-h-[90vh] w-auto h-auto object-contain rounded-lg shadow-lg mx-4"
+                className="max-h-[90vh] w-auto h-auto object-contain shadow-lg mx-4 rounded-lg"
               />
             </div>
 
-            {/* Nút next nằm sát bên phải màn hình (trong container giới hạn max-w) */}
-            {message.images.length > 1 && (
+            {/* Nút next */}
+            {images.length > 1 && (
               <button
                 className="p-2 bg-white text-black bg-opacity-50 rounded-full hover:bg-opacity-80 z-10 cursor-pointer hover:bg-gray-200 active:bg-gray-300"
                 onClick={nextImage}

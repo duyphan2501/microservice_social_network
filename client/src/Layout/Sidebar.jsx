@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
 import useSocketStore from "../stores/useSocketStore";
+import Notification from "../Components/Notification";
 
 // Navigation Item Component
 const NavItem = ({
@@ -11,10 +12,12 @@ const NavItem = ({
   isActive = false,
   isCollapsed,
   href = "#",
+  onClick, // Thêm prop onClick
 }) => {
   return (
     <a
       href={href}
+      onClick={onClick} // Thêm handler onClick
       className={`w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors ${
         isActive ? "font-bold" : "font-normal"
       }`}
@@ -38,6 +41,9 @@ const Sidebar = () => {
   const user = useUserStore((state) => state.user);
   const [isLoading, setIsLoading] = useState(true);
   const { connectAllSockets, disconnectAllSockets } = useSocketStore();
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hasNewNotifications] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -84,10 +90,8 @@ const Sidebar = () => {
       disconnectAllSockets();
     };
 
-    // Gắn sự kiện khi mở tab
     window.addEventListener("beforeunload", handleTabClose);
 
-    // Cleanup khi unmount
     return () => {
       window.removeEventListener("beforeunload", handleTabClose);
       disconnectAllSockets();
@@ -128,7 +132,6 @@ const Sidebar = () => {
       label: "Search",
       href: "/search",
     },
-
     {
       icon: (
         <svg
@@ -150,14 +153,19 @@ const Sidebar = () => {
           className="w-6 h-6"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="2"
           viewBox="0 0 24 24"
         >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       ),
-      label: "Inbox",
-      href: "/inbox",
+      label: "Notifications",
+      href: "#",
+      hasIndicator: hasNewNotifications,
+      onClick: (e) => {
+        e.preventDefault();
+        setShowNotifications(!showNotifications);
+      },
     },
     {
       icon: (
@@ -192,7 +200,7 @@ const Sidebar = () => {
     <>
       {isLoading ? (
         <>
-          <div className="fixed inset-0 z-50  opacity-30"></div>
+          <div className="fixed inset-0 z-50 opacity-30"></div>
           <div className="fixed inset-0 z-60 bg-white flex items-center justify-center">
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -240,6 +248,7 @@ const Sidebar = () => {
                   isActive={location.pathname === item.href}
                   isCollapsed={isCollapsed}
                   href={item.href}
+                  onClick={item.onClick} // Truyền onClick vào NavItem
                 />
               ))}
             </nav>
@@ -336,6 +345,17 @@ const Sidebar = () => {
               </a>
             ))}
           </nav>
+
+          {/* Notification Panel */}
+          {showNotifications && (
+            <div
+              className={`hidden lg:block fixed top-0 h-full w-96 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out z-40 shadow-lg ${
+                isCollapsed ? "left-20" : "left-64"
+              }`}
+            >
+              <Notification />
+            </div>
+          )}
         </div>
       )}
     </>

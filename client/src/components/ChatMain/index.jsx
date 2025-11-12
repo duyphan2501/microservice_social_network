@@ -7,10 +7,12 @@ import useUserStore from "../../stores/useUserStore";
 import useConversationStore from "../../stores/useConversationStore";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useSocketStore from "../../stores/useSocketStore";
+import useMessageStore from "../../stores/useMessageStore";
 
 const ChatMain = ({ chatUser, conservationId }) => {
   const user = useUserStore((state) => state.user); // currentUser
   const { getConversationMessages } = useConversationStore();
+  const { uploadMessageImages } = useMessageStore();
   const axiosPrivate = useAxiosPrivate();
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
@@ -52,15 +54,38 @@ const ChatMain = ({ chatUser, conservationId }) => {
 
     // 2. Lắng nghe tin nhắn mới
     const handleReceiveMessage = (newMessage) => {
-      if (!newMessage.status) newMessage.status = 'sent'
-      if (chatUser.id !== newMessage.sender_id && newMessage.sender_id !== user.id) return;
-      setMessages((prev) => [...prev, newMessage]);
-      // Nếu tin nhắn không phải của mình, gửi xác nhận đã DELIVERED
-      if (newMessage.sender_id !== user.id) {
+      if (!newMessage.status) newMessage.status = "sent";
+      if (newMessage.conversation_id !== conservationId) {
+        return;
+      }
+      if (newMessage.sender_id === user.id) {
+        setMessages((prevMessages) => {
+          // Tìm tin nhắn tạm thời dựa trên tempId
+          const index = prevMessages.findIndex(
+            (msg) =>
+              msg.id === newMessage.tempId || msg.tempId === newMessage.tempId
+          );
+
+          if (index !== -1) {
+            // Nếu tìm thấy, thay thế tin nhắn tạm bằng tin nhắn chính thức
+            const updatedMessages = [...prevMessages];
+            updatedMessages[index] = {
+              ...updatedMessages[index],
+              id: newMessage.id, // Gán ID thật
+              status: "sent",
+            };
+            return updatedMessages;
+          } else {
+            return [...prevMessages, newMessage];
+          }
+        });
+      } else {
+        setMessages((prev) => [...prev, newMessage]);
+
         chatSocket.emit("update_message_status", {
           conversationId: conservationId,
           messageId: newMessage.id,
-          userId: user.id, // ID người nhận (mình)
+          userId: user.id,
           status: "delivered",
         });
       }
@@ -89,45 +114,67 @@ const ChatMain = ({ chatUser, conservationId }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [chatUser, messages]); 
+  }, [chatUser, messages]);
 
-  const handleSendMessage = (e, content, images) => {
+  const addTempMessageToUI = (tempMessage) => {
+    setMessages((prev) => [...prev, tempMessage]);
+  };
+
+  const handleSendMessage = async (e, content, images) => {
     e.preventDefault();
 
     if (!content.trim() && images.length === 0) return;
+    // Tạo một ID tạm thời (ví dụ dùng UUID library)
+    const tempId = Date.now().toString();
 
-    // TODO: Implement image upload logic here (use axiosPrivate)
-    // Sau khi upload xong, bạn sẽ có imageUrls thực tế từ server.
-    const imageUrls = images.map((f) => f.preview || f.url); // Tạm dùng preview
-
-    // Dữ liệu chuẩn bị gửi lên Socket.IO Server
-    const messageData = {
-      conversationId: conservationId,
-      senderId: user.id,
-      content: content.trim(),
+    // Tạo đối tượng tin nhắn giả định để hiển thị ngay lập tức
+    const tempMessage = {
+      id: tempId,
+      conversation_id: conservationId,
+      sender_id: user.id,
+      content: content,
       type: images.length > 0 ? "image" : "text",
-      // Giả định backend cần list URLs để lưu vào DB
-      mediaUrls: imageUrls,
+      sent_at: new Date().toISOString(),
+      status: "sending",
+      media: images.map((file) => ({
+        media_url: file.preview,
+        media_file_type: "image",
+      })),
     };
 
-    // Gửi sự kiện 'send_message' lên Backend Socket Server
-    if (chatSocket) {
-      chatSocket.emit("send_message", messageData);
-    }
+    addTempMessageToUI(tempMessage);
+    try {
+      const formData = new FormData();
+      images.forEach((file) => {
+        formData.append("message_images", file);
+      });
 
-    // TẠM THỜI thêm tin nhắn vào state để hiển thị ngay lập tức (UI/UX tốt hơn)
-    // Backend sẽ gửi lại tin nhắn chuẩn (có ID DB, sent_at chuẩn) sau đó
-    // và chúng ta sẽ cần logic để thay thế tin nhắn tạm này bằng tin nhắn thật.
-    // Cách xử lý này hơi nâng cao, bạn có thể bỏ qua bước thêm tạm nếu muốn đơn giản.
-    // const tempMessage = {
-    //     id: Date.now(), // ID tạm
-    //     sender_id: user.id,
-    //     content: content.trim(),
-    //     sent_at: new Date().toISOString(),
-    //     media: imageUrls.map(url => ({ media_url: url, media_file_type: messageData.type })),
-    //     status: 'sent'
-    // };
-    // setMessages((prev) => [...prev, tempMessage]);
+      const uploadedImages = await uploadMessageImages(formData, axiosPrivate);
+      console.log("uploaded", uploadedImages)
+
+      // Dữ liệu chuẩn bị gửi lên Socket.IO Server
+      const messageData = {
+        conversationId: conservationId,
+        senderId: user.id,
+        content: content.trim(),
+        type: images.length > 0 ? "image" : "text",
+        // Giả định backend cần list URLs để lưu vào DB
+        media: uploadedImages,
+      };
+
+      // Gửi sự kiện 'send_message' lên Backend Socket Server
+      if (chatSocket) {
+        chatSocket.emit("send_message", { ...messageData, tempId });
+      }
+    } catch (error) {
+      const lastIndex = messages.length - 1;
+      const updatedMessages = [...messages];
+      updatedMessages[lastIndex] = {
+        ...updatedMessages[lastIndex],
+        status: "error",
+      };
+      setMessages(updatedMessages);
+    }
   };
 
   const markChatAsRead = () => {

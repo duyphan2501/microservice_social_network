@@ -1,15 +1,17 @@
-import { X, ChevronLeft, ChevronRight, Check, CheckCheck } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, CheckCheck, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-const MessageItem = ({ message, currentUser, chatUser }) => {
+const MessageItem = ({ message, currentUser, chatUser, onResendMessage }) => {
   const isMe = message.sender_id === currentUser.id;
 
   const [selectedIndex, setSelectedIndex] = useState(null);
   const images =
     message.media?.filter((item) => item.media_file_type === "image") || [];
-
-  // Hàm định dạng thời gian
+  
+  // Hàm định dạng thời gian  
   const formatTime = (timeStr) => {
+    // Handle cases where sent_at might be missing during 'sending' state
+    if (!timeStr) return "Just now"; 
     const date = new Date(timeStr);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
@@ -17,19 +19,36 @@ const MessageItem = ({ message, currentUser, chatUser }) => {
   const renderStatusIcon = () => {
     if (!isMe || !message.status) return null;
     let icon;
+    let text = message.status;
+    
     switch (message.status) {
       case "read":
         icon = <CheckCheck size={14} className="text-blue-500 ml-1" />;
+        break;
       case "delivered":
         icon = <CheckCheck size={14} className="text-gray-400 ml-1" />;
+        break;
       case "sent":
+        icon = <Check size={14} className="text-gray-400 ml-1" />;
+        break;
+      case "sending":
+        // Use a spinning loader icon for sending state
+        icon = <Loader2 size={14} className="text-gray-400 ml-1 animate-spin" />;
+        text = "sending...";
+        break;
+      case "error":
+        // Use an alert triangle for error state
+        icon = <AlertTriangle size={14} className="text-red-500 ml-1" />;
+        text = "Failed to send";
+        break;
       default:
         icon = <Check size={14} className="text-gray-400 ml-1" />;
     }
+    
     return (
       <div className="flex items-center gap-1">
         {icon}
-        <p>{message.status}</p>
+        <p className="capitalize">{text}</p>
       </div>
     );
   };
@@ -90,12 +109,20 @@ const MessageItem = ({ message, currentUser, chatUser }) => {
               {displayedImages.map((img, i) => {
                 const isLastAndMore = i === 5 && images.length > 6;
                 return (
-                  <div key={i} className="relative">
+                  // Added loading visualization for images
+                  <div 
+                    key={i} 
+                    className="relative bg-gray-100 flex items-center justify-center rounded-lg"
+                    style={{ minWidth: '100px', minHeight: '100px' }}
+                  >
                     <img
                       src={img.media_url}
                       alt={`img-${i}`}
                       className="max-w-[150px] max-h-[150px] sm:max-w-[200px] sm:max-h-[200px] object-cover border border-gray-300 cursor-pointer hover:opacity-80 rounded-lg"
                       onClick={() => openModal(i)} // Mở modal khi click
+                      // Simple text loading indicator
+                      onLoad={(e) => e.target.parentElement.classList.remove('bg-gray-100')} 
+                      onError={(e) => e.target.parentElement.innerText = 'Error loading image'}
                     />
                     {/* Overlay hiển thị số lượng ảnh còn lại nếu nhiều hơn 6 */}
                     {isLastAndMore && (
@@ -117,6 +144,16 @@ const MessageItem = ({ message, currentUser, chatUser }) => {
         <div className="chat-footer opacity-70 text-xs mt-1 flex items-center">
           {formatTime(message.sent_at)}
           {renderStatusIcon()}
+          {/* Optional: Add a resend button for error status */}
+          {isMe && message.status === "error" && onResendMessage && (
+             <button 
+                onClick={() => onResendMessage(message)} 
+                className="ml-2 text-red-500 hover:text-red-700 transition"
+                title="Resend message"
+             >
+                <RefreshCw size={14} />
+             </button>
+          )}
         </div>
       </div>
 

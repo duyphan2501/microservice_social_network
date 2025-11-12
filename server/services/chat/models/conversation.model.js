@@ -21,7 +21,7 @@ const ConversationModel = {
         JOIN
             messages m ON c.last_message_id = m.id
         LEFT JOIN
-            message_statuses ms ON m.id = ms.message_id AND ms.user_id = ?
+            message_statuses ms ON m.id = ms.message_id AND ms.receiver_id = ?
         WHERE
             c.user_id_1 = ? OR c.user_id_2 = ?
         ORDER BY
@@ -60,8 +60,7 @@ const ConversationModel = {
         LEFT JOIN 
             message_media mm ON m.id = mm.message_id
         LEFT JOIN
-            message_statuses ms ON m.id = ms.message_id AND ms.user_id = ?
-
+            message_statuses ms ON m.id = ms.message_id AND ms.receiver_id = ?
         WHERE 
             m.conversation_id = ?
       `;

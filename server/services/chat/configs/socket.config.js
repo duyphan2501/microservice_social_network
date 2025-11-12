@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
 
     // SỰ KIỆN 2: GỬI TIN NHẮN MỚI
     socket.on("send_message", async (messageData) => {
-      // messageData: { conversationId, senderId, content, type, mediaUrls }
+      // messageData: { conversationId, senderId, content, type, media, tempId }
 
       try {
         // Sử dụng hàm DAO để lưu vào DB (Cần import messageDAO)
@@ -50,7 +50,10 @@ io.on("connection", (socket) => {
         const savedMessage = await MessageModel.getMessageById(messageId);
 
         // Phát tin nhắn ĐÃ LƯU trở lại cho TẤT CẢ client trong phòng chat đó
-        io.to(messageData.conversationId).emit("receive_message", savedMessage);
+        io.to(messageData.conversationId).emit("receive_message", {
+          ...savedMessage,
+          tempId: messageData.tempId,
+        });
       } catch (error) {
         console.error("Error handling send_message:", error);
         // Có thể emit một sự kiện lỗi về client nếu cần

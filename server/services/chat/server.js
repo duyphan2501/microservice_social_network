@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import ENV from "./helpers/env.helper.js";
 import { app, server } from "./configs/socket.config.js";
 import conversationRouter from "./routes/conversation.route.js";
+import messageRouter from "./routes/message.route.js";
 
 app.use(morgan("dev"));
 app.use(cookieParser());
@@ -14,6 +15,7 @@ app.get("/health", (_, res) => res.json({ success: true, service: "chat" }));
 const PORT = ENV.PORT || 3002;
 
 app.use("/conversations", conversationRouter);
+app.use("/messages", messageRouter);
 
 app.use(errorHandler);
 

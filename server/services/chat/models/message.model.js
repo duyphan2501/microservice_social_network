@@ -48,10 +48,10 @@ const MessageModel = {
       // 2. Insert vào bảng message_media nếu có media
       if (media.length > 0) {
         const mediaInsertQuery = `
-          INSERT INTO message_media (message_id, media_url, media_type)
+          INSERT INTO message_media (message_id, media_url, media_public_id, media_type)
           VALUES ?
         `;
-        const mediaValues = media.map((m) => [messageId, m.url, m.type]);
+        const mediaValues = media.map((m) => [messageId, m.url, m.publicId, m.type]);
         await connection.query(mediaInsertQuery, [mediaValues]); // <-- Dùng connection
       }
 
@@ -73,18 +73,18 @@ const MessageModel = {
         [conversationId]
       );
       if (convoRows.length > 0) {
-        const recipientId =
+        const receiverId =
           convoRows[0].user_id_1 === senderId
             ? convoRows[0].user_id_2
             : convoRows[0].user_id_1;
 
         const statusInsertQuery = `
-          INSERT INTO message_statuses (message_id, user_id, status)
+          INSERT INTO message_statuses (message_id, receiver_id, status)
           VALUES (?, ?, 'sent')
         `;
         await connection.query(statusInsertQuery, [
           messageId,
-          recipientId,
+          receiverId,
           messageId,
         ]);
       }
@@ -121,7 +121,7 @@ const MessageModel = {
           m.media_count,
           COALESCE(
               JSON_ARRAYAGG(
-                  JSON_OBJECT('id', mm.id, 'media_url', mm.media_url, 'media_file_typle', mm.media_type)
+                  JSON_OBJECT('id', mm.id, 'media_url', mm.media_url, 'media_file_type', mm.media_type)
               ), 
               '[]'
           ) AS media
@@ -162,7 +162,7 @@ const MessageModel = {
           status = ?,
           -- Chỉ cập nhật read_at nếu trạng thái là 'read' (nếu bạn vẫn giữ cột read_at)
           read_at = CASE WHEN ? = 'read' THEN CURRENT_TIMESTAMP ELSE read_at END
-      WHERE message_id = ? AND user_id = ?
+      WHERE message_id = ? AND receiver_id = ?
     `;
 
     // Giả định `pool` là đối tượng kết nối DB của bạn

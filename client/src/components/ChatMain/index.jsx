@@ -199,7 +199,6 @@ const ChatMain = ({ chatUser, conservationId }) => {
         <section className="h-full flex flex-col">
           <div className="">
             <ChatHeader
-              user={chatUser}
               isChatUserOnline={onlineUsers.includes(chatUser.id.toString())}
             />
           </div>

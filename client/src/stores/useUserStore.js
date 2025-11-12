@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
-import { io } from "socket.io-client";
-
-const CHAT_SERVICE_URL =
-  import.meta.env.VITE_CHAT_SERVICE_URL || "http://localhost:3002";
 
 const useUserStore = create((set, get) => {
   const login = async (user) => {
@@ -196,6 +192,10 @@ const useUserStore = create((set, get) => {
       toast.error(message);
     }
   };
+
+  const updateUserLastActiveStatus = (userId, timestamp) => {
+    set({user: {...user, last_active_at: timestamp}})
+  }
 
   return {
     user: null,

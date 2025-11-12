@@ -43,54 +43,63 @@ const ConversationModel = {
     beforeId,
     currentUserId
   ) => {
+    const [conversation] = await pool.query(
+      `SELECT user_id_1, user_id_2 FROM conversations WHERE id = ?`,
+      [conversationId]
+    );
+
+    if (!conversation.length) return [];
+
+    const { user_id_1, user_id_2 } = conversation[0];
+    const partnerId = currentUserId === user_id_1 ? user_id_2 : user_id_1;
+
     let query = `
-        SELECT 
-            m.id AS message_id,
-            m.conversation_id,
-            m.sender_id,
-            m.content,
-            m.type AS message_type,
-            m.sent_at,
-            mm.id AS media_id,
-            mm.media_url,
-            mm.media_type AS media_file_type,
-            COALESCE(ms.status, 'sent') AS message_status 
-        FROM 
-            messages m
-        LEFT JOIN 
-            message_media mm ON m.id = mm.message_id
-        LEFT JOIN
-            message_statuses ms ON m.id = ms.message_id AND ms.receiver_id = ?
-        WHERE 
-            m.conversation_id = ?
-      `;
+    SELECT 
+        m.id AS message_id,
+        m.conversation_id,
+        m.sender_id,
+        m.content,
+        m.type AS message_type,
+        m.sent_at,
+        mm.id AS media_id,
+        mm.media_url,
+        mm.media_type AS media_file_type,
+        CASE 
+            WHEN m.sender_id = ? THEN COALESCE(ms2.status, 'sent')
+            ELSE COALESCE(ms.status, 'sent')
+        END AS message_status
+    FROM 
+        messages m
+    LEFT JOIN 
+        message_media mm ON m.id = mm.message_id
+    LEFT JOIN
+        message_statuses ms ON m.id = ms.message_id AND ms.receiver_id = ?
+    LEFT JOIN
+        message_statuses ms2 ON m.id = ms2.message_id AND ms2.receiver_id = ?
+    WHERE 
+        m.conversation_id = ?
+  `;
 
-    const params = [currentUserId, conversationId];
+    const params = [currentUserId, currentUserId, partnerId, conversationId];
 
-    // 2. Thêm điều kiện phân trang (nếu có beforeId)
     if (beforeId && beforeId != "undefined") {
-      query += ` AND m.id < ?`; // Chỉ lấy tin nhắn CŨ hơn ID này
+      query += ` AND m.id < ?`;
       params.push(beforeId);
     }
 
-    // 3. Sắp xếp và giới hạn kết quả
     query += `
-        ORDER BY 
-            m.sent_at DESC, m.id DESC
-        LIMIT ?;
-      `;
+    ORDER BY m.sent_at DESC, m.id DESC
+    LIMIT ?;
+  `;
     params.push(parseInt(limit, 10));
 
     const [rows] = await pool.query(query, params);
 
-    // --- XỬ LÝ GOM NHÓM DỮ LIỆU ---
+    // --- Gom nhóm dữ liệu như trước ---
     const messagesMap = new Map();
-
     for (const row of rows) {
-      const messageId = row.message_id;
-      if (!messagesMap.has(messageId)) {
-        // Nếu đây là lần đầu thấy messageId này, tạo object message gốc
-        messagesMap.set(messageId, {
+      if (!messagesMap.has(row.message_id)) {
+        messagesMap.set(row.message_id, {
           id: row.message_id,
           conversation_id: row.conversation_id,
           sender_id: row.sender_id,
@@ -101,10 +110,8 @@ const ConversationModel = {
           media: [],
         });
       }
-
-      // Thêm media vào mảng nếu có dữ liệu media_id
       if (row.media_id) {
-        messagesMap.get(messageId).media.push({
+        messagesMap.get(row.message_id).media.push({
           id: row.media_id,
           media_url: row.media_url,
           media_file_type: row.media_file_type,
@@ -112,14 +119,8 @@ const ConversationModel = {
       }
     }
 
-    // Chuyển Map thành Array và đảo ngược thứ tự (mới -> cũ thành cũ -> mới)
-    const formattedMessages = Array.from(messagesMap.values()).reverse();
-
-    return formattedMessages;
+    return Array.from(messagesMap.values()).reverse();
   },
-
-  
-
 };
 
 export default ConversationModel;

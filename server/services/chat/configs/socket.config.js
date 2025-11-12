@@ -89,6 +89,10 @@ io.on("connection", (socket) => {
         "user_last_active_updates",
         JSON.stringify({ userId: socket.userId, timestamp: Date.now() })
       );
+      io.emit("user_last_active_updates", {
+        userId: socket.userId,
+        timestamp: Date.now(),
+      });
     });
   } else {
     console.log("A client connected without a valid userId.");

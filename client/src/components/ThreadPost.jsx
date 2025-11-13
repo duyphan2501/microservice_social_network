@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatRelativeTime } from "../utils/DateFormat";
+import useUserStore from "../stores/useUserStore";
 
 const ThreadPost = ({ post }) => {
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes);
+  const [likeCount, setLikeCount] = useState(post.likes_count);
   const navigate = useNavigate();
+  const usersCache = useUserStore(state => state.usersCache)
+  const author = usersCache[post.user_id]
 
   const handleLike = () => {
     setLiked(!liked);
@@ -20,9 +24,9 @@ const ThreadPost = ({ post }) => {
 
         <div className="flex-grow min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[15px]">{post.username}</span>
-              <span className="text-gray-500 text-sm">{post.time}</span>
+            <div className="flex items-center flex-col">
+              <span className="font-semibold text-[15px]">{author?.username || "username"}</span>
+              <span className="text-gray-500 text-xs">&bull; {formatRelativeTime(post.created_at)}</span>
             </div>
             <button className="p-1 hover:bg-gray-200 rounded-lg">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -61,13 +65,13 @@ const ThreadPost = ({ post }) => {
                 >
                   {item.type === "video" ? (
                     <video
-                      src={item.url}
+                      src={item.media_url}
                       className="w-full h-full object-cover"
                       controls
                     />
                   ) : (
                     <img
-                      src={item.url}
+                      src={item.media_url}
                       alt={`Post media ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -111,8 +115,8 @@ const ThreadPost = ({ post }) => {
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              {post.comments > 0 && (
-                <span className="text-gray-600 text-sm">{post.comments}</span>
+              {post.comments_count > 0 && (
+                <span className="text-gray-600 text-sm">{post.comments_count}</span>
               )}
             </button>
 

@@ -1,14 +1,15 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatRelativeTime } from "../utils/DateFormat";
 import useUserStore from "../stores/useUserStore";
+import PostMedia from "./PostMedia";
 
 const ThreadPost = ({ post }) => {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.likes_count);
   const navigate = useNavigate();
-  const usersCache = useUserStore(state => state.usersCache)
-  const author = usersCache[post.user_id]
+  const usersCache = useUserStore((state) => state.usersCache);
+  const author = usersCache[post.user_id];
 
   const handleLike = () => {
     setLiked(!liked);
@@ -19,14 +20,24 @@ const ThreadPost = ({ post }) => {
     <article className="px-4 py-4 hover:bg-gray-50 transition border-b border-gray-200">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden">
+            <img
+              src={author.avatar_url}
+              alt=""
+              className="size-full object-cover"
+            />
+          </div>
         </div>
 
         <div className="flex-grow min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center flex-col">
-              <span className="font-semibold text-[15px]">{author?.username || "username"}</span>
-              <span className="text-gray-500 text-xs">&bull; {formatRelativeTime(post.created_at)}</span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-[15px]">
+                {author?.username || "username"}
+              </span>
+              <span className="text-gray-500 text-xs">
+                &bull; {formatRelativeTime(post.created_at)}
+              </span>
             </div>
             <button className="p-1 hover:bg-gray-200 rounded-lg">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -40,46 +51,9 @@ const ThreadPost = ({ post }) => {
           <p className="text-[15px] mb-3 whitespace-pre-line">{post.content}</p>
 
           {/* Media Display */}
-          {post.media && post.media.length > 0 && (
-            <div
-              className={`grid gap-2 mb-3 ${
-                post.media.length === 1
-                  ? "grid-cols-1"
-                  : post.media.length === 2
-                  ? "grid-cols-2"
-                  : post.media.length === 3
-                  ? "grid-cols-3"
-                  : "grid-cols-2"
-              }`}
-            >
-              {post.media.map((item, index) => (
-                <div
-                  key={index}
-                  className={`rounded-2xl overflow-hidden bg-gray-100 ${
-                    post.media.length === 1
-                      ? "max-h-[600px]"
-                      : post.media.length === 3 && index === 0
-                      ? "col-span-3 max-h-[400px]"
-                      : "aspect-square"
-                  }`}
-                >
-                  {item.type === "video" ? (
-                    <video
-                      src={item.media_url}
-                      className="w-full h-full object-cover"
-                      controls
-                    />
-                  ) : (
-                    <img
-                      src={item.media_url}
-                      alt={`Post media ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="">
+            <PostMedia media={post.media} />
+          </div>
 
           <div className="flex items-center gap-5 mt-3">
             <button
@@ -116,7 +90,9 @@ const ThreadPost = ({ post }) => {
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               {post.comments_count > 0 && (
-                <span className="text-gray-600 text-sm">{post.comments_count}</span>
+                <span className="text-gray-600 text-sm">
+                  {post.comments_count}
+                </span>
               )}
             </button>
 

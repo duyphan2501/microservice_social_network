@@ -1,6 +1,8 @@
 // store/postStore.js
 import { create } from "zustand";
 import useUserStore from "./useUserStore";
+import { toast } from "react-toastify";
+import API from "../API/axiosInstance";
 
 export const usePostStore = create((set, get) => ({
   posts: [],
@@ -17,7 +19,7 @@ export const usePostStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await axiosPrivate.get(`/posts?page=${page}&limit=1`);
+      const response = await axiosPrivate.get(`/posts?page=${page}&limit=10`);
       const newPosts = response.data.posts;
 
       if (newPosts.length === 0) {
@@ -32,15 +34,29 @@ export const usePostStore = create((set, get) => ({
       set((state) => ({
         posts: [...state.posts, ...newPosts],
         page: state.page + 1,
-        hasMore: newPosts.length === 1,
+        hasMore: newPosts.length === 10,
         isLoading: false,
       }));
-
     } catch (error) {
       set({
         error: error.message || "Lỗi khi tải bài viết",
         isLoading: false,
       });
+    }
+  },
+
+  getPost: async (postId) => {
+    const findPost = get().posts.find((post) => post.id === postId);
+    if (findPost) return findPost;
+    set({ isLoading: true });
+    try {
+      const res = await API.get(`/posts/${postId}`);
+      return res.data.post;
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+    } finally {
+      set({ isLoading: false });
     }
   },
 

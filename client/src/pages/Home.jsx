@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import ThreadPost from "../Components/ThreadPost";
-import NewThreadModal from "../Components/NewThreadModal";
+import ThreadPost from "../components/ThreadPost";
+import NewThreadModal from "../components/NewThreadModal";
 import usePostStore from "../stores/usePostStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import useUserStore from "../stores/useUserStore";
 
 // Main Component
 const Home = () => {
@@ -10,6 +11,7 @@ const Home = () => {
   const { posts, isLoading, hasMore, fetchPosts } = usePostStore();
   const observerElem = useRef(null);
   const axiosPrivate = useAxiosPrivate();
+  const user = useUserStore(state => state.user)
 
   const handleObserver = useCallback(
     (entries) => {
@@ -44,28 +46,15 @@ const Home = () => {
     }
   }, [fetchPosts, posts.length]);
 
-  const handleNewPost = (newPost) => {
-    const post = {
-      id: posts.length + 1,
-      username: "You",
-      time: "Just now",
-      content: newPost.content,
-      media: newPost.media,
-      likes: 0,
-      comments: 0,
-      reposts: 0,
-      shares: 0,
-    };
-    // setPosts([post, ...posts]);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto pt-4">
         {/* New Post Button */}
         <div className="bg-white rounded-2xl border border-gray-200 px-4 py-4 mb-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden" >
+              <img src={user?.avatar_url} alt="" />
+            </div>
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex-grow text-left text-gray-400 text-[15px] py-2"
@@ -96,7 +85,6 @@ const Home = () => {
       <NewThreadModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onPost={handleNewPost}
       />
     </div>
   );

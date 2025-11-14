@@ -14,7 +14,11 @@ const PostModel = {
       ORDER BY p.id DESC
       LIMIT ? OFFSET ?
     `;
-    const [posts] = await pool.query(postsQuery, [currentUserId, limit, offset]);
+    const [posts] = await pool.query(postsQuery, [
+      currentUserId,
+      limit,
+      offset,
+    ]);
 
     if (posts.length === 0) return [];
 
@@ -75,6 +79,33 @@ const PostModel = {
     `;
     const [rows] = await pool.query(query, [postId]);
     return rows;
+  },
+
+  createPost: async (content, media, userId) => {
+    const postQuery = `INSERT INTO posts (user_id, content, likes_count, comments_count)  
+                     VALUES (?, ?, ?, ?)`;
+    const [postResult] = await pool.query(postQuery, [userId, content, 0, 0]);
+
+    const postId = postResult.insertId;
+
+    if (postId && media.length > 0) {
+      const mediaValues = media.map((mediaItem, index) => [
+        postId,
+        mediaItem.media_url,
+        mediaItem.media_public_id,
+        mediaItem.media_type,
+        mediaItem.display_order || index+1,
+      ]);
+
+      const mediaQuery = `
+      INSERT INTO post_media (post_id, media_url, media_public_id, media_type, display_order)
+      VALUES ?
+    `;
+
+      await pool.query(mediaQuery, [mediaValues]);
+    }
+
+    return postId;
   },
 };
 

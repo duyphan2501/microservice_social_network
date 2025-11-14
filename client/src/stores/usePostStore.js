@@ -60,6 +60,29 @@ export const usePostStore = create((set, get) => ({
     }
   },
 
+  uploadPostMedia: async (formData, axiosPrivate) => {
+    const res = await axiosPrivate.post(`/posts/upload-media`, formData);
+    return res.data.uploadedMedia;
+  },
+
+  createNewPost: async (content, media, userId, axiosPrivate) => {
+    const res = await axiosPrivate.post(`/posts/create`, { content, media });
+
+    const newPost = {
+      id: res.data.postId,
+      user_id: userId,
+      content,
+      media,
+      likes_count: 0,
+      comments_count: 0,
+      created_at: new Date(),
+    };
+
+    set((state) => ({
+      posts: [newPost, ...state.posts],
+    }));
+  },
+
   resetPosts: () =>
     set({
       posts: [],

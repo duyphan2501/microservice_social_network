@@ -1,5 +1,6 @@
 import createHttpError from "http-errors";
 import PostModel from "../models/post.model.js";
+import uploadFiles from "../helpers/upload.js";
 
 const getPosts = async (req, res, next) => {
   try {
@@ -50,4 +51,80 @@ const getPostComments = async (req, res, next) => {
   }
 };
 
-export { getPosts, getPost, getPostComments };
+const createNewPost = async (req, res, next) => {
+  try {
+    const { content, media } = req.body;
+
+    if (!content && media.length === 0)
+      throw createHttpError.BadRequest("Vui lòng nhập nội dung bài viết hoặc ảnh/video");
+    const userId = req.user.userId;
+
+    const postId = await PostModel.createPost(content, media, userId);
+    if (!postId)
+      throw createHttpError.createHttpError("Thêm dữ liệu vào DB thất bại");
+
+    return res.status(200).json({
+      message: "Tạo bài viết thành công",
+      postId,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const POST_IMAGES_FOLDER = "post_images";
+const POST_VIDEOS_FOLDER = "post_videos";
+
+const uploadPostMedia = async (req, res, next) => {
+  try {
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      throw createHttpError.BadRequest("Không có file nào được cung cấp.");
+    }
+
+    const images = files.filter((file) => file.mimetype.startsWith("image"));
+    const videos = files.filter((file) => file.mimetype.startsWith("video"));
+
+    let uploadedMedia = [];
+
+    if (images.length > 0) {
+      const options = {
+        folder: POST_IMAGES_FOLDER,
+        use_filename: true,
+        unique_filename: false,
+        overwrite: true,
+      };
+      const imageResults = await uploadFiles(images, options);
+      const mappedImages = imageResults.map((item) => ({
+        media_url: item.url,
+        media_public_id: item.publicId,
+        media_type: "image",
+      }));
+      uploadedMedia.push(...mappedImages);
+    }
+
+    if (videos.length > 0) {
+      const options = {
+        folder: POST_VIDEOS_FOLDER,
+        resource_type: "video",
+      };
+      const videoResults = await uploadFiles(videos, options);
+      const mappedVideos = videoResults.map((item) => ({
+        media_url: item.url,
+        media_public_id: item.publicId,
+        media_type: "video",
+      }));
+      uploadedMedia.push(...mappedVideos);
+    }
+
+    res.status(200).json({
+      message: "Upload thành công",
+      uploadedMedia: uploadedMedia,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getPosts, getPost, getPostComments, createNewPost, uploadPostMedia };

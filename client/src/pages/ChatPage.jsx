@@ -65,11 +65,6 @@ const ChatPage = () => {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Giả định state của bạn được khai báo như thế này:
-  // const [conversationsWithUsers, setConversationsWithUsers] = useState([]);
-  // const { user } = useAuth(); // Giả định lấy user từ context/hook
-
-  // Sửa hàm updateStatus:
   const updateMessageStatusInState = useCallback(
     ({ messageId, status }) => {
       setConversationsWithUsers((prevConversations) => {
@@ -83,7 +78,7 @@ const ChatPage = () => {
       });
     },
     [setConversationsWithUsers]
-  ); // Thêm setter vào dependency array (nếu cần)
+  );
 
   // 2. Lắng nghe tin nhắn mới
   const handleReceiveMessage = useCallback(

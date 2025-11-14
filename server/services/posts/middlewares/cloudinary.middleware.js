@@ -41,4 +41,24 @@ const docFilter = (req, file, cb) => {
 
 const uploadDoc = multer({ storage, fileFilter: docFilter });
 
-export { uploadImg, uploadDoc };
+export const mediaFilter = (req, file, cb) => {
+    // Cho phép cả ảnh và video
+    const allowedImageTypes = /jpeg|jpg|png|gif|webp|jfif/;
+    const allowedVideoTypes = /mp4|avi|mkv|mov|wmv|flv|webm/;
+
+    const extname = 
+        allowedImageTypes.test(path.extname(file.originalname).toLowerCase()) ||
+        allowedVideoTypes.test(path.extname(file.originalname).toLowerCase());
+        
+    const mimetype = 
+        allowedImageTypes.test(file.mimetype.toLowerCase()) ||
+        allowedVideoTypes.test(file.mimetype.toLowerCase());
+
+    if (extname && mimetype) cb(null, true);
+    else cb(new Error("Chỉ cho phép file ảnh hoặc video hợp lệ."));
+};
+
+const uploadMedia = multer({ storage, fileFilter: mediaFilter });
+
+
+export { uploadImg, uploadDoc, uploadMedia };

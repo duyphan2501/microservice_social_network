@@ -1,6 +1,26 @@
 import { pool } from "../database/connectDB.js";
 
 const UserModel = {
+  addUser: async (userData) => {
+    const query = `
+    INSERT INTO users (username, email, password_hash, full_name)
+    VALUES (?, ?, ?, ?)
+  `;
+
+    const { username, email, password, fullname } = userData;
+
+    const [result] = await pool.query(query, [
+      username,
+      email,
+      password,
+      fullname,
+    ]);
+
+    const user = await UserModel.getUserById(result.insertId);
+
+    return user;
+  },
+
   getUserByUserName: async (username) => {
     const query = "SELECT * FROM users WHERE username = ? LIMIT 1";
     const [rows] = await pool.query(query, [username]);

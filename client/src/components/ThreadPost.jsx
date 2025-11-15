@@ -22,7 +22,7 @@ const ThreadPost = ({ post }) => {
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden">
             <img
-              src={author.avatar_url}
+              src={author?.avatar_url}
               alt=""
               className="size-full object-cover"
             />

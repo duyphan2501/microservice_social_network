@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { MyContext } from "../../Context/MyContext";
 import BiLoader from "../../components/Biloader";
 import useUserStore from "../../stores/useUserStore";
- 
+
 const Login = () => {
   const [user, setUser] = useState({
     account: "",
@@ -29,8 +29,7 @@ const Login = () => {
     const { loginUser, success } = await login(user);
     if (success) {
       navigate("/");
-    }
-    else {
+    } else {
       if (loginUser && !loginUser?.isVerified) {
         setVerifyUser(loginUser);
         navigate("/verify-account");
@@ -101,7 +100,7 @@ const Login = () => {
       </form>
       <div className="bg-gray-800 text-center py-2 text-white text-sm">
         Chưa có tài khoản?{" "}
-        <a href="sign-up" className="italic hover:underline">
+        <a href="/auth/sign-up" className="italic hover:underline">
           Đăng ký ngay
         </a>
       </div>

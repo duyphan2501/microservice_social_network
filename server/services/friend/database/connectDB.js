@@ -1,6 +1,6 @@
 import mysql2 from "mysql2";
 import dotenv from "dotenv";
-dotenv.config({ quiet: true });
+dotenv.config();
 
 const pool = mysql2
   .createPool({
@@ -22,7 +22,7 @@ const checkConnection = async () => {
     console.log("Connected to DB:", rows[0].db_name);
     connection.release();
   } catch (error) {
-    console.error("Failed to connect chatdb:", error.message);
+    console.error("Failed to connect userdb:", error.message);
   }
 };
 

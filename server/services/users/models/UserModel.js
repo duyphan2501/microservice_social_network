@@ -1,4 +1,5 @@
 import { pool } from "../database/connectDB.js";
+import { sendForgotPasswordEmail } from "../helpers/email.helper.js";
 
 const UserModel = {
   addUser: async (userData) => {
@@ -39,6 +40,18 @@ const UserModel = {
     return rows.length > 0 ? rows[0] : null;
   },
 
+  getUserByForgotpasswordToken: async (token) => {
+    const query = `
+      SELECT U.*, SUT.expires_at AS token_expires_at
+      FROM users U
+      JOIN single_use_tokens SUT ON U.id = SUT.user_id
+      WHERE SUT.token = ? AND SUT.type = 'RESET_PASSWORD' AND SUT.is_used = FALSE
+    `;
+
+    const [rows] = await pool.query(query, [token]);
+    return rows.length > 0 ? rows[0] : null;
+  },
+
   setRefreshToken: async (userId, token, tokenExpiresAt) => {
     const query = `
     UPDATE users 
@@ -63,6 +76,44 @@ const UserModel = {
     WHERE id = ?
   `;
     const [result] = await pool.query(query, [timestamp, userId]);
+    return result.affectedRows;
+  },
+
+  sendForgotPasswordEmailtoUser: async (user) => {
+    const minutes = 10;
+    const token = await sendForgotPasswordEmail(
+      user.full_name,
+      user.email,
+      minutes
+    );
+    const tokenExpiresAt = new Date(Date.now() + 60 * 1000 * minutes);
+
+    const queryAddForgotToken = `
+      INSERT INTO single_use_tokens(user_id, token, type, expires_at)
+      VALUES (?, ?, 'RESET_PASSWORD', ?)
+    `;
+
+    await pool.query(queryAddForgotToken, [user.id, token, tokenExpiresAt]);
+  },
+
+  updateUserPassword: async (userId, newPassword) => {
+    const query = `
+      UPDATE users
+      SET password_hash = ?
+      WHERE id = ?
+    `;
+
+    const [result] = await pool.query(query, [newPassword, userId]);
+    return result.affectedRows;
+  },
+
+  updateTokenAsUsed: async (token) => {
+    const query = `
+      UPDATE single_use_tokens
+      SET is_used = TRUE
+      WHERE token = ?
+    `;
+    const [result] = await pool.query(query, [token]);
     return result.affectedRows;
   },
 };

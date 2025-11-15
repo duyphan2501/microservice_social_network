@@ -85,7 +85,7 @@ const Login = () => {
             className="remember-me"
           />
           <a
-            href="/forgot-password"
+            href="/auth/forgot-password"
             className="text-sm font-semibold italic text-gray-600 hover:underline"
           >
             Quên mật khẩu?

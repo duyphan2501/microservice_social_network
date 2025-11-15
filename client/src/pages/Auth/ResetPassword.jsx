@@ -34,7 +34,7 @@ const ResetPassword = () => {
       formData.password,
       formData.confirmPassword
     );
-    if (success) navigate("/login");
+    if (success) navigate("/auth/login");
   };
 
   return (

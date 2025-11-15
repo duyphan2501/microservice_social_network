@@ -8,6 +8,27 @@ import UserModel from "../models/UserModel.js";
 import { filterFieldUser } from "../helpers/filterField.js";
 import createHttpError from "http-errors";
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) throw createHttpError.BadRequest("Vui lòng nhập email");
+
+    const foundUser = await UserModel.getUserByEmail(email);
+
+    if (!foundUser) throw createHttpError.NotFound("Người dùng không tồn tại");
+
+    await UserModel.sendForgotPasswordEmailtoUser(foundUser);
+
+    return res.status(200).json({
+      message: "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến.",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const login = async (req, res, next) => {
   try {
     const { account, password } = req.body;
@@ -209,4 +230,54 @@ const signUp = async (req, res, next) => {
   }
 };
 
-export { login, refreshToken, logout, getUserInfo, signUp };
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token) throw createHttpError.BadRequest("Token không hợp lệ");
+
+    if (!password)
+      throw createHttpError.BadRequest("Vui lòng nhập mật khẩu mới!");
+
+    if (!confirmPassword)
+      throw createHttpError.BadRequest("Vui lòng nhập lại mật khẩu mới!");
+
+    const foundUser = await UserModel.getUserByForgotpasswordToken(token);
+
+    if (!foundUser) throw createHttpError.NotFound("Tài khoản không tồn tại");
+
+    if (foundUser.forgot_password_token_expires_at < new Date()) {
+      await UserModel.sendForgotPasswordEmailtoUser(foundUser);
+      throw createHttpError.BadRequest(
+        "Token đã hết hạn. Chúng tôi đã gửi lại email đặt lại mật khẩu mới cho bạn. Vui lòng kiểm tra hộp thư đến."
+      );
+    }
+
+    if (password !== confirmPassword) {
+      throw createHttpError.BadRequest("Mật khẩu không khớp!");
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    await UserModel.updateUserPassword(foundUser.id, hashedPassword);
+
+    await UserModel.updateTokenAsUsed(token);
+
+    return res.status(200).json({
+      message: "Đặt lại mật khẩu thành công!",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  login,
+  refreshToken,
+  logout,
+  getUserInfo,
+  signUp,
+  forgotPassword,
+  resetPassword,
+};

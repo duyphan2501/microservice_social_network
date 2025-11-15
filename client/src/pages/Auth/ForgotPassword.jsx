@@ -28,16 +28,22 @@ const ForgotPassword = () => {
                 Vui lòng kiểm tra email của bạn để nhận đường dẫn khôi phục mật
                 khẩu.
               </p>
-            <div className="bg-gray-800 text-center py-2 text-white text-sm px-3 rounded-lg mt-3">
-              <a href="/login" className="italic hover:underline">
-                Quay lại trang đăng nhập
-              </a>
+              <div className="bg-gray-800 text-center py-2 text-white text-sm px-3 rounded-lg mt-3">
+                <a href="/auth/login" className="italic hover:underline">
+                  Quay lại trang đăng nhập
+                </a>
+              </div>
             </div>
-            </div>
-            <form className="bg-gray-800 text-center py-2 text-white text-sm" onSubmit={handleSubmit}>
+            <form
+              className="bg-gray-800 text-center py-2 text-white text-sm"
+              onSubmit={handleSubmit}
+            >
               Chưa nhận được email?{" "}
-              <button className="italic hover:underline cursor-pointer" type="submit">
-                {!isLoading.forgot ? "Gửi lại": "Đang gửi..."}
+              <button
+                className="italic hover:underline cursor-pointer"
+                type="submit"
+              >
+                {!isLoading.forgot ? "Gửi lại" : "Đang gửi..."}
               </button>
             </form>
           </>
@@ -77,7 +83,6 @@ const ForgotPassword = () => {
                 </form>
               </div>
             </div>
-            
           </>
         )}
       </div>

@@ -1,15 +1,17 @@
 import express from "express";
 import morgan from "morgan";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import cors from "cors"
+import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config({ quiet: true });
 const app = express();
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(morgan("tiny"));
 
 const PORT = process.env.GATEWAY_PORT || 3000;

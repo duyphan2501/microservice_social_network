@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import ConversationItem from "../components/ConversationItem";
 import { SquarePen } from "lucide-react";
 import ChatMain from "../components/ChatMain";
@@ -9,12 +9,14 @@ import useSocketStore from "../stores/useSocketStore";
 
 // Bọc ConversationItem bằng memo để tối ưu hiệu suất
 import { memo } from "react";
+import { MyContext } from "../Context/MyContext";
 const MemoizedConversationItem = memo(ConversationItem);
 
 const ChatPage = () => {
   const user = useUserStore((state) => state.user);
   const [conversationsWithUsers, setConversationsWithUsers] = useState([]);
-  const [chatUser, setChatUser] = useState(null);
+  const {chatUser, setChatUser} = useContext(MyContext)
+
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const chatSocket = useSocketStore((state) => state.chatSocket);
   const { getUserInfo } = useUserStore();
@@ -98,6 +100,7 @@ const ChatPage = () => {
               content: newMessage.content,
               message_type: newMessage.type,
               message_status: newMessage.status || 'sent',
+              media_count: newMessage.media_count,
               sender_id: newMessage.sender_id,
               sent_at: newMessage.sent_at,
             }

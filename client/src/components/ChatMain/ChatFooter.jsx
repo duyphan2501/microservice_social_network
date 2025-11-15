@@ -8,35 +8,36 @@ const ChatFooter = ({ onSendMessage }) => {
 
   // Khi chọn ảnh
   const handleImageChange = (event) => {
-  const files = event.target.files;
-  if (files && files.length > 0) {
-    const newFiles = Array.from(files);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
 
-    setImages((prevImages) => {
-      // Lọc bỏ file trùng (theo name + size + lastModified)
-      const existingKeys = new Set(
-        prevImages.map((img) => `${img.name}-${img.size}-${img.lastModified}`)
-      );
-
-      const uniqueNewImages = newFiles
-        .filter(
-          (file) =>
-            !existingKeys.has(`${file.name}-${file.size}-${file.lastModified}`)
-        )
-        .map((file) =>
-          Object.assign(file, {
-            preview: URL.createObjectURL(file),
-          })
+      setImages((prevImages) => {
+        // Lọc bỏ file trùng (theo name + size + lastModified)
+        const existingKeys = new Set(
+          prevImages.map((img) => `${img.name}-${img.size}-${img.lastModified}`)
         );
 
-      return [...prevImages, ...uniqueNewImages];
-    });
+        const uniqueNewImages = newFiles
+          .filter(
+            (file) =>
+              !existingKeys.has(
+                `${file.name}-${file.size}-${file.lastModified}`
+              )
+          )
+          .map((file) =>
+            Object.assign(file, {
+              preview: URL.createObjectURL(file),
+            })
+          );
 
-    // Reset input để có thể chọn lại cùng file (nhưng vẫn không thêm trùng)
-    event.target.value = null;
-  }
-};
+        return [...prevImages, ...uniqueNewImages];
+      });
 
+      // Reset input để có thể chọn lại cùng file (nhưng vẫn không thêm trùng)
+      event.target.value = null;
+    }
+  };
 
   // Gỡ bỏ ảnh khỏi danh sách
   const handleRemoveImage = (rmIndex) => {

@@ -1,16 +1,12 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
-import { io } from "socket.io-client";
-
-const CHAT_SERVICE_URL =
-  import.meta.env.VITE_CHAT_SERVICE_URL || "http://localhost:3002";
 
 const useUserStore = create((set, get) => {
   const login = async (user) => {
     set({ isLoading: { login: true } });
     try {
-      const res = await API.post(`/user/login`, user);
+      const res = await API.post(`/users/login`, user);
       set({ user: res.data.user, accessToken: res.data.accessToken });
       toast.success(res.data.message);
       return { success: true, loginUser: res.data.user };
@@ -34,7 +30,7 @@ const useUserStore = create((set, get) => {
   const refreshToken = async () => {
     set({ isLoading: { refresh: true } });
     try {
-      const res = await API.put(`/user/refresh-token`);
+      const res = await API.put(`/users/refresh-token`);
       set({
         user: res.data.user,
         accessToken: res.data.accessToken,
@@ -50,23 +46,16 @@ const useUserStore = create((set, get) => {
   const signUp = async (user) => {
     set({ isLoading: { signUp: true } });
     try {
-      const res = await API.post(`/user/sign-up`, user);
+      const res = await API.post(`/users/sign-up`, user);
       toast.success(res.data.message);
       set({ user: res.data.user });
-      return { verifyUser: res.data.user, success: true };
+      return { user: res.data.user, success: true };
     } catch (error) {
-      console.log(error);
+      console.error(error);
       if (error.response) {
-        const message = error.response.data?.message || message;
-        if (error.response.status === 401) {
-          const user = error.response.data?.user;
-          toast.info(message || "Please verify your account");
-          return { verifyUser: user, success: false };
-        } else {
-          toast.error(message || "Failed to sign up");
-        }
+        const message = error.response.data?.message || "Failed to sign up";
+        toast.error(message);
       }
-      return { verifyUser: null, success: false };
     } finally {
       set({ isLoading: { signUp: false } });
     }
@@ -75,7 +64,7 @@ const useUserStore = create((set, get) => {
   const verifyAccount = async (formData) => {
     set({ isLoading: { verify: true } });
     try {
-      const res = await API.put(`/user/verify-account`, formData);
+      const res = await API.put(`/users/verify-account`, formData);
       toast.success(res.data.message);
       return true;
     } catch (error) {
@@ -90,7 +79,7 @@ const useUserStore = create((set, get) => {
   const sendVerificationEmail = async (email) => {
     set({ isLoading: { resend: true } });
     try {
-      const res = await API.put(`/user/resend-verification-email`, {
+      const res = await API.put(`/users/resend-verification-email`, {
         email,
       });
       toast.success(res.data.message);
@@ -109,7 +98,7 @@ const useUserStore = create((set, get) => {
   const sendForgotPasswordEmail = async (email) => {
     set({ isLoading: { forgot: true } });
     try {
-      const res = await API.post(`/user/forgot-password`, { email });
+      const res = await API.post(`/users/forgot-password`, { email });
       toast.success(res.data.message);
       return true;
     } catch (error) {
@@ -126,7 +115,7 @@ const useUserStore = create((set, get) => {
   const resetPassword = async (token, password, confirmPassword) => {
     set({ isLoading: { reset: true } });
     try {
-      const res = await API.put(`/user/reset-password`, {
+      const res = await API.put(`/users/reset-password`, {
         token,
         password,
         confirmPassword,
@@ -144,7 +133,7 @@ const useUserStore = create((set, get) => {
 
   const logout = async () => {
     try {
-      const res = await API.delete(`/user/logout`);
+      const res = await API.delete(`/users/logout`);
       toast.info(res.data.message);
       set({ user: null, accessToken: null });
       return true;
@@ -157,7 +146,7 @@ const useUserStore = create((set, get) => {
 
   const updatePersonalInfo = async (name, phone, axiosPrivate) => {
     try {
-      const res = await axiosPrivate.put(`/user/personal-info/update`, {
+      const res = await axiosPrivate.put(`/users/personal-info/update`, {
         name,
         phone,
       });
@@ -174,7 +163,7 @@ const useUserStore = create((set, get) => {
   const changePassword = async (formData, axiosPrivate) => {
     set({ isLoading: { change: true } });
     try {
-      const res = await axiosPrivate.put(`/user/change-password`, formData);
+      const res = await axiosPrivate.put(`/users/change-password`, formData);
       toast.success(res.data.message);
       return true;
     } catch (error) {
@@ -188,7 +177,7 @@ const useUserStore = create((set, get) => {
 
   const getUserInfo = async (userId, axiosPrivate) => {
     try {
-      const res = await axiosPrivate.get(`/user/get-info/${userId}`);
+      const res = await axiosPrivate.get(`/users/get-info/${userId}`);
       return res.data.user;
     } catch (error) {
       const message = error.response?.data?.message;
@@ -197,7 +186,34 @@ const useUserStore = create((set, get) => {
     }
   };
 
+  const fetchUserIfNeeded = async (userId) => {
+    const { usersCache } = get();
+
+    if (usersCache[userId]) {
+      return usersCache[userId];
+    }
+
+    try {
+      const response = await API.get(`/users/get-info/${userId}`);
+      const userInfo = response.data.user;
+
+      // Cập nhật cache
+      set((state) => ({
+        usersCache: {
+          ...state.usersCache,
+          [userId]: userInfo,
+        },
+      }));
+
+      return userInfo;
+    } catch (error) {
+      console.error(`Could not fetch user ${userId}:`, error);
+      return null;
+    }
+  };
+
   return {
+    usersCache: {},
     user: null,
     accessToken: null,
     isLoading: {
@@ -221,6 +237,7 @@ const useUserStore = create((set, get) => {
     updatePersonalInfo,
     changePassword,
     getUserInfo,
+    fetchUserIfNeeded,
   };
 });
 

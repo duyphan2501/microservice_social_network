@@ -1,6 +1,25 @@
+import { useContext, useEffect } from "react";
+import useSocketStore from "../../stores/useSocketStore";
 import { formatRelativeTime } from "../../utils/DateFormat";
+import { MyContext } from "../../Context/MyContext";
 
-const ChatHeader = ({ user, isChatUserOnline }) => {
+const ChatHeader = ({ isChatUserOnline }) => {
+  const { chatSocket } = useSocketStore();
+  const { chatUser, setChatUser } = useContext(MyContext);
+
+  useEffect(() => {
+    if (!chatSocket) return;
+
+    chatSocket.on("user_last_active_updates", (data) => {
+      if (chatUser.id === data.userId)
+        setChatUser((prev) => ({ ...prev, last_active_at: data.timestamp }));
+    });
+
+    return () => {
+      chatSocket.off("user_last_active_updates");
+    };
+  }, [chatSocket]);
+
   return (
     <div className="p-4 border-b border-gray-200 ">
       <div className="flex">
@@ -14,19 +33,19 @@ const ChatHeader = ({ user, isChatUserOnline }) => {
             <div className="w-12 rounded-full">
               <img
                 src={
-                  user.avatar_url ||
+                  chatUser.avatar_url ||
                   "https://img.daisyui.com/images/profile/demo/gordon@192.webp"
                 }
               />
             </div>
           </div>
           <div className="flex flex-1 flex-col justify-center">
-            <p className="font-medium ">{user.full_name}</p>
+            <p className="font-medium ">{chatUser.full_name}</p>
             <div className="text-xs text-gray-600">
               {isChatUserOnline ? (
                 <p>Đang hoạt động</p>
               ) : (
-                <p>Hoạt động {formatRelativeTime(user.last_active_at)}</p>
+                <p>Hoạt động {formatRelativeTime(chatUser.last_active_at, true)}</p>
               )}
             </div>
           </div>

@@ -24,19 +24,12 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("Người dùng không tồn tại");
 
-    if (!foundUser.is_verified) {
-      return res.status(401).json({
-        message:
-          "Tài khoản chưa được xác minh! Vui lòng kiểm tra email để xác minh tài khoản.",
-        user: filterFieldUser(foundUser),
-        success: false,
-        notVerified: true,
-      });
-    }
+    const isCorrectPassword = await comparePassword(
+      password,
+      foundUser.password_hash
+    );
 
-    // const isCorrectPassword = await comparePassword(password, foundUser.password_hash);
-
-    const isCorrectPassword = password === foundUser.password_hash;
+    // const isCorrectPassword = password === foundUser.password_hash;
 
     if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 
@@ -156,4 +149,64 @@ const getUserInfo = async (req, res, next) => {
   }
 };
 
-export { login, refreshToken, logout, getUserInfo };
+const signUp = async (req, res, next) => {
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  function validatePassword(password) {
+    return passwordRegex.test(password);
+  }
+
+  try {
+    const { username, email, fullname, password, confirmPassword } = req.body;
+
+    if (!email) throw createHttpError.BadRequest("Vui lòng nhập email!");
+
+    const isExistingUser = await UserModel.getUserByEmail(email);
+
+    if (isExistingUser) {
+      throw createHttpError.Conflict("Email đã được sử dụng!");
+    }
+
+    if (!fullname) throw createHttpError.BadRequest("Vui lòng nhập họ tên!");
+
+    if (!username)
+      throw createHttpError.BadRequest("Vui lòng nhập tên đăng nhập!");
+
+    const isExistingUsername = await UserModel.getUserByUserName(username);
+    if (isExistingUsername) {
+      throw createHttpError.Conflict("Tên đăng nhập đã được sử dụng!");
+    }
+
+    if (!password) throw createHttpError.BadRequest("Vui lòng nhập mật khẩu!");
+
+    if (!validatePassword(password)) {
+      throw createHttpError.BadRequest(
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+      );
+    }
+
+    if (password !== confirmPassword) {
+      throw createHttpError.BadRequest("Mật khẩu không khớp!");
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await UserModel.addUser({
+      username,
+      email,
+      fullname,
+      password: hashedPassword,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo tài khoản thành công!",
+      user: filterFieldUser(user),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { login, refreshToken, logout, getUserInfo, signUp };

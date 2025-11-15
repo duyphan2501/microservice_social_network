@@ -1,65 +1,48 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ThreadPost from "../Components/ThreadPost";
 import NewThreadModal from "../Components/NewThreadModal";
+import usePostStore from "../stores/usePostStore";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 // Main Component
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      username: "duy",
-      time: "3h",
-      content: "đế vương phải có long ngai!",
-      media: [
-        {
-          url: "https://scontent.fsgn5-9.fna.fbcdn.net/v/t39.30808-6/578266243_846771654960260_4697044188393644855_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeGNPuq7uts0rWdNU8ch_pMmNxOPbnVOGIU3E49udU4YhfabT90M516KqwHUc83Pu_Jmcg2SsxThkLgBCAw6LpOM&_nc_ohc=cRPUaR6qsKYQ7kNvwFBnJ-b&_nc_oc=Adlt5FX1A0I0wm3FnfMGuZ8YbSKO9pZMlwZd16Zpq4tgVPlYQgMvdLuUNzBCROzMhrg&_nc_zt=23&_nc_ht=scontent.fsgn5-9.fna&_nc_gid=vifG91P9yYnrVvjuod11_w&oh=00_AfgV96CzLO2AM4Pf3ZAy0JSpKT1WvVOUG1s_ese27ke_pw&oe=6916A766",
-          type: "image",
-        },
-      ],
-      likes: 60,
-      comments: 2,
-      reposts: 4,
-      shares: 0,
+  const { posts, isLoading, hasMore, fetchPosts } = usePostStore();
+  const observerElem = useRef(null);
+  const axiosPrivate = useAxiosPrivate();
+
+  const handleObserver = useCallback(
+    (entries) => {
+      const target = entries[0];
+      if (target.isIntersecting && hasMore && !isLoading) {
+        fetchPosts(axiosPrivate); // Gọi hàm fetch từ store
+      }
     },
-    {
-      id: 2,
-      username: "duy",
-      time: "10h",
-      content: "gà",
-      media: [
-        {
-          url: "https://scontent-hkg4-1.xx.fbcdn.net/v/t39.30808-6/577589201_2636352886722699_2463702600817763023_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeHZsFBQ7gD5W20exarSqltnTSrhEpciusVNKuESlyK6xYvHCWMou-GpSzzDa4IFJImPJmklU5r2bSSq1Lyyu5Dt&_nc_ohc=NCnnRsn4DW8Q7kNvwFer0OQ&_nc_oc=AdmUi3AL4Nyo4ZmztKcrwFIYpmdosScuHCw7dCiSfUvKoR-TKwX7hkyo-It8kc90huleImxkWcXmQxx4r23jVrBB&_nc_zt=23&_nc_ht=scontent-hkg4-1.xx&_nc_gid=N7AvmLWv0d_QiHpSIztKmw&oh=00_AfirYzt-5YPHaiL39nyHa856DSHJv3zh2PCrwCcloB0fpQ&oe=69166105",
-          type: "image",
-        },
-      ],
-      likes: 450,
-      comments: 4,
-      reposts: 2,
-      shares: 2,
-    },
-    {
-      id: 3,
-      username: "meomaybe",
-      time: "2h",
-      content: "Mẹ mày béo vcl, t xài 2 tấm hình còn chưa đủ",
-      media: [
-        {
-          url: "https://files.catbox.moe/pv2fm6.png",
-          type: "image",
-        },
-        {
-          url: "https://files.catbox.moe/hfhbro.png",
-          type: "image",
-        },
-      ],
-      likes: 447,
-      comments: 2,
-      reposts: 37,
-      shares: 4,
-    },
-  ]);
+    [isLoading, hasMore, fetchPosts]
+  );
+
+  useEffect(() => {
+    const option = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.9,
+    };
+
+    const observer = new IntersectionObserver(handleObserver, option);
+    const target = observerElem.current;
+
+    if (target) observer.observe(target);
+
+    return () => {
+      if (target) observer.unobserve(target);
+    };
+  }, [handleObserver]);
+
+  useEffect(() => {
+    if (posts.length === 0) {
+      fetchPosts(axiosPrivate);
+    }
+  }, [fetchPosts, posts.length]);
 
   const handleNewPost = (newPost) => {
     const post = {
@@ -73,7 +56,7 @@ const Home = () => {
       reposts: 0,
       shares: 0,
     };
-    setPosts([post, ...posts]);
+    // setPosts([post, ...posts]);
   };
 
   return (
@@ -94,15 +77,20 @@ const Home = () => {
 
         {/* Posts Feed */}
         <div className="space-y-4">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
-            >
-              <ThreadPost post={post} />
-            </div>
-          ))}
+          {posts &&
+            posts.map((post) => (
+              <div
+                key={post.id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+              >
+                <ThreadPost post={post} />
+              </div>
+            ))}
         </div>
+      </div>
+      <div ref={observerElem} style={{ padding: "20px", textAlign: "center" }}>
+        {isLoading && <h4>Đang tải thêm bài viết...</h4>}
+        {!hasMore && !isLoading && <h4>Đã tải hết tất cả bài viết.</h4>}
       </div>
 
       <NewThreadModal

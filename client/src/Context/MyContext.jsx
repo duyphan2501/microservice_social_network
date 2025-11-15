@@ -8,12 +8,14 @@ const ContextProvider = ({ children }) => {
   );
 
   const [verifyUser, setVerifyUser] = useState(null);
-
+  const [chatUser, setChatUser] = useState(null)
   const values = {
     persist,
     setPersist,
     verifyUser,
-    setVerifyUser
+    setVerifyUser,
+    chatUser,
+    setChatUser,
   };
   return <MyContext.Provider value={values}>{children}</MyContext.Provider>;
 };

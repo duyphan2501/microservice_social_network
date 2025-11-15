@@ -3,16 +3,19 @@
   "private": true,
   "workspaces": [
     "gateway",
-    "services/users"
+    "services/users",
+    "services/posts"
   ],
   "scripts": {
     "dev:gateway": "npm --workspace gateway run dev",
     "dev:users": "npm --workspace services/users run dev",
-
+    "dev:posts": "npm --workspace services/posts run dev",
+    
     "start:gateway": "npm --workspace gateway run start",
     "start:users": "npm --workspace services/users run start",
+    "start:posts": "npm --workspace services/posts run start",
 
-    "dev:all": "concurrently -n gateway,users -c green,blue \"npm run dev:gateway\" \"npm run dev:users\""
+    "dev:all": "concurrently -n gateway,users -c green,blue,yellow \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:posts\""
   },
   "engines": {
     "node": ">=18"

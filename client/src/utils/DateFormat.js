@@ -1,4 +1,4 @@
-function formatRelativeTime(dateInput) {
+function formatRelativeTime(dateInput, isLastActive = false) {
   const date = new Date(dateInput);
   const now = new Date();
   const diffMs = now - date;
@@ -7,7 +7,7 @@ function formatRelativeTime(dateInput) {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return "Vừa xong";
+  if (diffSec < 60) return isLastActive ? "1 phút trước" : "Vừa xong";
   if (diffMin < 60) return `${diffMin} phút trước`;
   if (diffHour < 24) return `${diffHour} giờ trước`;
   if (diffDay === 1) return "Hôm qua";
@@ -17,5 +17,4 @@ function formatRelativeTime(dateInput) {
   return `${Math.floor(diffDay / 365)} năm trước`;
 }
 
-
-export {formatRelativeTime}
+export { formatRelativeTime };

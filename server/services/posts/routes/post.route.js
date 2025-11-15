@@ -11,7 +11,7 @@ import { uploadMedia } from "../middlewares/cloudinary.middleware.js";
 
 const postRouter = express.Router();
 
-postRouter.get("/", checkAuth, getPosts);
+postRouter.get("/", getPosts);
 postRouter.post("/create", checkAuth, createNewPost);
 postRouter.post(
   "/upload-media",
@@ -21,6 +21,6 @@ postRouter.post(
 );
 
 postRouter.get("/:id/comments", getPostComments);
-postRouter.get("/:id", checkAuth, getPost);
+postRouter.get("/:id", getPost);
 
 export default postRouter;

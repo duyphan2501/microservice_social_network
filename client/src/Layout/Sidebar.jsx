@@ -4,6 +4,7 @@ import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
 import useSocketStore from "../stores/useSocketStore";
 import Notification from "../Components/Notification";
+import { toast } from "react-toastify";
 
 // Navigation Item Component
 const NavItem = ({
@@ -34,12 +35,11 @@ const NavItem = ({
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const { refreshToken } = useUserStore();
+  const { refreshToken, isLoading } = useUserStore();
   const { persist } = useContext(MyContext);
   const navigator = useNavigate();
   const location = useLocation();
   const user = useUserStore((state) => state.user);
-  const [isLoading, setIsLoading] = useState(true);
   const { connectAllSockets, disconnectAllSockets } = useSocketStore();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -47,34 +47,24 @@ const Sidebar = () => {
 
   useEffect(() => {
     let isMounted = true;
-
     const refresh = async () => {
-      if (user || !persist) {
-        if (isMounted) setIsLoading(false);
-        return;
-      }
-
       try {
+        if (user || !persist) return;
         await refreshToken();
       } catch (error) {
-        if (
-          isMounted &&
-          ["/addresses", "/my-account"].includes(location.pathname)
-        ) {
-          toast.info("Bạn cần phải đăng nhập trước!");
-          navigator("/login", { replace: true });
+        if (isMounted) {
+          if (["/"].includes(location.pathname)) return;
+          toast.error("Bạn cần phải đăng nhập trước!");
+          navigator("/auth/login");
         }
-      } finally {
-        if (isMounted) setIsLoading(false);
       }
     };
-
     refresh();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     let isMounted = false;
@@ -198,7 +188,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {isLoading ? (
+      {isLoading.refresh ? (
         <>
           <div className="fixed inset-0 z-50 opacity-30"></div>
           <div className="fixed inset-0 z-60 bg-white flex items-center justify-center">

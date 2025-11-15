@@ -34,7 +34,6 @@ const NewThreadModal = ({ isOpen, onClose }) => {
         });
 
         uploadedMedia = await uploadPostMedia(formData, axiosPrivate);
-        console.log(uploadedMedia)
       }
 
       await createNewPost(content, uploadedMedia, user.id, axiosPrivate);

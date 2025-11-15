@@ -117,7 +117,7 @@ const ChatPage = () => {
       chatSocket?.off("receive_message", handleReceiveMessage);
       chatSocket?.off("status_updated", updateMessageStatusInState);
     };
-  }, [chatSocket, user.id, updateMessageStatusInState, handleReceiveMessage]);
+  }, [chatSocket, user?.id, updateMessageStatusInState, handleReceiveMessage]);
 
   if (!user) return;
 

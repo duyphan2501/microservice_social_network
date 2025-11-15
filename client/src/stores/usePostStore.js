@@ -11,7 +11,7 @@ export const usePostStore = create((set, get) => ({
   page: 1,
   hasMore: true,
 
-  fetchPosts: async (axiosPrivate) => {
+  fetchPosts: async () => {
     const { isLoading, page, hasMore } = get();
 
     if (isLoading || !hasMore) return;
@@ -19,7 +19,7 @@ export const usePostStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await axiosPrivate.get(`/posts?page=${page}&limit=10`);
+      const response = await API.get(`/posts?page=${page}&limit=10`);
       const newPosts = response.data.posts;
 
       if (newPosts.length === 0) {

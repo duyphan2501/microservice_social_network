@@ -6,7 +6,7 @@ const ContextProvider = ({ children }) => {
   const [persist, setPersist] = useState(
     JSON.parse(localStorage.getItem("persist")) || false
   );
-
+  const [isShowLoginNavigator, setIsShowLoginNavigator] = useState(false)
   const [verifyUser, setVerifyUser] = useState(null);
   const [chatUser, setChatUser] = useState(null)
   const values = {
@@ -16,6 +16,8 @@ const ContextProvider = ({ children }) => {
     setVerifyUser,
     chatUser,
     setChatUser,
+    isShowLoginNavigator,
+    setIsShowLoginNavigator,
   };
   return <MyContext.Provider value={values}>{children}</MyContext.Provider>;
 };

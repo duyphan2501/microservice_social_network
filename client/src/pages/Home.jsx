@@ -4,20 +4,28 @@ import NewThreadModal from "../components/NewThreadModal";
 import usePostStore from "../stores/usePostStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import useUserStore from "../stores/useUserStore";
+import { MyContext } from "../Context/MyContext";
+import { useContext } from "react";
 
 // Main Component
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { posts, isLoading, hasMore, fetchPosts } = usePostStore();
   const observerElem = useRef(null);
-  const axiosPrivate = useAxiosPrivate();
-  const user = useUserStore(state => state.user)
+  const user = useUserStore((state) => state.user);
+  const { setIsShowLoginNavigator, isShowLoginNavigator } =
+    useContext(MyContext);
+
+  const handleClickNewPost = () => {
+    if (!user) setIsShowLoginNavigator(true);
+    else setIsModalOpen(true);
+  };
 
   const handleObserver = useCallback(
     (entries) => {
       const target = entries[0];
       if (target.isIntersecting && hasMore && !isLoading) {
-        fetchPosts(axiosPrivate); // Gọi hàm fetch từ store
+        fetchPosts(); // Gọi hàm fetch từ store
       }
     },
     [isLoading, hasMore, fetchPosts]
@@ -42,7 +50,7 @@ const Home = () => {
 
   useEffect(() => {
     if (posts.length === 0) {
-      fetchPosts(axiosPrivate);
+      fetchPosts();
     }
   }, [fetchPosts, posts.length]);
 
@@ -52,11 +60,11 @@ const Home = () => {
         {/* New Post Button */}
         <div className="bg-white rounded-2xl border border-gray-200 px-4 py-4 mb-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden" >
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
               <img src={user?.avatar_url} alt="" />
             </div>
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleClickNewPost}
               className="flex-grow text-left text-gray-400 text-[15px] py-2"
             >
               What's new?

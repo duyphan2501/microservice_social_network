@@ -1,6 +1,6 @@
 import createHttpError from "http-errors";
 import PostModel from "../models/post.model.js";
-import uploadFiles from "../helpers/upload.js";
+import { uploadFiles, uploadVideoLarge } from "../helpers/upload.js";
 
 const getPosts = async (req, res, next) => {
   try {
@@ -56,7 +56,9 @@ const createNewPost = async (req, res, next) => {
     const { content, media } = req.body;
 
     if (!content && media.length === 0)
-      throw createHttpError.BadRequest("Vui lòng nhập nội dung bài viết hoặc ảnh/video");
+      throw createHttpError.BadRequest(
+        "Vui lòng nhập nội dung bài viết hoặc ảnh/video"
+      );
     const userId = req.user.userId;
 
     const postId = await PostModel.createPost(content, media, userId);
@@ -108,8 +110,10 @@ const uploadPostMedia = async (req, res, next) => {
       const options = {
         folder: POST_VIDEOS_FOLDER,
         resource_type: "video",
+        quality: "auto",
+        fetch_format: "auto",
       };
-      const videoResults = await uploadFiles(videos, options);
+      const videoResults = await uploadVideoLarge(videos, options);
       const mappedVideos = videoResults.map((item) => ({
         media_url: item.url,
         media_public_id: item.publicId,
@@ -117,7 +121,6 @@ const uploadPostMedia = async (req, res, next) => {
       }));
       uploadedMedia.push(...mappedVideos);
     }
-
     res.status(200).json({
       message: "Upload thành công",
       uploadedMedia: uploadedMedia,

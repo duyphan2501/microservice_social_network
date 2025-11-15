@@ -1,12 +1,11 @@
 import { useContext, useEffect } from "react";
 import axiosPrivate from "../API/axiosInstance.js";
-import { MyContext } from "../Context/MyContext.jsx";
 import useUserStore from "../stores/useUserStore.js";
+import { MyContext } from "../Context/MyContext.jsx";
 
 const useAxiosPrivate = () => {
   const { refreshToken } = useUserStore();
   const { persist } = useContext(MyContext);
-
   useEffect(() => {
     const requestInterceptor = axiosPrivate.interceptors.request.use(
       (config) => {
@@ -26,6 +25,10 @@ const useAxiosPrivate = () => {
       (response) => response,
       async (error) => {
         const prevRequest = error?.config;
+        if (prevRequest.url.includes("users/refresh-token")) {
+          prevRequest._retry = true;
+          return Promise.reject(error);
+        }
         if (
           (error.response?.status === 401 || error.response?.status === 403) &&
           !prevRequest._retry &&

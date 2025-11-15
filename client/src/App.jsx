@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 
 import ResetPassword from "./pages/Auth/ResetPassword";
 import { ToastContainer } from "react-toastify";
+import NavigateToLogin from "./components/NavigateToLogin";
 
 function App() {
   return (
@@ -29,15 +30,14 @@ function App() {
           </Route>
           <Route path="/" element={<Sidebar />}>
             <Route index element={<Home />} />
-
             <Route path="inbox" element={<ChatPage />} />
             <Route path="/post/:postId/comments" element={<CommentPage />} />
             <Route path="search" element={<Search />} />
             <Route path="profile" element={<Profile />} />
-
-            <Route path={"inbox"} element={<ChatPage />} />
           </Route>
+          <Route path={"inbox"} element={<ChatPage />} />
         </Routes>
+        <NavigateToLogin />
       </BrowserRouter>
       <ToastContainer
         autoClose={3000}

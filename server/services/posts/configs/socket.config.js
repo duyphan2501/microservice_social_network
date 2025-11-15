@@ -6,7 +6,9 @@ import socketAuth from "../middlewares/socketAuth.js";
 import PostModel from "../models/post.model.js"; 
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '40mb' }));
+app.use(express.urlencoded({ limit: '40mb', extended: true }));
+
 const server = http.createServer(app);
 
 const io = new Server(server, {

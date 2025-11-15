@@ -1,6 +1,6 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs"
+import fs from "fs";
 
 // Thư mục lưu file tạm thời
 const storage = multer.diskStorage({
@@ -22,7 +22,9 @@ const storage = multer.diskStorage({
 // uploadImage.js
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp|jfif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
   const mimetype = allowedTypes.test(file.mimetype.toLowerCase());
   if (extname && mimetype) cb(null, true);
   else cb(new Error("Only image files are allowed"));
@@ -33,7 +35,9 @@ const uploadImg = multer({ storage, fileFilter: imageFilter });
 // uploadFile.js
 const docFilter = (req, file, cb) => {
   const allowedTypes = /pdf|doc|docx|ppt|xlsx|txt/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
   const mimetype = allowedTypes.test(file.mimetype.toLowerCase());
   if (extname && mimetype) cb(null, true);
   else cb(new Error("Only document files are allowed"));
@@ -41,4 +45,35 @@ const docFilter = (req, file, cb) => {
 
 const uploadDoc = multer({ storage, fileFilter: docFilter });
 
-export { uploadImg, uploadDoc };
+export const mediaFilter = (req, file, cb) => {
+  const allowedImageTypes = /jpeg|jpg|png|gif|webp|jfif/;
+  const allowedVideoTypes = /mp4|avi|mkv|mov|wmv|flv|webm/;
+
+  const isImage =
+    allowedImageTypes.test(path.extname(file.originalname).toLowerCase()) &&
+    allowedImageTypes.test(file.mimetype.toLowerCase());
+
+  const isVideo =
+    allowedVideoTypes.test(path.extname(file.originalname).toLowerCase()) &&
+    allowedVideoTypes.test(file.mimetype.toLowerCase());
+
+  if (isImage || isVideo) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Chỉ cho phép file ảnh hoặc video hợp lệ (JPEG, PNG, GIF, MP4, MKV, MOV, v.v.)."
+      )
+    );
+  }
+};
+
+const uploadMedia = multer({
+  storage,
+  limits: {
+    fileSize: 40 * 1024 * 1024,
+  },
+  fileFilter: mediaFilter,
+});
+
+export { uploadImg, uploadDoc, uploadMedia };

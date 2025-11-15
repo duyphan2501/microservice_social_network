@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import EditProfileModal from "../components/EditProfile";
 import ThreadPost from "../components/ThreadPost";
-import NewThreadModal from "../Components/NewThreadModal";
+import NewThreadModal from "../components/NewThreadModal";
 
 // Component ProfileHeader
 const ProfileHeader = ({ profile, onEditClick }) => {

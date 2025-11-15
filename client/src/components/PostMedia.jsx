@@ -23,7 +23,7 @@ const PostMedia = ({ media }) => {
               : "aspect-square"
           }`}
         >
-          {item.type === "video" ? (
+          {item.media_type === "video" ? (
             <video
               src={item.media_url}
               className="w-full h-full object-cover"

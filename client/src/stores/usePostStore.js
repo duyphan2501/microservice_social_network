@@ -11,7 +11,7 @@ export const usePostStore = create((set, get) => ({
   page: 1,
   hasMore: true,
 
-  fetchPosts: async (axiosPrivate) => {
+  fetchPosts: async () => {
     const { isLoading, page, hasMore } = get();
 
     if (isLoading || !hasMore) return;
@@ -19,7 +19,7 @@ export const usePostStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await axiosPrivate.get(`/posts?page=${page}&limit=10`);
+      const response = await API.get(`/posts?page=${page}&limit=10`);
       const newPosts = response.data.posts;
 
       if (newPosts.length === 0) {
@@ -58,6 +58,29 @@ export const usePostStore = create((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  uploadPostMedia: async (formData, axiosPrivate) => {
+    const res = await axiosPrivate.post(`/posts/upload-media`, formData);
+    return res.data.uploadedMedia;
+  },
+
+  createNewPost: async (content, media, userId, axiosPrivate) => {
+    const res = await axiosPrivate.post(`/posts/create`, { content, media });
+
+    const newPost = {
+      id: res.data.postId,
+      user_id: userId,
+      content,
+      media,
+      likes_count: 0,
+      comments_count: 0,
+      created_at: new Date(),
+    };
+
+    set((state) => ({
+      posts: [newPost, ...state.posts],
+    }));
   },
 
   resetPosts: () =>

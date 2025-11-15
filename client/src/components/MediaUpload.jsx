@@ -14,7 +14,7 @@ const MediaUpload = ({ onMediaChange, maxFiles = 10 }) => {
 
     const newPreviews = files.map((file) => ({
       id: Date.now() + Math.random(),
-      file,
+      file, // File gốc được lưu bên trong thuộc tính 'file'
       url: URL.createObjectURL(file),
       type: file.type.startsWith("video/") ? "video" : "image",
     }));

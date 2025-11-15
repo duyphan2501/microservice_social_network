@@ -49,20 +49,13 @@ const useUserStore = create((set, get) => {
       const res = await API.post(`/users/sign-up`, user);
       toast.success(res.data.message);
       set({ user: res.data.user });
-      return { verifyUser: res.data.user, success: true };
+      return { user: res.data.user, success: true };
     } catch (error) {
-      console.log(error);
+      console.error(error);
       if (error.response) {
-        const message = error.response.data?.message || message;
-        if (error.response.status === 401) {
-          const user = error.response.data?.user;
-          toast.info(message || "Please verify your account");
-          return { verifyUser: user, success: false };
-        } else {
-          toast.error(message || "Failed to sign up");
-        }
+        const message = error.response.data?.message || "Failed to sign up";
+        toast.error(message);
       }
-      return { verifyUser: null, success: false };
     } finally {
       set({ isLoading: { signUp: false } });
     }
@@ -244,7 +237,7 @@ const useUserStore = create((set, get) => {
     updatePersonalInfo,
     changePassword,
     getUserInfo,
-    fetchUserIfNeeded
+    fetchUserIfNeeded,
   };
 });
 

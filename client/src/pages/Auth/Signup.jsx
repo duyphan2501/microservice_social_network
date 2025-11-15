@@ -56,16 +56,9 @@ const Signup = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     if (isLoading.signUp) return;
-    const { success, verifyUser } = await signUp(user);
-    if (checkValidAddress(address)) {
-    }
-    if (success) navigate("/verify-account");
-    else {
-      if (verifyUser && !verifyUser?.isVerified) {
-        setVerifyUser(verifyUser);
-        navigate("/verify-account");
-      }
-    }
+    const { success } = await signUp(user);
+
+    if (success) navigate("/auth/login");
   };
 
   return (
@@ -85,12 +78,42 @@ const Signup = () => {
                 type="email"
                 onChange={(e) => handleUserChange("email", e.target.value)}
               />
+
+              <TextField
+                id="outlined-basic"
+                label="Username"
+                variant="outlined"
+                value={user.username}
+                type="text"
+                onChange={(e) => handleUserChange("username", e.target.value)}
+              />
+
               <TextField
                 id="outlined-basic"
                 label="Họ tên"
                 variant="outlined"
                 value={user.fullname}
                 onChange={(e) => handleUserChange("fullname", e.target.value)}
+              />
+
+              <TextField
+                id="outlined-basic"
+                label="Mật khẩu"
+                variant="outlined"
+                value={user.password}
+                type="password"
+                onChange={(e) => handleUserChange("password", e.target.value)}
+              />
+
+              <TextField
+                id="outlined-basic"
+                label="Nhập lại mật khẩu"
+                variant="outlined"
+                value={user.confirmPassword}
+                type="password"
+                onChange={(e) =>
+                  handleUserChange("confirmPassword", e.target.value)
+                }
               />
             </div>
 
@@ -105,7 +128,7 @@ const Signup = () => {
       </div>
       <div className="bg-gray-800 text-center py-2 text-white text-sm">
         Đã có tài khoản?{" "}
-        <a href="/login" className="italic hover:underline">
+        <a href="/auth/login" className="italic hover:underline">
           Đăng nhập ngay
         </a>
       </div>

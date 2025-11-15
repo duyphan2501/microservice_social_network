@@ -1,20 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap&family=Outfit:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900');
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap&family=Outfit:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900");
 @import "tailwindcss";
-@plugin "daisyui";
+/* @plugin "daisyui"; */
 
 @theme {
-  --color-primary: #85ff76 ;
+  --color-primary: #85ff76;
   --color-secondary: #03d9fe;
   --color-dark: #0b0b0b;
   --color-background: #ebeff2;
   --color-highlight: #db4c2e;
-  --color-darkblue: #002B5B;
+  --color-darkblue: #002b5b;
 }
 
 .remember-me .MuiFormControlLabel-label {
-    font-weight: 500 !important;
-    font-size: 14px !important;
-    color: rgb(27, 18, 18);
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  color: rgb(27, 18, 18);
 }
 
 .container {
@@ -26,21 +26,20 @@
 
 @media (max-width: 768px) {
   .container {
-    max-width: 100%; 
+    max-width: 100%;
     padding: 0 12px;
   }
 }
 
 * {
-    font-family: "Inter", sans-serif !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 .title {
-    font-family: "Barlow Condensed", sans-serif !important;
 }
 
 .subtitle {
-    font-family: "Poppins", sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
 }
 
 .money {
@@ -75,7 +74,8 @@
   height: 8px;
 }
 
-.scroll::-webkit-scrollbar-track, .scroll-x::-webkit-scrollbar-track {
+.scroll::-webkit-scrollbar-track,
+.scroll-x::-webkit-scrollbar-track {
   background: none; /* màu nền của track (phần thanh cuộn rãnh) */
 }
 
@@ -98,13 +98,10 @@
 }
 
 input[type="checkbox"] {
-  accent-color: var(--color-darkblue) !important; 
+  accent-color: var(--color-darkblue) !important;
   cursor: pointer;
 }
 
 .MuiPaginationItem-root.Mui-selected {
   background-color: #000 !important;
 }
-
-
-

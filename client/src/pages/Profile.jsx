@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import EditProfileModal from "../Components/EditProfile";
-import ThreadPost from "../Components/ThreadPost";
+import EditProfileModal from "../components/EditProfile";
+import ThreadPost from "../components/ThreadPost";
 import NewThreadModal from "../Components/NewThreadModal";
 
 // Component ProfileHeader

@@ -2,6 +2,7 @@ import { pool } from "../database/connectDB.js";
 
 const PostModel = {
   getPostsWithMedia: async (limit, offset, currentUserId) => {
+    console.log(currentUserId)
     // 1. Lấy danh sách bài đăng + trạng thái đã like chưa
     const postsQuery = `
       SELECT 
@@ -94,7 +95,7 @@ const PostModel = {
         mediaItem.media_url,
         mediaItem.media_public_id,
         mediaItem.media_type,
-        mediaItem.display_order || index+1,
+        mediaItem.display_order || index + 1,
       ]);
 
       const mediaQuery = `
@@ -106,6 +107,68 @@ const PostModel = {
     }
 
     return postId;
+  },
+
+  toggleLike: async (postId, userId) => {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Kiểm tra đã like chưa
+      const [rows] = await connection.query(
+        `SELECT * FROM likes WHERE post_id = ? AND user_id = ?`,
+        [postId, userId]
+      );
+
+      let liked = false;
+
+      if (rows.length > 0) {
+        // Unlike
+        await connection.query(
+          `DELETE FROM likes WHERE post_id = ? AND user_id = ?`,
+          [postId, userId]
+        );
+
+        await connection.query(
+          `UPDATE posts SET likes_count = likes_count - 1 WHERE id = ?`,
+          [postId]
+        );
+
+        liked = false;
+      } else {
+        // Like
+        await connection.query(
+          `INSERT INTO likes (post_id, user_id) VALUES (?, ?)`,
+          [postId, userId]
+        );
+
+        await connection.query(
+          `UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?`,
+          [postId]
+        );
+
+        liked = true;
+      }
+
+      // Lấy likes_count mới nhất để trả về FE hoặc emit socket
+      const [[post]] = await connection.query(
+        `SELECT likes_count FROM posts WHERE id = ?`,
+        [postId]
+      );
+
+      await connection.commit();
+
+      return {
+        liked,
+        likes_count: post.likes_count,
+      };
+    } catch (err) {
+      await connection.rollback();
+      console.error("Toggle like error:", err);
+      throw err;
+    } finally {
+      connection.release();
+    }
   },
 };
 

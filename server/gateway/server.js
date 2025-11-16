@@ -1,26 +1,23 @@
-import express from "express";
-import morgan from "morgan";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import { app, server } from "./config/socket.config.js";
+import morgan from "morgan";
 import cors from "cors";
-import dotenv from "dotenv";
+import ENV from "./helpers/env.helper.js";
 
-dotenv.config({ quiet: true });
-const app = express();
+app.use(morgan("tiny"));
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [ENV.CLIENT_URL],
     credentials: true,
   })
 );
-app.use(morgan("tiny"));
 
-const PORT = process.env.GATEWAY_PORT || 3000;
-const USER_TARGET = process.env.USER_TARGET || "http://localhost:3001";
-const CHAT_TARGET = process.env.CHAT_TARGET || "http://localhost:3002";
-const FRIEND_TARGET = process.env.FRIEND_TARGET || "http://localhost:3003";
-const POST_TARGET = process.env.POST_TARGET || "http://localhost:3004";
-const NOTIFICATION_TARGET =
-  process.env.NOTIFICATION_TARGET || "http://localhost:3005";
+const PORT = ENV.GATEWAY_PORT || 3000;
+const USER_TARGET = ENV.USER_TARGET || "http://localhost:3001";
+const CHAT_TARGET = ENV.CHAT_TARGET || "http://localhost:3002";
+const FRIEND_TARGET = ENV.FRIEND_TARGET || "http://localhost:3003";
+const POST_TARGET = ENV.POST_TARGET || "http://localhost:3004";
+const NOTIFICATION_TARGET = ENV.NOTIFICATION_TARGET || "http://localhost:3005";
 
 app.get("/health", (_, res) => res.json({ ok: true, service: "gateway" }));
 
@@ -76,4 +73,4 @@ app.use(
   })
 );
 
-app.listen(PORT, () => console.log(`API Gateway on ${PORT}`));
+server.listen(PORT, () => console.log(`API Gateway on ${PORT}`));

@@ -1,18 +1,6 @@
 import { pool } from "../database/connectDB.js";
 
 const MessageModel = {
-  /**
-   * Lưu một tin nhắn mới cùng với các file media liên quan vào cơ sở dữ liệu.
-   * Thực hiện trong một transaction để đảm bảo tính nhất quán (tùy thuộc vào cách bạn quản lý DB).
-   *
-   * @param {object} messageData - Dữ liệu tin nhắn.
-   * @param {number} messageData.conversationId - ID cuộc hội thoại.
-   * @param {number} messageData.senderId - ID người gửi.
-   * @param {string} [messageData.content] - Nội dung tin nhắn (có thể null nếu chỉ có media).
-   * @param {'text' | 'image'} [messageData.type] - Loại tin nhắn.
-   * @param {Array<{url: string, type: 'image' | 'video' | 'file'}>} [messageData.media] - Mảng các file media.
-   * @returns {Promise<number|null>} ID của tin nhắn mới được tạo, hoặc null nếu thất bại.
-   */
   saveNewMessage: async (messageData) => {
     const {
       conversationId,
@@ -36,7 +24,6 @@ const MessageModel = {
         VALUES (?, ?, ?, ?, ?)
       `;
       const [messageResult] = await connection.query(messageInsertQuery, [
-        // <-- Dùng connection
         conversationId,
         senderId,
         content,
@@ -103,12 +90,6 @@ const MessageModel = {
     }
   },
 
-  /**
-   * Lấy chi tiết một tin nhắn cụ thể bao gồm media và số lượng người đã xem.
-   *
-   * @param {number} messageId - ID của tin nhắn cần lấy.
-   * @returns {Promise<object|null>} Đối tượng tin nhắn hoàn chỉnh, hoặc null nếu không tìm thấy.
-   */
   getMessageById: async (messageId) => {
     const query = `
       SELECT 
@@ -147,14 +128,6 @@ const MessageModel = {
     return message;
   },
 
-  /**
-   * Cập nhật trạng thái của một tin nhắn (ví dụ: 'delivered', 'read') cho một người dùng cụ thể.
-   *
-   * @param {number} messageId - ID của tin nhắn.
-   * @param {number} userId - ID của người dùng nhận.
-   * @param {'sent' | 'delivered' | 'read'} status - Trạng thái mới.
-   * @returns {Promise<boolean>} True nếu cập nhật thành công, false nếu không có dòng nào bị ảnh hưởng.
-   */
   markMessageStatus: async (messageId, userId, status) => {
     const query = `
       UPDATE message_statuses
@@ -165,7 +138,6 @@ const MessageModel = {
       WHERE message_id = ? AND receiver_id = ?
     `;
 
-    // Giả định `pool` là đối tượng kết nối DB của bạn
     const [result] = await pool.query(query, [
       status,
       status,

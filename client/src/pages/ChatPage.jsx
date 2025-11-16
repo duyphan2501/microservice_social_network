@@ -18,7 +18,7 @@ const ChatPage = () => {
   const {chatUser, setChatUser} = useContext(MyContext)
 
   const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const chatSocket = useSocketStore((state) => state.chatSocket);
+  const mainSocket = useSocketStore((state) => state.mainSocket);
   const { getUserInfo } = useUserStore();
   const { getConversations } = useConversationStore();
   const axiosPrivate = useAxiosPrivate();
@@ -110,14 +110,14 @@ const ChatPage = () => {
   );
 
   useEffect(() => {
-    if (!chatSocket) return;
-    chatSocket?.on("receive_message", handleReceiveMessage);
-    chatSocket?.on("status_updated", updateMessageStatusInState);
+    if (!mainSocket) return;
+    mainSocket?.on("receive_message", handleReceiveMessage);
+    mainSocket?.on("status_updated", updateMessageStatusInState);
     return () => {
-      chatSocket?.off("receive_message", handleReceiveMessage);
-      chatSocket?.off("status_updated", updateMessageStatusInState);
+      mainSocket?.off("receive_message", handleReceiveMessage);
+      mainSocket?.off("status_updated", updateMessageStatusInState);
     };
-  }, [chatSocket, user?.id, updateMessageStatusInState, handleReceiveMessage]);
+  }, [mainSocket, user?.id, updateMessageStatusInState, handleReceiveMessage]);
 
   if (!user) return;
 
@@ -200,7 +200,7 @@ const ChatPage = () => {
       </section>
       {/* right */}
       <section className="flex-1">
-        <ChatMain chatUser={chatUser} conservationId={selectedConversationId} />
+        <ChatMain chatUser={chatUser} conversationId={selectedConversationId} />
       </section>
     </div>
   );

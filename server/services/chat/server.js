@@ -3,10 +3,13 @@ import { checkConnection } from "./database/connectDB.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import cookieParser from "cookie-parser";
 import ENV from "./helpers/env.helper.js";
-import { app, server } from "./configs/socket.config.js";
 import conversationRouter from "./routes/conversation.route.js";
 import messageRouter from "./routes/message.route.js";
+import express from "express"
 
+const app = express()
+
+app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
 
@@ -19,7 +22,7 @@ app.use("/messages", messageRouter);
 
 app.use(errorHandler);
 
-server.listen(PORT, async () => {
+app.listen(PORT, async () => {
   console.log(`Chat service on ${PORT}`);
   await checkConnection();
 });

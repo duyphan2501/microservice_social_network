@@ -9,15 +9,16 @@ import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useSocketStore from "../../stores/useSocketStore";
 import useMessageStore from "../../stores/useMessageStore";
 
-const ChatMain = ({ chatUser, conservationId }) => {
+const ChatMain = ({ chatUser, conversationId }) => {
   const user = useUserStore((state) => state.user); // currentUser
   const { getConversationMessages } = useConversationStore();
-  const { uploadMessageImages } = useMessageStore();
+  const { uploadMessageImages, sendMessage, updateMessageStatus } =
+    useMessageStore();
   const axiosPrivate = useAxiosPrivate();
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
-  // Lấy instance chatSocket từ store
-  const chatSocket = useSocketStore((state) => state.chatSocket);
+  // Lấy instance mainSocket từ store
+  const mainSocket = useSocketStore((state) => state.mainSocket);
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
 
   // Cuộn xuống cuối danh sách tin nhắn khi có tin nhắn mới
@@ -28,7 +29,7 @@ const ChatMain = ({ chatUser, conservationId }) => {
   // Tải tin nhắn từ API ban đầu
   const fetchedMessages = async (limit = 20, beforeId = undefined) => {
     const data = await getConversationMessages(
-      conservationId,
+      conversationId,
       limit,
       beforeId,
       axiosPrivate
@@ -37,7 +38,7 @@ const ChatMain = ({ chatUser, conservationId }) => {
     setMessages(data);
   };
 
-  // Hàm cập nhật state tin nhắn khi có sự kiện chatSocket
+  // Hàm cập nhật state tin nhắn khi có sự kiện mainSocket
   const updateMessageStatusInState = useCallback(({ messageId, status }) => {
     setMessages((prevMessages) =>
       prevMessages.map((msg) =>
@@ -47,15 +48,15 @@ const ChatMain = ({ chatUser, conservationId }) => {
   }, []);
 
   useEffect(() => {
-    // 1. Kết nối và tham gia phòng chat khi conservationId thay đổi
-    if (chatSocket && conservationId) {
-      chatSocket.emit("join_conversation", conservationId);
+    // 1. Kết nối và tham gia phòng chat khi conversationId thay đổi
+    if (mainSocket && conversationId) {
+      mainSocket.emit("join_conversation", conversationId);
     }
 
     // 2. Lắng nghe tin nhắn mới
     const handleReceiveMessage = (newMessage) => {
       if (!newMessage.status) newMessage.status = "sent";
-      if (newMessage.conversation_id !== conservationId) {
+      if (newMessage.conversation_id !== conversationId) {
         return;
       }
       if (newMessage.sender_id === user.id) {
@@ -81,36 +82,36 @@ const ChatMain = ({ chatUser, conservationId }) => {
         });
       } else {
         setMessages((prev) => [...prev, newMessage]);
-
-        chatSocket.emit("update_message_status", {
-          conversationId: conservationId,
-          messageId: newMessage.id,
-          userId: user.id,
-          status: "delivered",
-        });
+        updateMessageStatus(
+          conversationId,
+          newMessage.id,
+          user.id,
+          "delivered",
+          axiosPrivate
+        );
       }
     };
 
     // 3. Lắng nghe cập nhật trạng thái (dấu tích)
     // Dùng useCallback bên trên để đảm bảo useEffect chạy mượt mà
-    chatSocket?.on("receive_message", handleReceiveMessage);
-    chatSocket?.on("status_updated", updateMessageStatusInState);
+    mainSocket?.on("receive_message", handleReceiveMessage);
+    mainSocket?.on("status_updated", updateMessageStatusInState);
 
     return () => {
-      // Dọn dẹp listener khi component unmount hoặc conservationId thay đổi
-      chatSocket?.off("receive_message", handleReceiveMessage);
-      chatSocket?.off("status_updated", updateMessageStatusInState);
+      // Dọn dẹp listener khi component unmount hoặc conversationId thay đổi
+      mainSocket?.off("receive_message", handleReceiveMessage);
+      mainSocket?.off("status_updated", updateMessageStatusInState);
     };
-  }, [conservationId, chatSocket, user.id, updateMessageStatusInState]);
+  }, [conversationId, user.id, updateMessageStatusInState]);
 
   // Effect cho việc cuộn trang và fetch API ban đầu
   useEffect(() => {
     scrollToBottom();
     // Đảm bảo fetch lại messages khi đổi conversation/chatUser
-    if (conservationId) {
+    if (conversationId) {
       fetchedMessages();
     }
-  }, [chatUser, conservationId]);
+  }, [chatUser, conversationId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -130,7 +131,7 @@ const ChatMain = ({ chatUser, conservationId }) => {
     // Tạo đối tượng tin nhắn giả định để hiển thị ngay lập tức
     const tempMessage = {
       id: tempId,
-      conversation_id: conservationId,
+      conversation_id: conversationId,
       sender_id: user.id,
       content: content,
       type: images.length > 0 ? "image" : "text",
@@ -150,22 +151,17 @@ const ChatMain = ({ chatUser, conservationId }) => {
       });
 
       const uploadedImages = await uploadMessageImages(formData, axiosPrivate);
-      console.log("uploaded", uploadedImages)
 
-      // Dữ liệu chuẩn bị gửi lên Socket.IO Server
       const messageData = {
-        conversationId: conservationId,
+        conversationId: conversationId,
         senderId: user.id,
         content: content.trim(),
         type: images.length > 0 ? "image" : "text",
-        // Giả định backend cần list URLs để lưu vào DB
         media: uploadedImages,
+        tempId,
       };
 
-      // Gửi sự kiện 'send_message' lên Backend Socket Server
-      if (chatSocket) {
-        chatSocket.emit("send_message", { ...messageData, tempId });
-      }
+      await sendMessage(messageData, axiosPrivate);
     } catch (error) {
       const lastIndex = messages.length - 1;
       const updatedMessages = [...messages];
@@ -178,18 +174,18 @@ const ChatMain = ({ chatUser, conservationId }) => {
   };
 
   const markChatAsRead = () => {
-    if (!chatSocket || !user.id || !conservationId || messages.length === 0)
+    if (!mainSocket || !user.id || !conversationId || messages.length === 0)
       return;
-
     const lastMessage = messages[messages.length - 1];
     // Nếu tin nhắn cuối cùng là của người khác và chưa được đọc
     if (lastMessage.sender_id !== user.id && lastMessage.status !== "read") {
-      chatSocket.emit("update_message_status", {
-        conversationId: conservationId,
-        messageId: lastMessage.id,
-        userId: user.id, // ID người nhận (mình)
-        status: "read",
-      });
+      updateMessageStatus(
+        conversationId,
+        lastMessage.id,
+        user.id,
+        "read",
+        axiosPrivate
+      );
     }
   };
 

@@ -40,7 +40,7 @@ const Sidebar = () => {
   const navigator = useNavigate();
   const location = useLocation();
   const user = useUserStore((state) => state.user);
-  const { connectAllSockets, disconnectAllSockets } = useSocketStore();
+  const { connectMainSocket, disconnectMainSocket } = useSocketStore();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotifications] = useState(true);
@@ -72,21 +72,21 @@ const Sidebar = () => {
     if (!user) return;
 
     if (!isMounted) {
-      connectAllSockets();
+      connectMainSocket();
       isMounted = true;
     }
 
     const handleTabClose = () => {
-      disconnectAllSockets();
+      disconnectMainSocket();
     };
 
     window.addEventListener("beforeunload", handleTabClose);
 
     return () => {
       window.removeEventListener("beforeunload", handleTabClose);
-      disconnectAllSockets();
+      disconnectMainSocket();
     };
-  }, [user, connectAllSockets, disconnectAllSockets]);
+  }, [user, connectMainSocket, disconnectMainSocket]);
 
   const navItems = [
     {

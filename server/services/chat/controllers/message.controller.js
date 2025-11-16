@@ -1,5 +1,7 @@
 import createHttpError from "http-errors";
 import uploadFiles from "../helpers/upload.js";
+import { sendQueue } from "../messages/rabbitMQ.js";
+import MessageModel from "../models/message.model.js";
 
 const MESSAGE_IMAGES_FOLDER = "message_images";
 
@@ -33,4 +35,44 @@ const uploadMessageImages = async (req, res, next) => {
   }
 };
 
-export { uploadMessageImages };
+const sendMessage = async (req, res, next) => {
+  try {
+    // messageData: { conversationId, senderId, content, type, media, tempId }
+    const messageData = req.body;
+    const messageId = await MessageModel.saveNewMessage(messageData);
+    const savedMessage = await MessageModel.getMessageById(messageId);
+
+    const eventPayload = {
+      type: "NEW_MESSAGE_SAVED",
+      data: {
+        ...savedMessage,
+        tempId: messageData.tempId,
+      },
+    };
+    await sendQueue("chat_events_to_client", JSON.stringify(eventPayload));
+
+    res.status(201).json({ savedMessage });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateMessageStatus = async (req, res, next) => {
+  try {
+    const { conversationId, messageId, userId, status } = req.body;
+    await MessageModel.markMessageStatus(messageId, userId, status);
+
+    const eventPayload = {
+      type: "MESSAGE_STATUS_UPDATED",
+      data: { conversationId, messageId, status },
+    };
+
+    await sendQueue("chat_events_to_client", JSON.stringify(eventPayload));
+
+    return res.status(200).json({ message: "Cập nhật status thành công" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { uploadMessageImages, sendMessage, updateMessageStatus };

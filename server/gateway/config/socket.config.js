@@ -7,7 +7,7 @@ import socketAuth from "../middlewares/socketAuth.js";
 import {
   consumeQueue,
   sendQueue,
-  subscribeMessage,
+  subscribeDirect,
 } from "../messages/rabbitMQ.js";
 
 const app = express();
@@ -99,14 +99,27 @@ async function connectRabbitMQ() {
       }
     });
 
-    await subscribeMessage("post_events_pubsub", "post_like_updated", async (msg) => {
-      const data = JSON.parse(msg);
-      io.to(`post_${data.postId}`).emit("update_post_likes", data);
-    });
+    await subscribeDirect(
+      "post_events_pubsub",
+      "post_like_updated",
+      async (msg) => {
+        const data = JSON.parse(msg);
+        console.log("update data", data)
+        io.to(`post_${data.postId}`).emit("update_post_likes", data);
+      }
+    );
 
+    await subscribeDirect(
+      "post_events_pubsub",
+      "post_comment_created",
+      async (msg) => {
+        const data = JSON.parse(msg);
+        io.to(`post_${data.postId}`).emit("receive_new_comment", data.comment);
+      }
+    );
   } catch (error) {
     console.error("Error connecting to RabbitMQ in Gateway:", error);
-    setTimeout(connectRabbitMQ, 5000); 
+    setTimeout(connectRabbitMQ, 5000);
   }
 }
 

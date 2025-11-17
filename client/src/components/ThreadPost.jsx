@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { formatRelativeTime } from "../utils/DateFormat";
 import useUserStore from "../stores/useUserStore";
 import PostMedia from "./PostMedia";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { useCallback } from "react";
+import usePostStore from "../stores/usePostStore";
 
 const ThreadPost = ({ post }) => {
   const [liked, setLiked] = useState(post.isLiked || false);
@@ -10,11 +13,14 @@ const ThreadPost = ({ post }) => {
   const navigate = useNavigate();
   const usersCache = useUserStore((state) => state.usersCache);
   const author = usersCache[post.user_id];
-
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
-  };
+  const axiosPrivate = useAxiosPrivate()
+  const {saveLike} = usePostStore()
+  
+  const handleLike = useCallback(async () => {
+    const res = await saveLike(post.id, axiosPrivate);
+    setLiked(res.liked || false);
+    setLikeCount(res.likes_count)
+  }, [liked]);
 
   return (
     <article className="px-4 py-4 hover:bg-gray-50 transition border-b border-gray-200">

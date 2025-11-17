@@ -1,6 +1,7 @@
 import express from "express";
 import checkAuth from "../middlewares/checkAuth.js";
 import {
+  addComment,
   createNewPost,
   getPost,
   getPostComments,
@@ -21,6 +22,7 @@ postRouter.post(
   uploadPostMedia
 );
 postRouter.post("/:postId/like", checkAuth, saveLike);
+postRouter.post("/comments/add", checkAuth, addComment);
 
 postRouter.get("/:id/comments", getPostComments);
 postRouter.get("/:id", checkAuth, getPost);

@@ -10,7 +10,7 @@ import { useContext } from "react";
 // Main Component
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { posts, isLoading, hasMore, fetchPosts } = usePostStore();
+  const { posts, isLoading, hasMore, fetchPosts, } = usePostStore();
   const observerElem = useRef(null);
   const user = useUserStore((state) => state.user);
   const { setIsShowLoginNavigator, isShowLoginNavigator } =

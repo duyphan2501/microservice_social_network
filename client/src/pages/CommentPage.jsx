@@ -9,6 +9,7 @@ import useCommentStore from "../stores/useCommentStore";
 import PostMedia from "../components/PostMedia";
 import useSocketStore from "../stores/useSocketStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import { toast } from "react-toastify";
 
 const CommentPage = () => {
   const navigate = useNavigate();
@@ -20,14 +21,15 @@ const CommentPage = () => {
 
   const { isLoading, getPost, saveLike } = usePostStore();
   const { fetchUserIfNeeded } = useUserStore();
-  const { getPostComments, addCommentToStore } = useCommentStore();
-  const user = useUserStore(state => state.user)
+  const { getPostComments, addComment } = useCommentStore();
+  const user = useUserStore((state) => state.user);
 
   const [post, setPost] = useState(null);
-  const [comments, setComments] = useState(null);
+  const [comments, setComments] = useState([]);
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0);
   const [replyingTo, setReplyingTo] = useState(null);
   const [commentText, setCommentText] = useState("");
 
@@ -41,14 +43,26 @@ const CommentPage = () => {
     setLikeCount(data.likes_count);
   };
 
+  const receiveNewComment = (comment) => {
+    if (postId.toString() === comment.post_id.toString()) {
+      if (comment.user_id === user?.id) {
+        return;
+      }
+      setComments((prev) => [...prev, comment]);
+      setCommentCount(prev => prev+1)
+    }
+  };
+
   useEffect(() => {
     if (mainSocket && postId) {
       mainSocket.emit("join_postRoom", postId);
       mainSocket?.on("update_post_likes", updatePostLikes);
+      mainSocket?.on("receive_new_comment", receiveNewComment);
     }
 
     return () => {
       mainSocket?.off("update_post_likes", updatePostLikes);
+      mainSocket?.off("receive_new_comment", receiveNewComment);
       if (mainSocket && postId) {
         mainSocket.emit("leave_postRoom", postId);
       }
@@ -71,8 +85,8 @@ const CommentPage = () => {
       const finalPost = { ...resPost, author };
       setComments(resComments);
       setPost(finalPost);
-      console.log(finalPost)
       setLikeCount(finalPost.likes_count);
+      setCommentCount(finalPost.comments_count);
       setLiked(resPost.isLiked || false);
     } catch (error) {
       console.error("Failed to fetch post data:", error);
@@ -111,7 +125,6 @@ const CommentPage = () => {
         );
       }
     });
-
     return rootComments;
   };
 
@@ -143,24 +156,40 @@ const CommentPage = () => {
     return () => observer.disconnect();
   }, [commentTree]);
 
-  const handleSubmitComment = async () => {
-    if (!commentText.trim() || !post) return;
+  const handleSubmitComment = async (content) => {
+    if (!content.trim() || !post) return;
 
     // In a real app, this data would go to an API via the store
+    const tempCommentId = `temp_${Date.now()}`;
     const newCommentData = {
-      postId: post.id,
-      parentId: replyingTo || null,
-      content: commentText,
-      // Backend would handle ID, timestamp, username, etc.
+      id: tempCommentId,
+      user_id: user?.id,
+      created_at: new Date().toISOString(),
+      post_id: post.id,
+      parent_comment_id: replyingTo || null,
+      content: content,
     };
+    // update UI immediately
+    setComments((prev) => [...prev, newCommentData]);
+    setCommentCount((prev) => prev + 1);
 
     try {
-      const addedComment = await addCommentToStore(newCommentData);
-
+      const addedCommentFromServer = await addComment(
+        newCommentData.post_id,
+        newCommentData.parent_comment_id,
+        newCommentData.content,
+        axiosPrivate
+      );
+      setComments((prev) =>
+        prev.map((c) => (c.id === tempCommentId ? addedCommentFromServer : c))
+      );
       setCommentText("");
       setReplyingTo(null);
     } catch (error) {
-      console.error("Failed to submit comment:", error);
+      setComments((prev) => prev.filter((c) => c.id !== tempCommentId));
+      setCommentCount((prev) => prev - 1);
+      console.error(error);
+      toast.error("Failed to submit comment:", error);
     }
   };
 
@@ -243,42 +272,8 @@ const CommentPage = () => {
                   >
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
-                  <span className="text-sm">{post.comments_count}</span>
+                  <span className="text-sm">{commentCount}</span>
                 </div>
-
-                <button className="flex items-center gap-2 hover:opacity-70 transition">
-                  <svg
-                    className="w-5 h-5 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <polyline points="17 1 21 5 17 9" />
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                    <polyline points="7 23 3 19 7 15" />
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                  </svg>
-                  {post.reposts > 0 && (
-                    <span className="text-sm">{post.reposts}</span>
-                  )}
-                </button>
-
-                <button className="flex items-center gap-2 hover:opacity-70 transition">
-                  <svg
-                    className="w-5 h-5 text-gray-700"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                  {post.shares > 0 && (
-                    <span className="text-sm">{post.shares}</span>
-                  )}
-                </button>
               </div>
             </div>
           </div>
@@ -296,6 +291,7 @@ const CommentPage = () => {
                 showReplyInput={replyingTo}
                 isLast={index === level0Comments.length - 1}
                 hasMoreSiblings={index < level0Comments.length - 1}
+                onSubmit={handleSubmitComment}
               />
             ))}
           </div>
@@ -312,14 +308,22 @@ const CommentPage = () => {
         {/* Comment Input - Separate rounded box at bottom */}
         <div className="bg-white rounded-b-2xl border border-gray-200 px-4 py-3 mb-4">
           <div className="flex gap-3 items-center">
-            <div className="w-9 h-9 rounded-full bg-gray-300 flex-shrink-0" />
+            <div className="w-9 h-9 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
+              <img
+                src={user?.avatar_url}
+                alt=""
+                className="size-full object-cover"
+              />
+            </div>
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Viết bình luận..."
               className="flex-grow bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyDown={(e) => e.key === "Enter" && handleSubmitComment()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && handleSubmitComment(commentText)
+              }
             />
             <button
               onClick={handleSubmitComment}

@@ -1,7 +1,7 @@
 import createHttpError from "http-errors";
 import PostModel from "../models/post.model.js";
 import { uploadFiles, uploadVideoLarge } from "../helpers/upload.js";
-import { publishMessage } from "../messages/rabbitMQ.js";
+import { publishDirect } from "../messages/rabbitMQ.js";
 
 const getPosts = async (req, res, next) => {
   try {
@@ -139,8 +139,9 @@ const saveLike = async (req, res, next) => {
 
     const result = await PostModel.toggleLike(postId, userId);
 
-    await publishMessage(
+    await publishDirect(
       "post_events_pubsub",
+      "post_like_updated",
       JSON.stringify({ likes_count: result.likes_count, postId })
     );
 
@@ -153,6 +154,35 @@ const saveLike = async (req, res, next) => {
   }
 };
 
+const addComment = async (req, res, next) => {
+  try {
+    const { postId, parentId, content } = req.body;
+
+    if (!postId) throw createHttpError.BadRequest("Thiếu mã bài viết");
+    if (!content) throw createHttpError.BadRequest("Vui lòng nhập bình luận");
+    const userId = req.user?.userId || 0;
+
+    const comment = await PostModel.addNewComment(
+      postId,
+      parentId,
+      content,
+      userId
+    );
+
+    await publishDirect(
+      "post_events_pubsub",
+      "post_comment_created",
+      JSON.stringify({ postId, comment })
+    );
+
+    return res
+      .status(201)
+      .json({ message: "Thêm bình luận thành công", comment });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   getPosts,
   getPost,
@@ -160,4 +190,5 @@ export {
   createNewPost,
   uploadPostMedia,
   saveLike,
+  addComment,
 };

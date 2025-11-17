@@ -2,7 +2,7 @@ import { pool } from "../database/connectDB.js";
 
 const PostModel = {
   getPostsWithMedia: async (limit, offset, currentUserId) => {
-    console.log(currentUserId)
+    console.log(currentUserId);
     // 1. Lấy danh sách bài đăng + trạng thái đã like chưa
     const postsQuery = `
       SELECT 
@@ -165,6 +165,53 @@ const PostModel = {
     } catch (err) {
       await connection.rollback();
       console.error("Toggle like error:", err);
+      throw err;
+    } finally {
+      connection.release();
+    }
+  },
+
+  addNewComment: async (postId, parentId = null, content, userId) => {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const insertQuery = `
+      INSERT INTO comments (post_id, parent_comment_id, content, user_id, created_at)
+      VALUES (?, ?, ?, ?, NOW())
+    `;
+
+      const insertValues = [postId, parentId, content, userId];
+
+      const [insertResult] = await connection.query(insertQuery, insertValues);
+
+      const newCommentId = insertResult.insertId;
+
+      // Add this query to increment the comments_count in the posts table
+      const updateCountQuery = `
+      UPDATE posts
+      SET comments_count = comments_count + 1
+      WHERE id = ?
+    `;
+
+      await connection.query(updateCountQuery, [postId]);
+
+      const [rows] = await connection.query(
+        `SELECT * FROM comments WHERE id = ?`,
+        [newCommentId]
+      );
+
+      if (rows.length === 0) {
+        throw new Error("Failed to retrieve the newly added comment.");
+      }
+
+      const newComment = rows[0];
+      await connection.commit();
+
+      return newComment;
+    } catch (err) {
+      await connection.rollback();
+      console.error("Add comment error:", err);
       throw err;
     } finally {
       connection.release();

@@ -2,6 +2,7 @@
 import FriendModel from "../models/friend.model.js";
 import { FriendEventPublisher } from "../messages/friendEvents.js";
 import userServiceMQ from "../messages/userService.js";
+import createHttpError from "http-errors";
 
 const FriendController = {
   // Gửi lời mời kết bạn
@@ -495,6 +496,22 @@ const FriendController = {
         success: false,
         message: "Failed to get mutual friends",
       });
+    }
+  },
+
+  //Lấy số lượng bạn bè theo userId
+  async getFriendQuantity(req, res) {
+    try {
+      const userId = req.params.userId;
+
+      const count = await FriendModel.countFriends(userId);
+
+      return res.status(200).json({
+        success: true,
+        count,
+      });
+    } catch (error) {
+      throw error;
     }
   },
 };

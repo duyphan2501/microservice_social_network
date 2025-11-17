@@ -116,6 +116,24 @@ const UserModel = {
     const [result] = await pool.query(query, [token]);
     return result.affectedRows;
   },
+
+  updateUserInfo: async (userId, fullname, username, bio, avatar_url) => {
+    const query = `
+      UPDATE users
+      set full_name = ?, username = ?, bio = ?, avatar_url = ?
+      where id = ?
+    `;
+
+    const [result] = await pool.query(query, [
+      fullname,
+      username,
+      bio,
+      avatar_url,
+      userId,
+    ]);
+
+    return result.affectedRows;
+  },
 };
 
 export default UserModel;

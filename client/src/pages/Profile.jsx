@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import EditProfileModal from "../components/EditProfile";
 import ThreadPost from "../components/ThreadPost";
 import NewThreadModal from "../components/NewThreadModal";
+import useUserStore from "../stores/useUserStore.js";
+import useFriendStore from "../stores/useFriendStore.js";
+import useAxiosPrivate from "../hooks/useAxiosPrivate.js";
+import { toast } from "react-toastify";
+import API from "../API/axiosInstance.js";
 
 // Component ProfileHeader
 const ProfileHeader = ({ profile, onEditClick }) => {
@@ -11,13 +16,35 @@ const ProfileHeader = ({ profile, onEditClick }) => {
         {/* Left side - Profile Info */}
         <div className="flex-1">
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0" />
+            {profile?.avatar_url == null ? (
+              <div className="w-20 relative flex justify-center items-center h-20 md:w-24 md:h-24 overflow-hidden rounded-full bg-gray-300 to-pink-500 flex-shrink-0">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="100px"
+                  viewBox="0 -960 960 960"
+                  width="100px"
+                  fill="#797979ff"
+                  className="absolute top-3"
+                >
+                  <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0">
+                <img
+                  src={profile.avatar_url}
+                  alt="avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl md:text-3xl font-bold mb-1 break-words">
-                {profile.name}
+                {profile?.full_name}
               </h1>
-              <p className="text-gray-600 mb-3">@{profile.username}</p>
-              {profile.bio && (
+              <p className="text-gray-600 mb-3">@{profile?.username}</p>
+              {profile?.bio && (
                 <p className="text-sm md:text-base text-gray-700 mb-3 whitespace-pre-line">
                   {profile.bio}
                 </p>
@@ -25,15 +52,9 @@ const ProfileHeader = ({ profile, onEditClick }) => {
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-gray-600">
                   <span className="font-semibold text-black">
-                    {profile.followers}
+                    {profile?.friends}
                   </span>{" "}
-                  followers
-                </span>
-                <span className="text-gray-600">
-                  <span className="font-semibold text-black">
-                    {profile.following}
-                  </span>{" "}
-                  following
+                  friends
                 </span>
               </div>
             </div>
@@ -42,9 +63,9 @@ const ProfileHeader = ({ profile, onEditClick }) => {
 
         {/* Right side - Social Links */}
         <div className="flex items-center gap-3 justify-center md:justify-start">
-          {profile.socialLinks?.instagram && (
+          {profile?.socialLinks?.instagram && (
             <a
-              href={profile.socialLinks.instagram}
+              href={profile?.socialLinks?.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition"
@@ -54,9 +75,9 @@ const ProfileHeader = ({ profile, onEditClick }) => {
               </svg>
             </a>
           )}
-          {profile.socialLinks?.website && (
+          {profile?.socialLinks?.website && (
             <a
-              href={profile.socialLinks.website}
+              href={profile?.socialLinks?.website}
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 border-2 border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition"
@@ -136,136 +157,129 @@ const NewPostBox = ({ onOpenModal }) => {
 };
 
 // Mock API Service
-const ProfileAPI = {
-  getProfile: async (userId) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return {
-      id: userId,
-      name: "Duc Do",
-      username: "ducx3452025",
-      bio: "Passionate developer 💻 | Tech enthusiast 🚀 | Coffee lover ☕",
-      followers: 1234,
-      following: 567,
-      interests: "Technology, Design, Coffee",
-      instagramBadge: true,
-      privacy: "public",
-      socialLinks: {
-        instagram: "https://instagram.com",
-        website: "https://example.com",
-      },
-    };
-  },
+// const ProfileAPI = {
+//   getProfile: async (profileId) => {
+//     await new Promise((resolve) => setTimeout(resolve, 500));
+//     return {
+//       id: userId,
+//       name: "Duc Do",
+//       username: "ducx3452025",
+//       bio: "Passionate developer 💻 | Tech enthusiast 🚀 | Coffee lover ☕",
+//       followers: 1234,
+//       following: 567,
+//       interests: "Technology, Design, Coffee",
+//       instagramBadge: true,
+//       privacy: "public",
+//       socialLinks: {
+//         instagram: "https://instagram.com",
+//         website: "https://example.com",
+//       },
+//     };
+//   },
 
-  getPosts: async (userId, tab = "threads") => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+//   getPosts: async (userId, tab = "threads") => {
+//     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const posts = [
-      {
-        id: 1,
-        username: "ducx3452025",
-        time: "2h",
-        content:
-          "Just finished building an awesome React component with Tailwind CSS! 🎉 The responsiveness is looking great on all devices.",
-        likes: 42,
-        comments: 8,
-        reposts: 3,
-        shares: 1,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800",
-          },
-        ],
-      },
-      {
-        id: 2,
-        username: "ducx3452025",
-        time: "5h",
-        content:
-          "Working on API integration today. Here are some tips for handling async operations in React:\n\n1. Always use try-catch blocks\n2. Show loading states\n3. Handle errors gracefully\n4. Use proper state management",
-        likes: 89,
-        comments: 15,
-        reposts: 7,
-        shares: 4,
-        media: [],
-      },
-      {
-        id: 3,
-        username: "ducx3452025",
-        time: "1d",
-        content:
-          "Beautiful sunset coding session 🌅 Multiple monitors setup for maximum productivity!",
-        likes: 156,
-        comments: 23,
-        reposts: 12,
-        shares: 8,
-        media: [
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800",
-          },
-          {
-            type: "image",
-            url: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800",
-          },
-        ],
-      },
-    ];
+//     const posts = [
+//       {
+//         id: 1,
+//         username: "ducx3452025",
+//         time: "2h",
+//         content:
+//           "Just finished building an awesome React component with Tailwind CSS! 🎉 The responsiveness is looking great on all devices.",
+//         likes: 42,
+//         comments: 8,
+//         reposts: 3,
+//         shares: 1,
+//         media: [
+//           {
+//             type: "image",
+//             url: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800",
+//           },
+//         ],
+//       },
+//       {
+//         id: 2,
+//         username: "ducx3452025",
+//         time: "5h",
+//         content:
+//           "Working on API integration today. Here are some tips for handling async operations in React:\n\n1. Always use try-catch blocks\n2. Show loading states\n3. Handle errors gracefully\n4. Use proper state management",
+//         likes: 89,
+//         comments: 15,
+//         reposts: 7,
+//         shares: 4,
+//         media: [],
+//       },
+//       {
+//         id: 3,
+//         username: "ducx3452025",
+//         time: "1d",
+//         content:
+//           "Beautiful sunset coding session 🌅 Multiple monitors setup for maximum productivity!",
+//         likes: 156,
+//         comments: 23,
+//         reposts: 12,
+//         shares: 8,
+//         media: [
+//           {
+//             type: "image",
+//             url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800",
+//           },
+//           {
+//             type: "image",
+//             url: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800",
+//           },
+//         ],
+//       },
+//     ];
 
-    return posts;
-  },
+//     return posts;
+//   },
 
-  createPost: async (content) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return {
-      id: Date.now(),
-      username: "ducx3452025",
-      time: "now",
-      content,
-      likes: 0,
-      comments: 0,
-      reposts: 0,
-      shares: 0,
-      media: [],
-    };
-  },
+//   createPost: async (content) => {
+//     await new Promise((resolve) => setTimeout(resolve, 500));
+//     return {
+//       id: Date.now(),
+//       username: "ducx3452025",
+//       time: "now",
+//       content,
+//       likes: 0,
+//       comments: 0,
+//       reposts: 0,
+//       shares: 0,
+//       media: [],
+//     };
+//   },
 
-  updateProfile: async (profileData) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return { success: true, data: profileData };
-  },
-};
+//   updateProfile: async (profileData) => {
+//     await new Promise((resolve) => setTimeout(resolve, 500));
+//     return { success: true, data: profileData };
+//   },
+// };
 
 // Main Profile Component
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [activeTab, setActiveTab] = useState("threads");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isNewThreadModalOpen, setIsNewThreadModalOpen] = useState(false);
 
-  useEffect(() => {
-    loadProfileData();
-  }, []);
+  const refreshUserInfo = useUserStore((s) => s.refreshUserInfo);
 
-  useEffect(() => {
-    loadPosts(activeTab);
-  }, [activeTab]);
-
-  const loadProfileData = async () => {
-    try {
-      setLoading(true);
-      const profileData = await ProfileAPI.getProfile("ducx3452025");
-      setProfile(profileData);
-      const postsData = await ProfileAPI.getPosts("ducx3452025", "threads");
-      setPosts(postsData);
-    } catch (error) {
-      console.error("Error loading profile:", error);
-    } finally {
-      setLoading(false);
-    }
+  const axiosPrivate = useAxiosPrivate();
+  const user = useUserStore((s) => s.user);
+  const countFriends = useFriendStore((s) => s.countFriends);
+  const getProfile = async (userId) => {
+    const countFriend = await countFriends(userId, axiosPrivate);
+    const data = { ...user, friends: countFriend };
+    setProfile(data);
   };
+
+  useEffect(() => {
+    getProfile(user?.id);
+  }, [user]);
 
   const loadPosts = async (tab) => {
     try {
@@ -287,16 +301,34 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async (updatedProfile) => {
     try {
-      await ProfileAPI.updateProfile(updatedProfile);
-      setProfile({ ...profile, ...updatedProfile });
+      const formData = new FormData();
+      formData.append("userId", user?.id);
+
+      for (const key in updatedProfile) {
+        if (updatedProfile[key] !== null) {
+          formData.append(key, updatedProfile[key]);
+        }
+      }
+
+      const res = await axiosPrivate.put("/users/update-info", formData);
+
+      if (res.data.success) {
+        toast.success("Update succesfully!");
+        await refreshUserInfo(user?.id, axiosPrivate);
+      }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error(error);
+      const message =
+        error?.response.data.message || "Update user info failed!";
+      toast.error(message);
     }
   };
 
   const handleNavigate = (url) => {
     console.log("Navigate to:", url);
   };
+
+  //Tổng hợp API cho trang Profile
 
   if (loading) {
     return (
@@ -315,24 +347,15 @@ const ProfilePage = () => {
 
       <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between">
         <h1 className="text-xl font-bold">Profile</h1>
-        <button className="p-2 hover:bg-gray-100 rounded-lg">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
-          </svg>
-        </button>
       </div>
 
       {/* Content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {profile && (
-            <ProfileHeader
-              profile={profile}
-              onEditClick={() => setIsEditModalOpen(true)}
-            />
-          )}
+          <ProfileHeader
+            profile={profile}
+            onEditClick={() => setIsEditModalOpen(true)}
+          />
 
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

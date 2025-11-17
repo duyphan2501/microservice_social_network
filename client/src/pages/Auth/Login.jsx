@@ -21,7 +21,7 @@ const Login = () => {
   };
 
   const { login, isLoading } = useUserStore();
-  const { setVerifyUser, setPersist } = useContext(MyContext);
+  const { setVerifyUser, persist, setPersist } = useContext(MyContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -68,7 +68,7 @@ const Login = () => {
           <FormControlLabel
             control={
               <Checkbox
-                defaultChecked
+                checked={persist}
                 onChange={onPersistChange}
                 sx={{
                   color: "black", // màu viền khi chưa chọn

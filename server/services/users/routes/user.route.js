@@ -7,12 +7,20 @@ import {
   refreshToken,
   signUp,
   resetPassword,
+  updateUserInfo,
 } from "../controllers/user.controller.js";
 import checkAuth from "../../chat/middlewares/checkAuth.js";
+import { uploadImg } from "../middlewares/cloudinary.middleware.js";
 
 const router = express.Router();
 
 router.post("/login", login);
+router.put(
+  "/update-info",
+  checkAuth,
+  uploadImg.single("avatarFile"),
+  updateUserInfo
+);
 router.post("/sign-up", signUp);
 router.put("/refresh-token", refreshToken);
 router.delete("/logout", checkAuth, logout);

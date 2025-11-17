@@ -17,7 +17,7 @@ app.use(cookieParser());
 
 app.get("/health", (_, res) => res.json({ success: true, service: "friend" }));
 
-app.use("/friends", friendRouter);
+app.use("/", friendRouter);
 
 app.use(errorHandler);
 

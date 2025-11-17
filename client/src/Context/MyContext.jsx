@@ -6,9 +6,9 @@ const ContextProvider = ({ children }) => {
   const [persist, setPersist] = useState(
     JSON.parse(localStorage.getItem("persist")) || false
   );
-  const [isShowLoginNavigator, setIsShowLoginNavigator] = useState(false)
+  const [isShowLoginNavigator, setIsShowLoginNavigator] = useState(false);
   const [verifyUser, setVerifyUser] = useState(null);
-  const [chatUser, setChatUser] = useState(null)
+  const [chatUser, setChatUser] = useState(null);
   const values = {
     persist,
     setPersist,

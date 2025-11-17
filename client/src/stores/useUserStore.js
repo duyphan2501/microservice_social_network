@@ -8,6 +8,7 @@ const useUserStore = create((set, get) => {
     try {
       const res = await API.post(`/users/login`, user);
       set({ user: res.data.user, accessToken: res.data.accessToken });
+
       toast.success(res.data.message);
       return { success: true, loginUser: res.data.user };
     } catch (error) {
@@ -27,7 +28,7 @@ const useUserStore = create((set, get) => {
     }
   };
 
-  const refreshToken = async () => {
+  const refreshToken = async (axiosPrivate, persist) => {
     set({ isLoading: { refresh: true } });
     try {
       const res = await API.put(`/users/refresh-token`);
@@ -186,6 +187,20 @@ const useUserStore = create((set, get) => {
     }
   };
 
+  const refreshUserInfo = async (userId, axiosPrivate) => {
+    try {
+      const res = await axiosPrivate.get(`/users/get-info/${userId}`);
+      set(() => ({
+        user: res.data.user,
+      }));
+      return res.data.user;
+    } catch (error) {
+      const message = error.response?.data?.message;
+      console.error(error);
+      toast.error(message);
+    }
+  };
+
   const fetchUserIfNeeded = async (userId) => {
     const { usersCache } = get();
 
@@ -238,6 +253,7 @@ const useUserStore = create((set, get) => {
     changePassword,
     getUserInfo,
     fetchUserIfNeeded,
+    refreshUserInfo,
   };
 });
 

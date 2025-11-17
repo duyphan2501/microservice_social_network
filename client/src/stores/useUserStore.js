@@ -164,7 +164,7 @@ const useUserStore = create((set, get) => {
   const changePassword = async (formData, axiosPrivate) => {
     set({ isLoading: { change: true } });
     try {
-      const res = await axiosPrivate.put(`/users/change-password`, formData);
+      const res = await API.put(`/users/change-password`, formData);
       toast.success(res.data.message);
       return true;
     } catch (error) {

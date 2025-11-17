@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Heart, ArrowLeft, MoreHorizontal } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Comment from "../components/Comment";
@@ -10,6 +17,7 @@ import PostMedia from "../components/PostMedia";
 import useSocketStore from "../stores/useSocketStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { toast } from "react-toastify";
+import { MyContext } from "../Context/MyContext";
 
 const CommentPage = () => {
   const navigate = useNavigate();
@@ -23,6 +31,7 @@ const CommentPage = () => {
   const { fetchUserIfNeeded } = useUserStore();
   const { getPostComments, addComment } = useCommentStore();
   const user = useUserStore((state) => state.user);
+  const { setIsShowLoginNavigator } = useContext(MyContext);
 
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -49,7 +58,7 @@ const CommentPage = () => {
         return;
       }
       setComments((prev) => [...prev, comment]);
-      setCommentCount(prev => prev+1)
+      setCommentCount((prev) => prev + 1);
     }
   };
 
@@ -70,6 +79,10 @@ const CommentPage = () => {
   }, [postId, mainSocket]);
 
   const handleLike = useCallback(async () => {
+    if (!user) {
+      setIsShowLoginNavigator(true);
+      return;
+    }
     const res = await saveLike(postId, axiosPrivate);
     setLiked(res.liked || false);
   }, [liked]);
@@ -99,6 +112,10 @@ const CommentPage = () => {
 
   const handleReply = useCallback(
     (commentId) => {
+      if (!user) {
+        setIsShowLoginNavigator(true);
+        return;
+      }
       if (replyingTo !== commentId) {
         setReplyingTo(commentId);
       }
@@ -318,6 +335,7 @@ const CommentPage = () => {
             <input
               type="text"
               value={commentText}
+              disabled={!user}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Viết bình luận..."
               className="flex-grow bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

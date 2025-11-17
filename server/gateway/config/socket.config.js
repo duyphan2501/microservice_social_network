@@ -25,11 +25,18 @@ io.use(socketAuth);
 const userSocketMap = {};
 
 io.on("connection", (socket) => {
-  const userId = socket.userId || "guest_user";
+  // socket.userId sẽ là userId thật (string) hoặc null (nếu là khách)
+  const userId = socket.userId;
 
+  console.log(
+    `Socket connected. User ID: ${userId ? userId : "Guest"}, Socket ID: ${
+      socket.id
+    }`
+  );
+
+  // --- Xử lý cho người dùng ĐÃ ĐĂNG NHẬP ---
   if (userId) {
     userSocketMap[userId] = socket.id;
-    console.log("Socket connected user id =", userId, "Socket ID =", socket.id);
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("join_conversation", (conversationId) => {
@@ -41,39 +48,47 @@ io.on("connection", (socket) => {
       socket.leave(conversationId);
       console.log(`User ${socket.id} left room ${conversationId}`);
     });
+  }
 
-    socket.on("join_postRoom", (postId) => {
-      console.log(`User ${socket.id} joining room post_${postId}`);
-      socket.join(`post_${postId}`);
-    });
+  // --- Logic CHUNG cho cả KHÁCH và USER ĐĂNG NHẬP (VD: Public Post Updates) ---
 
-    // Lắng nghe yêu cầu rời phòng (khi user đóng tab hoặc chuyển trang)
-    socket.on("leave_postRoom", (postId) => {
-      console.log(`User ${socket.id} leaving room post_${postId}`);
-      socket.leave(`post_${postId}`);
-    });
+  socket.on("join_postRoom", (postId) => {
+    // Cả khách và user đều có thể join room này để nhận realtime like/comment
+    console.log(
+      `User ${userId ? userId : "Guest"} joining room post_${postId}`
+    );
+    socket.join(`post_${postId}`);
+  });
 
-    socket.on("disconnect", async () => {
-      console.log(
-        `User disconnected. Socket ID: ${socket.id}, User ID: ${userId}`
-      );
-      if (userSocketMap[userId]) {
-        delete userSocketMap[userId];
-      }
+  socket.on("leave_postRoom", (postId) => {
+    console.log(`User ${socket.id} leaving room post_${postId}`);
+    socket.leave(`post_${postId}`);
+  });
+
+  // --- Xử lý sự kiện ngắt kết nối (Disconnect) ---
+  socket.on("disconnect", async () => {
+    console.log(
+      `User disconnected. Socket ID: ${socket.id}, User ID: ${
+        userId ? userId : "Guest"
+      }`
+    );
+
+    // Chỉ xử lý logic offline cho người dùng ĐÃ ĐĂNG NHẬP
+    if (userId && userSocketMap[userId]) {
+      delete userSocketMap[userId];
       io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+      // Cập nhật trạng thái hoạt động lần cuối (chỉ cho user đăng nhập)
       await sendQueue(
         "user_last_active_updates",
-        JSON.stringify({ userId: socket.userId, timestamp: Date.now() })
+        JSON.stringify({ userId: userId, timestamp: Date.now() })
       );
       io.emit("user_last_active_updates", {
-        userId: socket.userId,
+        userId: userId,
         timestamp: Date.now(),
       });
-    });
-  } else {
-    console.log("A client connected without a valid userId. Disconnecting.");
-    socket.disconnect(true);
-  }
+    }
+  });
 });
 
 async function connectRabbitMQ() {
@@ -104,7 +119,7 @@ async function connectRabbitMQ() {
       "post_like_updated",
       async (msg) => {
         const data = JSON.parse(msg);
-        console.log("update data", data)
+        console.log("update data", data);
         io.to(`post_${data.postId}`).emit("update_post_likes", data);
       }
     );

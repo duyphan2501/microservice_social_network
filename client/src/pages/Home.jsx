@@ -13,8 +13,9 @@ const Home = () => {
   const { posts, isLoading, hasMore, fetchPosts, } = usePostStore();
   const observerElem = useRef(null);
   const user = useUserStore((state) => state.user);
-  const { setIsShowLoginNavigator, isShowLoginNavigator } =
+  const { setIsShowLoginNavigator } =
     useContext(MyContext);
+  const axiosPrivate = useAxiosPrivate()
 
   const handleClickNewPost = () => {
     if (!user) setIsShowLoginNavigator(true);
@@ -50,7 +51,7 @@ const Home = () => {
 
   useEffect(() => {
     if (posts.length === 0) {
-      fetchPosts();
+      fetchPosts(axiosPrivate);
     }
   }, [fetchPosts, posts.length]);
 

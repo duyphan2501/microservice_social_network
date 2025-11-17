@@ -28,7 +28,7 @@ const useUserStore = create((set, get) => {
     }
   };
 
-  const refreshToken = async (axiosPrivate, persist) => {
+  const refreshToken = async () => {
     set({ isLoading: { refresh: true } });
     try {
       const res = await API.put(`/users/refresh-token`);

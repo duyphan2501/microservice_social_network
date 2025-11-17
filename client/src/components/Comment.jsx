@@ -1,27 +1,31 @@
-import { Heart } from "lucide-react";
 import { useState } from "react";
 import useUserStore from "../stores/useUserStore";
 import { formatRelativeTime } from "../utils/DateFormat";
 
 // Component nhập phản hồi tái sử dụng
 const ReplyInput = ({ username, className = "", onSubmit }) => {
-  const user = useUserStore(state => state.user)
-  const [content, setContent] = useState("")
+  const user = useUserStore((state) => state.user);
+  const [content, setContent] = useState("");
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(content);
-    setContent("")
+    setContent("");
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <form className={`flex gap-2 ${className}`} onSubmit={handleSubmit}>
-      <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden" >
+      <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
         <img src={user.avatar_url} alt="" />
       </div>
 
       <input
         type="text"
         value={content}
+        disabled={!user}
         onChange={(e) => setContent(e.target.value)}
         placeholder={`Trả lời ${username}...`}
         className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -40,15 +44,8 @@ const Comment = ({ comment, level = 0, onReply, showReplyInput, onSubmit }) => {
   const usersCache = useUserStore((state) => state.usersCache);
   const commentUser = usersCache[comment.user_id];
   const hasReplies = comment.replies && comment.replies.length > 0;
-
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(comment.likes_count);
+  const user = useUserStore((state) => state.user);
   const [showReplies, setShowReplies] = useState(false);
-
-  const handleLike = () => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
 
   const toggleReplies = () => setShowReplies((prev) => !prev);
   const handleReplyClick = () => onReply(comment.id);
@@ -97,10 +94,6 @@ const Comment = ({ comment, level = 0, onReply, showReplyInput, onSubmit }) => {
           <span className="text-gray-500 text-xs">
             {formatRelativeTime(comment.created_at)}
           </span>
-
-          {likeCount > 0 && (
-            <span className="text-gray-500 text-xs">{likeCount}</span>
-          )}
 
           <button
             onClick={handleReplyClick}

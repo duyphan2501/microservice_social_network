@@ -16,6 +16,7 @@ router.delete("/unfriend", FriendController.unfriend);
 router.post("/block", FriendController.blockUser);
 
 // Friend lists
+router.get("/count/:userId", FriendController.getFriendQuantity);
 router.get("/list", FriendController.getFriendsList);
 router.get("/requests/received", FriendController.getReceivedFriendRequests);
 router.get("/requests/sent", FriendController.getSentFriendRequests);

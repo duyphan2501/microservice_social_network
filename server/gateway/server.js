@@ -7,7 +7,8 @@ import ENV from "./helpers/env.helper.js";
 app.use(morgan("tiny"));
 app.use(
   cors({
-    origin: [ENV.CLIENT_URL],
+    // origin: ENV.CLIENT_URL,
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -38,11 +39,11 @@ app.use(
   })
 );
 app.use(
-  "/api/v1/friend",
+  "/api/v1/friends",
   createProxyMiddleware({
     target: FRIEND_TARGET,
     changeOrigin: true,
-    pathRewrite: { "^/api/v1/friend": "" },
+    pathRewrite: { "^/api/v1/friends": "" },
   })
 );
 

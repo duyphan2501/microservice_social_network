@@ -1,10 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react"; // Thêm useRef
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
 import useSocketStore from "../stores/useSocketStore";
 import Notification from "../Components/Notification";
 import { toast } from "react-toastify";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 // Navigation Item Component
 const NavItem = ({
@@ -13,12 +14,12 @@ const NavItem = ({
   isActive = false,
   isCollapsed,
   href = "#",
-  onClick, // Thêm prop onClick
+  onClick,
 }) => {
   return (
     <a
       href={href}
-      onClick={onClick} // Thêm handler onClick
+      onClick={onClick}
       className={`w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors ${
         isActive ? "font-bold" : "font-normal"
       }`}
@@ -40,20 +41,37 @@ const Sidebar = () => {
   const navigator = useNavigate();
   const location = useLocation();
   const user = useUserStore((state) => state.user);
+  const logout = useUserStore((state) => state.logout);
   const { connectMainSocket, disconnectMainSocket } = useSocketStore();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotifications] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const axiosPrivate = useAxiosPrivate();
+
+  // Đóng dropdown khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     const refresh = async () => {
       try {
         if (user || !persist) return;
-        await refreshToken();
+        await refreshToken(axiosPrivate, persist);
       } catch (error) {
+        console.error("Error refreshing token:", error);
         if (isMounted) {
-          if (["/"].includes(location.pathname)) return;
+          if (["/auth"].includes(location.pathname)) return;
           toast.error("Bạn cần phải đăng nhập trước!");
           navigator("/auth/login");
         }
@@ -186,6 +204,19 @@ const Sidebar = () => {
     },
   ];
 
+  const handleLogout = async () => {
+    const res = await logout();
+    setIsOpen(false);
+    if (res) {
+      navigator("/auth/login");
+    }
+  };
+
+  const handleSettings = () => {
+    navigator("/settings");
+    setIsOpen(false);
+  };
+
   return (
     <>
       {isLoading.refresh ? (
@@ -223,7 +254,7 @@ const Sidebar = () => {
                   className="text-2xl font-semibold"
                   style={{ fontFamily: "Brush Script MT, cursive" }}
                 >
-                  PhanNhutDuy
+                  {user ? user.full_name : ""}
                 </h1>
               )}
             </div>
@@ -238,48 +269,76 @@ const Sidebar = () => {
                   isActive={location.pathname === item.href}
                   isCollapsed={isCollapsed}
                   href={item.href}
-                  onClick={item.onClick} // Truyền onClick vào NavItem
+                  onClick={item.onClick}
                 />
               ))}
             </nav>
 
             {/* Bottom Section */}
             <div className="p-3 border-t border-gray-200 space-y-1">
-              <NavItem
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                  </svg>
-                }
-                label="More"
-                isCollapsed={isCollapsed}
-                href="/settings"
-              />
+              {/* More Button with Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsOpen(!isOpen);
+                  }}
+                  className="w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <line x1="3" y1="12" x2="21" y2="12" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                  </div>
+                  {!isCollapsed && <span className="text-base">More</span>}
+                </button>
 
-              <NavItem
-                icon={
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
+                {/* Dropdown Menu */}
+                {isOpen && (
+                  <div
+                    className={`absolute bottom-full mb-2 ${
+                      isCollapsed ? "left-0" : "left-0"
+                    } w-64 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden`}
+                    style={{
+                      animation: "slideUp 0.2s ease-out",
+                    }}
                   >
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                }
-                label="Also from Meta"
-                isCollapsed={isCollapsed}
-                href="/meta"
-              />
+                    {/* Settings */}
+                    <button
+                      onClick={handleSettings}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors duration-150 text-left"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M12 1v6m0 6v6m6-9h-6m-6 0H1m16.39-4.61l-4.24 4.24M7.76 16.24l-4.24 4.24M20.24 16.24l-4.24-4.24M7.76 7.76L3.52 3.52" />
+                      </svg>
+                      <span className="font-medium">Settings</span>
+                    </button>
+
+                    {/* Log out */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors duration-150 text-left"
+                    >
+                      <span className="font-medium text-red-700">Log out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Toggle Button */}
               <button
@@ -348,6 +407,20 @@ const Sidebar = () => {
           )}
         </div>
       )}
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </>
   );
 };

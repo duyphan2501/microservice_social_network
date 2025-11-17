@@ -7,6 +7,7 @@ import { comparePassword, hashPassword } from "../helpers/password.helper.js";
 import UserModel from "../models/UserModel.js";
 import { filterFieldUser } from "../helpers/filterField.js";
 import createHttpError from "http-errors";
+import { uploadFileToCloudinary } from "../helpers/cloudinary.helper.js";
 
 const forgotPassword = async (req, res, next) => {
   try {
@@ -45,12 +46,10 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("Người dùng không tồn tại");
 
-    // const isCorrectPassword = await comparePassword(
-    //   password,
-    //   foundUser.password_hash
-    // );
-
-    const isCorrectPassword = password === foundUser.password_hash;
+    const isCorrectPassword = await comparePassword(
+      password,
+      foundUser.password_hash
+    );
 
     if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 
@@ -87,6 +86,7 @@ const login = async (req, res, next) => {
 const refreshToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
+
     if (!refreshToken)
       throw createHttpError.BadRequest("Refresh token is missing");
 
@@ -95,7 +95,6 @@ const refreshToken = async (req, res, next) => {
     const userId = payload.userId;
     // Kiểm tra token còn hạn trong DB
     const user = await UserModel.checkRefreshToken(userId, refreshToken);
-
     if (!user)
       throw createHttpError.Unauthorized("Invalid or expired refresh token");
 
@@ -272,6 +271,49 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const updateUserInfo = async (req, res, next) => {
+  try {
+    const { userId, fullname, username, bio } = req.body;
+    const file = req.file;
+
+    if (!userId) throw createHttpError.BadRequest("Missing userId");
+    if (!fullname) throw createHttpError.BadRequest("Missing fullname");
+    if (!username) throw createHttpError.BadRequest("Missing username");
+    // if (!bio) throw createHttpError.BadRequest("Missing bio");
+
+    const user = await UserModel.getUserByUserName(username);
+
+    if (user.id != userId) {
+      throw createHttpError.BadRequest("This username already be used!");
+    }
+
+    let avatar_url = null;
+
+    if (file) {
+      const { url, public_id } = await uploadFileToCloudinary(
+        file.path,
+        "avatars"
+      );
+      avatar_url = url;
+    }
+
+    const result = await UserModel.updateUserInfo(
+      userId,
+      fullname,
+      username,
+      bio,
+      avatar_url
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Update user successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   login,
   refreshToken,
@@ -280,4 +322,5 @@ export {
   signUp,
   forgotPassword,
   resetPassword,
+  updateUserInfo,
 };

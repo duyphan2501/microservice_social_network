@@ -4,7 +4,11 @@ import http from "http";
 import { Server } from "socket.io";
 import ENV from "../helpers/env.helper.js";
 import socketAuth from "../middlewares/socketAuth.js";
-import { consumeQueue, sendQueue } from "../messages/rabbitMQ.js";
+import {
+  consumeQueue,
+  sendQueue,
+  subscribeMessage,
+} from "../messages/rabbitMQ.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +35,22 @@ io.on("connection", (socket) => {
     socket.on("join_conversation", (conversationId) => {
       socket.join(conversationId);
       console.log(`User ${userId} joined room ${conversationId}`);
+    });
+
+    socket.on("leave_conversation", (conversationId) => {
+      socket.leave(conversationId);
+      console.log(`User ${socket.id} left room ${conversationId}`);
+    });
+
+    socket.on("join_postRoom", (postId) => {
+      console.log(`User ${socket.id} joining room post_${postId}`);
+      socket.join(`post_${postId}`);
+    });
+
+    // Lắng nghe yêu cầu rời phòng (khi user đóng tab hoặc chuyển trang)
+    socket.on("leave_postRoom", (postId) => {
+      console.log(`User ${socket.id} leaving room post_${postId}`);
+      socket.leave(`post_${postId}`);
     });
 
     socket.on("disconnect", async () => {
@@ -61,7 +81,6 @@ async function connectRabbitMQ() {
     await consumeQueue("chat_events_to_client", (msg) => {
       if (msg) {
         const event = JSON.parse(msg);
-        console.log(event);
         // Phân loại event và phát sóng (emit) tới đúng phòng/client
         switch (event.type) {
           case "NEW_MESSAGE_SAVED":
@@ -73,15 +92,21 @@ async function connectRabbitMQ() {
             break;
           case "MESSAGE_STATUS_UPDATED":
             // Phát cập nhật trạng thái
-            console.log("update to", event.data.conversationId)
+            console.log("update to", event.data.conversationId);
             io.to(event.data.conversationId).emit("status_updated", event.data);
             break;
         }
       }
     });
+
+    await subscribeMessage("post_events_pubsub", "post_like_updated", async (msg) => {
+      const data = JSON.parse(msg);
+      io.to(`post_${data.postId}`).emit("update_post_likes", data);
+    });
+
   } catch (error) {
     console.error("Error connecting to RabbitMQ in Gateway:", error);
-    setTimeout(connectRabbitMQ, 5000); // Thử kết nối lại
+    setTimeout(connectRabbitMQ, 5000); 
   }
 }
 

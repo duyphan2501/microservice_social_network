@@ -83,6 +83,17 @@ export const usePostStore = create((set, get) => ({
     }));
   },
 
+  saveLike: async (postId, axiosPrivate) => {
+    try {
+      const res = await axiosPrivate.post(`/posts/${postId}/like`);
+      return res.data;
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+      return null
+    }
+  },
+
   resetPosts: () =>
     set({
       posts: [],

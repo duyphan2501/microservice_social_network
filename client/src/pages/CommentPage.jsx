@@ -7,6 +7,8 @@ import useUserStore from "../stores/useUserStore";
 import { formatRelativeTime } from "../utils/DateFormat";
 import useCommentStore from "../stores/useCommentStore";
 import PostMedia from "../components/PostMedia";
+import useSocketStore from "../stores/useSocketStore";
+import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 const CommentPage = () => {
   const navigate = useNavigate();
@@ -16,9 +18,10 @@ const CommentPage = () => {
     if (!postId) navigate("/");
   }, [postId, navigate]);
 
-  const { isLoading, getPost } = usePostStore();
+  const { isLoading, getPost, saveLike } = usePostStore();
   const { fetchUserIfNeeded } = useUserStore();
   const { getPostComments, addCommentToStore } = useCommentStore();
+  const user = useUserStore(state => state.user)
 
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState(null);
@@ -31,9 +34,30 @@ const CommentPage = () => {
   const [visibleCount, setVisibleCount] = useState(5);
   const loadMoreRef = useRef(null);
 
-  const handleLike = useCallback(() => {
-    setLiked((prev) => !prev);
-    setLikeCount((prev) => prev + (liked ? -1 : 1));
+  const { mainSocket } = useSocketStore();
+  const axiosPrivate = useAxiosPrivate();
+
+  const updatePostLikes = (data) => {
+    setLikeCount(data.likes_count);
+  };
+
+  useEffect(() => {
+    if (mainSocket && postId) {
+      mainSocket.emit("join_postRoom", postId);
+      mainSocket?.on("update_post_likes", updatePostLikes);
+    }
+
+    return () => {
+      mainSocket?.off("update_post_likes", updatePostLikes);
+      if (mainSocket && postId) {
+        mainSocket.emit("leave_postRoom", postId);
+      }
+    };
+  }, [postId, mainSocket]);
+
+  const handleLike = useCallback(async () => {
+    const res = await saveLike(postId, axiosPrivate);
+    setLiked(res.liked || false);
   }, [liked]);
 
   const fetchPostData = useCallback(async () => {
@@ -47,6 +71,7 @@ const CommentPage = () => {
       const finalPost = { ...resPost, author };
       setComments(resComments);
       setPost(finalPost);
+      console.log(finalPost)
       setLikeCount(finalPost.likes_count);
       setLiked(resPost.isLiked || false);
     } catch (error) {

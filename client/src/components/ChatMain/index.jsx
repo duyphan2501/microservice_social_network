@@ -101,6 +101,9 @@ const ChatMain = ({ chatUser, conversationId }) => {
       // Dọn dẹp listener khi component unmount hoặc conversationId thay đổi
       mainSocket?.off("receive_message", handleReceiveMessage);
       mainSocket?.off("status_updated", updateMessageStatusInState);
+      if (mainSocket && conversationId) {
+        mainSocket.emit("leave_conversation", conversationId);
+      }
     };
   }, [conversationId, user.id, updateMessageStatusInState]);
 

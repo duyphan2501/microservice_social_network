@@ -5,13 +5,14 @@ import {
   getPost,
   getPostComments,
   getPosts,
+  saveLike,
   uploadPostMedia,
 } from "../controllers/post.controller.js";
 import { uploadMedia } from "../middlewares/cloudinary.middleware.js";
 
 const postRouter = express.Router();
 
-postRouter.get("/", getPosts);
+postRouter.get("/", checkAuth, getPosts);
 postRouter.post("/create", checkAuth, createNewPost);
 postRouter.post(
   "/upload-media",
@@ -19,8 +20,9 @@ postRouter.post(
   uploadMedia.array("mediaFiles", 10),
   uploadPostMedia
 );
+postRouter.post("/:postId/like", checkAuth, saveLike);
 
 postRouter.get("/:id/comments", getPostComments);
-postRouter.get("/:id", getPost);
+postRouter.get("/:id", checkAuth, getPost);
 
 export default postRouter;

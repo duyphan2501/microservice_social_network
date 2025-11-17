@@ -1,15 +1,15 @@
 import createHttpError from "http-errors";
 import PostModel from "../models/post.model.js";
 import { uploadFiles, uploadVideoLarge } from "../helpers/upload.js";
+import { publishMessage } from "../messages/rabbitMQ.js";
 
 const getPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-    const userId = req.user?.userId || 0;
+    const userId = req.user?.userId || req.query.userId || 0;
     const posts = await PostModel.getPostsWithMedia(limit, offset, userId);
-
     res.status(200).json({
       posts,
     });
@@ -23,7 +23,7 @@ const getPost = async (req, res, next) => {
     const { id } = req.params;
 
     if (!id) throw createHttpError.BadRequest("Thiếu mã bài viết");
-    const userId = req.user?.userId || 0;
+    const userId = req.user?.userId || req.query.userId || 0;
 
     const post = await PostModel.getPostById(id, userId);
 
@@ -130,4 +130,34 @@ const uploadPostMedia = async (req, res, next) => {
   }
 };
 
-export { getPosts, getPost, getPostComments, createNewPost, uploadPostMedia };
+const saveLike = async (req, res, next) => {
+  try {
+    const postId = parseInt(req.params.postId || 0, 10);
+    const userId = req.user?.userId;
+
+    if (postId === 0) throw createHttpError.BadRequest("Thiếu mã bài đăng");
+
+    const result = await PostModel.toggleLike(postId, userId);
+
+    await publishMessage(
+      "post_events_pubsub",
+      JSON.stringify({ likes_count: result.likes_count, postId })
+    );
+
+    return res.status(200).json({
+      liked: result.liked,
+      likes_count: result.likes_count,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  getPosts,
+  getPost,
+  getPostComments,
+  createNewPost,
+  uploadPostMedia,
+  saveLike,
+};

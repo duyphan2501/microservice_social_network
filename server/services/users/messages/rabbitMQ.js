@@ -1,6 +1,6 @@
 import amqp from "amqplib";
-import dotenv from "dotenv"
-dotenv.config({quiet: true})
+import dotenv from "dotenv";
+dotenv.config({ quiet: true });
 
 const connectMQ = async () => {
   try {
@@ -48,18 +48,20 @@ const consumeQueue = async (queueName, callback) => {
   }
 };
 
-const publishMessage = async (exchangeName, message) => {
+const publishFanout = async (exchangeName, message) => {
   let conn, channel;
   try {
     conn = await connectMQ();
     channel = await conn.createChannel();
 
+    // FANOUT exchange
     await channel.assertExchange(exchangeName, "fanout", { durable: true });
 
     channel.publish(exchangeName, "", Buffer.from(message), {
       persistent: true,
     });
-    console.log(`Published to exchange "${exchangeName}":`, message);
+
+    console.log(`Published (fanout) to "${exchangeName}":`, message);
   } catch (error) {
     console.error(error);
   } finally {
@@ -68,7 +70,7 @@ const publishMessage = async (exchangeName, message) => {
   }
 };
 
-const subscribeMessage = async (exchangeName, queueName, callback) => {
+const subscribeFanout = async (exchangeName, queueName, callback) => {
   try {
     const conn = await connectMQ();
     const channel = await conn.createChannel();
@@ -86,7 +88,59 @@ const subscribeMessage = async (exchangeName, queueName, callback) => {
     });
 
     console.log(
-      `Subscribed to exchange "${exchangeName}" on queue "${queueName}"`
+      `Subscribed (fanout) to "${exchangeName}" on queue "${queueName}"`
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const publishDirect = async (exchangeName, routingKey, message) => {
+  let conn, channel;
+  try {
+    conn = await connectMQ();
+    channel = await conn.createChannel();
+
+    await channel.assertExchange(exchangeName, "direct", { durable: true });
+
+    channel.publish(exchangeName, routingKey, Buffer.from(message), {
+      persistent: true,
+    });
+
+    console.log(
+      `Published (direct) to "${exchangeName}" with key "${routingKey}":`,
+      message
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    if (channel) await channel.close();
+    if (conn) await conn.close();
+  }
+};
+
+const subscribeDirect = async (exchangeName, routingKey, callback) => {
+  try {
+    const conn = await connectMQ();
+    const channel = await conn.createChannel();
+
+    await channel.assertExchange(exchangeName, "direct", { durable: true });
+
+    // Tạo queue tên ngẫu nhiên cho mỗi service
+    const q = await channel.assertQueue("", { durable: true });
+
+    await channel.bindQueue(q.queue, exchangeName, routingKey);
+
+    await channel.consume(q.queue, async (msg) => {
+      if (msg) {
+        const content = msg.content.toString();
+        await callback(content);
+        channel.ack(msg);
+      }
+    });
+
+    console.log(
+      `Subscribed (direct) to "${exchangeName}" with routingKey "${routingKey}"`
     );
   } catch (error) {
     console.error(error);
@@ -125,4 +179,12 @@ const resetMQ = async (exchangeName, queues = []) => {
   }
 };
 
-export { sendQueue, consumeQueue, publishMessage, subscribeMessage, resetMQ };
+export {
+  sendQueue,
+  consumeQueue,
+  publishFanout,
+  subscribeFanout,
+  resetMQ,
+  publishDirect,
+  subscribeDirect,
+};

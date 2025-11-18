@@ -126,6 +126,71 @@ async function connectRabbitMQ() {
       }
     });
 
+    // ==================== FRIEND EVENTS ====================
+    await consumeQueue("friend_events_to_client", (msg) => {
+      if (msg) {
+        const event = JSON.parse(msg);
+        console.log("📨 [FRIEND]", event.type, event.data);
+
+        const { targetUserId, ...eventData } = event.data;
+
+        switch (event.type) {
+          case "friend_request_received":
+            // Emit to user nhận friend request
+            emitToUser(targetUserId, "friend_request_received", {
+              fromUserId: event.data.fromUserId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "friend_request_accepted":
+            // Emit to user gửi request ban đầu
+            emitToUser(targetUserId, "friend_request_accepted", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "unfriended":
+            // Emit to user bị unfriend
+            emitToUser(targetUserId, "unfriended", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "user_blocked":
+            // Emit to user bị block
+            emitToUser(targetUserId, "user_blocked", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          default:
+            console.log("Unknown friend event type:", event.type);
+        }
+      }
+    });
+
+    // ==================== NOTIFICATION EVENTS ====================
+    await consumeQueue("notification_events_to_client", (msg) => {
+      if (msg) {
+        const event = JSON.parse(msg);
+        console.log("📨 [NOTIFICATION]", event.type);
+
+        switch (event.type) {
+          case "new_notification":
+            emitToUser(event.data.userId, "new_notification", event.data);
+            break;
+
+          case "notification_read":
+            emitToUser(event.data.userId, "notification_read", event.data);
+            break;
+        }
+      }
+    });
+
     await subscribeDirect(
       "post_events_pubsub",
       "post_like_updated",

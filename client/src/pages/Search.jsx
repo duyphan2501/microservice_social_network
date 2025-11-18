@@ -109,7 +109,7 @@ const UserCard = ({ user, onAction, loading }) => {
   );
 };
 
-// FriendCard Component (cho danh sách bạn bè)
+// FriendCard Component
 const FriendCard = ({ friend, onUnfriend, loading }) => {
   return (
     <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 transition-colors">
@@ -250,15 +250,19 @@ function SearchPage() {
 
     try {
       if (query.trim()) {
-        // Search users
+        // Search users - FIXED: Changed from /friend/search/users to /friends/search/users
         const response = await axiosPrivate.get(
-          `/friend/search/users?query=${encodeURIComponent(query)}&limit=20`
+          `/friends/search/users?query=${encodeURIComponent(
+            query
+          )}&limit=20``/friend/search/users?query=${encodeURIComponent(
+            query
+          )}&limit=20`
         );
         setUsers(response.data.data.users || []);
       } else {
-        // Load suggestions
+        // Load suggestions - FIXED: Changed from /friend/search/suggestions to /friends/search/suggestions
         const response = await axiosPrivate.get(
-          "/friend/search/suggestions?limit=20"
+          "/friends/search/suggestions?limit=20"
         );
         setUsers(response.data.data.suggestions || []);
       }
@@ -279,8 +283,8 @@ function SearchPage() {
 
       switch (action) {
         case "send":
-          // Send friend request
-          response = await axiosPrivate.post("/api/v1/friend/friends/request", {
+          // Send friend request - FIXED: Changed from /friend/friends/request to /friends/request
+          response = await axiosPrivate.post("/friends/request", {
             targetUserId: user.id,
           });
 
@@ -293,8 +297,8 @@ function SearchPage() {
           break;
 
         case "accept":
-          // Accept friend request
-          response = await axiosPrivate.post("/api/v1/friend/friends/accept", {
+          // Accept friend request - FIXED: Changed from /friend/friends/accept to /friends/accept
+          response = await axiosPrivate.post("/friends/accept", {
             fromUserId: user.id,
           });
 
@@ -307,14 +311,11 @@ function SearchPage() {
           break;
 
         case "unfriend":
-          // Unfriend
+          // Unfriend - FIXED: Changed from /friend/friends/unfriend to /friends/unfriend
           if (window.confirm(`Unfriend ${user.username}?`)) {
-            response = await axiosPrivate.delete(
-              "/api/v1/friend/friends/unfriend",
-              {
-                data: { friendUserId: user.id },
-              }
-            );
+            response = await axiosPrivate.delete("/friends/unfriend", {
+              data: { friendUserId: user.id },
+            });
 
             // Update user status in list
             setUsers((prev) =>
@@ -341,9 +342,8 @@ function SearchPage() {
     setFriendsLoading(true);
 
     try {
-      const response = await axiosPrivate.get(
-        "/api/v1/friend/friends/list?limit=100"
-      );
+      // FIXED: Changed from /friend/friends/list to /friends/list
+      const response = await axiosPrivate.get("/friends/list?limit=100");
       setFriends(response.data.data.friends || []);
     } catch (err) {
       console.error("Error loading friends:", err);
@@ -362,7 +362,8 @@ function SearchPage() {
     setUnfriendLoading(true);
 
     try {
-      await axiosPrivate.delete("/api/v1/friend/friends/unfriend", {
+      // FIXED: Changed from /friend/friends/unfriend to /friends/unfriend
+      await axiosPrivate.delete("/friends/unfriend", {
         data: { friendUserId },
       });
 

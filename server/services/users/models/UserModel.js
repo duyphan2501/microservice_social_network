@@ -117,22 +117,77 @@ const UserModel = {
     return result.affectedRows;
   },
 
-  updateUserInfo: async (userId, fullname, username, bio, avatar_url) => {
-    const query = `
-      UPDATE users
-      set full_name = ?, username = ?, bio = ?, avatar_url = ?
-      where id = ?
-    `;
+  searchUsers: async (query, limit = 20, offset = 0) => {
+    try {
+      const sql = `
+        SELECT 
+          id as userId,
+          username,
+          full_name as fullName,
+          avatar_url as avatarUrl,
+          email,
+          last_active_at as lastActive
+        FROM users
+        WHERE 
+          (username LIKE ? OR full_name LIKE ? OR email LIKE ?)
+        ORDER BY username ASC
+        LIMIT ? OFFSET ?
+      `;
 
-    const [result] = await pool.query(query, [
-      fullname,
-      username,
-      bio,
-      avatar_url,
-      userId,
-    ]);
+      const searchPattern = `%${query}%`;
+      const [rows] = await pool.query(sql, [
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        parseInt(limit),
+        parseInt(offset),
+      ]);
 
-    return result.affectedRows;
+      return rows;
+    } catch (error) {
+      console.error("Error searching users:", error);
+      throw error;
+    }
+  },
+
+  countSearchResults: async (query) => {
+    try {
+      const sql = `
+        SELECT COUNT(*) as total
+        FROM users
+        WHERE 
+          (username LIKE ? OR full_name LIKE ? OR email LIKE ?)
+      `;
+
+      const searchPattern = `%${query}%`;
+      const [rows] = await pool.query(sql, [
+        searchPattern,
+        searchPattern,
+        searchPattern,
+      ]);
+
+      return rows[0].total;
+    } catch (error) {
+      console.error("Error counting search results:", error);
+      return 0;
+    }
+
+    // updateUserInfo: async (userId, fullname, username, bio, avatar_url) => {
+    //   const query = `
+    //     UPDATE users
+    //     set full_name = ?, username = ?, bio = ?, avatar_url = ?
+    //     where id = ?
+    //   `;
+
+    //   const [result] = await pool.query(query, [
+    //     fullname,
+    //     username,
+    //     bio,
+    //     avatar_url,
+    //     userId,
+    //   ]);
+
+    //   return result.affectedRows;
   },
 };
 

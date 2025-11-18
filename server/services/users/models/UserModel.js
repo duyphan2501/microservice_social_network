@@ -116,6 +116,62 @@ const UserModel = {
     const [result] = await pool.query(query, [token]);
     return result.affectedRows;
   },
+
+  searchUsers: async (query, limit = 20, offset = 0) => {
+    try {
+      const sql = `
+        SELECT 
+          id as userId,
+          username,
+          full_name as fullName,
+          avatar_url as avatarUrl,
+          email,
+          last_active_at as lastActive
+        FROM users
+        WHERE 
+          (username LIKE ? OR full_name LIKE ? OR email LIKE ?)
+        ORDER BY username ASC
+        LIMIT ? OFFSET ?
+      `;
+
+      const searchPattern = `%${query}%`;
+      const [rows] = await pool.query(sql, [
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        parseInt(limit),
+        parseInt(offset),
+      ]);
+
+      return rows;
+    } catch (error) {
+      console.error("Error searching users:", error);
+      throw error;
+    }
+  },
+
+  countSearchResults: async (query) => {
+    try {
+      const sql = `
+        SELECT COUNT(*) as total
+        FROM users
+        WHERE 
+          (username LIKE ? OR full_name LIKE ? OR email LIKE ?)
+      `;
+
+      const searchPattern = `%${query}%`;
+      const [rows] = await pool.query(sql, [
+        searchPattern,
+        searchPattern,
+        searchPattern,
+      ]);
+
+      return rows[0].total;
+    } catch (error) {
+      console.error("Error counting search results:", error);
+      return 0;
+    }
+  },
 };
 
 export default UserModel;

@@ -1,6 +1,6 @@
 import amqp from "amqplib";
-import dotenv from "dotenv"
-dotenv.config({quiet: true})
+import dotenv from "dotenv";
+dotenv.config({ quiet: true });
 
 const connectMQ = async () => {
   try {

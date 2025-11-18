@@ -5,6 +5,7 @@ import ENV from "./helpers/env.helper.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { checkConnection } from "./database/connectDB.js";
 import friendRouter from "./routes/friend.route.js";
+import searchRouter from "./routes/search.route.js"; // ← THÊM DÒNG NÀY
 import express from "express";
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(cookieParser());
 app.get("/health", (_, res) => res.json({ success: true, service: "friend" }));
 
 app.use("/friends", friendRouter);
+app.use("/search", searchRouter); // ← THÊM DÒNG NÀY
 
 app.use(errorHandler);
 

@@ -69,7 +69,7 @@ const FriendModel = {
     return result;
   },
 
-  // Huỷ kết bạn
+  // Hủy kết bạn
   async unfriend(userId1, userId2) {
     const [minId, maxId] =
       userId1 < userId2 ? [userId1, userId2] : [userId2, userId1];
@@ -216,82 +216,76 @@ const FriendModel = {
     return rows[0].count;
   },
 
-  // Gợi ý bạn bè (users chưa là bạn, có bạn chung)
-  async getSuggestedFriends(userId, limit = 20) {
-    const query = `
-      SELECT DISTINCT 
-        suggested_user_id,
-        mutual_count
-      FROM (
-        SELECT 
-          CASE 
-            WHEN fr2.user_id_1 = fr1_friend_id THEN fr2.user_id_2 
-            ELSE fr2.user_id_1 
-          END as suggested_user_id,
-          COUNT(*) as mutual_count
-        FROM (
-          SELECT 
-            CASE 
-              WHEN user_id_1 = ? THEN user_id_2 
-              ELSE user_id_1 
-            END as fr1_friend_id
-          FROM friend_relationships 
-          WHERE (user_id_1 = ? OR user_id_2 = ?) 
-            AND status = 'accepted'
-        ) as my_friends
-        JOIN friend_relationships fr2 
-          ON (fr2.user_id_1 = my_friends.fr1_friend_id OR fr2.user_id_2 = my_friends.fr1_friend_id)
-          AND fr2.status = 'accepted'
-        WHERE CASE 
-                WHEN fr2.user_id_1 = my_friends.fr1_friend_id THEN fr2.user_id_2 
-                ELSE fr2.user_id_1 
-              END != ?
-        GROUP BY suggested_user_id
-      ) as suggestions
-      WHERE suggested_user_id NOT IN (
-        SELECT 
-          CASE 
-            WHEN user_id_1 = ? THEN user_id_2 
-            ELSE user_id_1 
-          END
-        FROM friend_relationships 
-        WHERE (user_id_1 = ? OR user_id_2 = ?)
-      )
+  // Gợi ý bạn bè (users chưa là bạn, có bạn chung) - Simplified version
+  getSuggestedFriends: async (userId, limit = 20) => {
+    const limitInt = parseInt(limit, 10);
+
+    // Step 1: Get all my friends
+    const [myFriends] = await pool.execute(
+      `SELECT 
+        CASE 
+          WHEN user_id_1 = ? THEN user_id_2
+          ELSE user_id_1
+        END AS friend_id
+      FROM friend_relationships
+      WHERE (user_id_1 = ? OR user_id_2 = ?)
+        AND status = 'accepted'`,
+      [userId, userId, userId]
+    );
+
+    if (myFriends.length === 0) {
+      return [];
+    }
+
+    const myFriendIds = myFriends.map((f) => f.friend_id);
+
+    // Step 2: Get friends of friends (excluding myself and existing friends)
+    const placeholders = myFriendIds.map(() => "?").join(",");
+
+    const sql = `
+      SELECT 
+        CASE 
+          WHEN user_id_1 IN (${placeholders}) THEN user_id_2
+          ELSE user_id_1
+        END AS suggested_user_id,
+        COUNT(*) AS mutual_count
+      FROM friend_relationships
+      WHERE ((user_id_1 IN (${placeholders}) OR user_id_2 IN (${placeholders}))
+        AND status = 'accepted')
+      GROUP BY suggested_user_id
+      HAVING suggested_user_id != ?
+        AND suggested_user_id NOT IN (${placeholders})
       ORDER BY mutual_count DESC, suggested_user_id
       LIMIT ?
     `;
 
-    const [rows] = await pool.execute(query, [
-      userId,
-      userId,
-      userId,
-      userId,
-      userId,
-      userId,
-      userId,
-      limit,
-    ]);
+    const params = [
+      ...myFriendIds, // for first CASE
+      ...myFriendIds, // for WHERE user_id_1 IN
+      ...myFriendIds, // for WHERE user_id_2 IN
+      userId, // for HAVING != ?
+      ...myFriendIds, // for HAVING NOT IN
+      limitInt, // for LIMIT
+    ];
+
+    const [rows] = await pool.execute(sql, params);
     return rows;
-  },
-
-  // Kiểm tra xem 2 users có phải bạn bè không
-  async areFriends(userId1, userId2) {
-    const [minId, maxId] =
-      userId1 < userId2 ? [userId1, userId2] : [userId2, userId1];
-
-    const query = `
-      SELECT 1 FROM friend_relationships 
-      WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'
-      LIMIT 1
-    `;
-
-    const [rows] = await pool.execute(query, [minId, maxId]);
-    return rows.length > 0;
   },
 
   // Lấy danh sách mutual friends
   async getMutualFriends(userId1, userId2, limit = 50) {
-    const query = `
+    try {
+      const user1 = parseInt(userId1);
+      const user2 = parseInt(userId2);
+      const limitInt = parseInt(limit);
+
+      if (isNaN(user1) || isNaN(user2) || isNaN(limitInt)) {
+        return [];
+      }
+
+      console.log("🔍 Getting mutual friends:", { user1, user2, limitInt });
+
+      const query = `
       SELECT 
         CASE 
           WHEN fr1.user_id_1 = ? THEN fr1.user_id_2 
@@ -313,17 +307,21 @@ const FriendModel = {
       LIMIT ?
     `;
 
-    const [rows] = await pool.execute(query, [
-      userId1,
-      userId2,
-      userId2,
-      userId1,
-      userId1,
-      userId1,
-      userId1,
-      limit,
-    ]);
-    return rows;
+      const [rows] = await pool.execute(query, [
+        user1,
+        user2,
+        user2,
+        user1,
+        user1,
+        user1,
+        user1,
+        limitInt,
+      ]);
+
+      return rows;
+    } catch (error) {
+      return [];
+    }
   },
 };
 

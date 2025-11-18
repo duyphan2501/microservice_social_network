@@ -28,7 +28,7 @@ const useUserStore = create((set, get) => {
     }
   };
 
-  const refreshToken = async (axiosPrivate, persist) => {
+  const refreshToken = async () => {
     set({ isLoading: { refresh: true } });
     try {
       const res = await API.put(`/users/refresh-token`);
@@ -41,6 +41,18 @@ const useUserStore = create((set, get) => {
       throw error;
     } finally {
       set({ isLoading: { refresh: false } });
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const res = await API.get("/users/refresh-user");
+
+      set({
+        user: res.data.user,
+      });
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -243,6 +255,7 @@ const useUserStore = create((set, get) => {
     },
     login,
     refreshToken,
+    refreshUser,
     signUp,
     verifyAccount,
     sendVerificationEmail,

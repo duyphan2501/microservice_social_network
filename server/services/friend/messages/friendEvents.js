@@ -1,8 +1,6 @@
 // messages/friendEvents.js
 // Định nghĩa các event types và publish events cho Friend service
 
-import { publishMessage } from "./rabbitMQ.js";
-
 const EXCHANGES = {
   FRIEND_EVENTS: "friend_events",
   USER_EVENTS: "user_events",

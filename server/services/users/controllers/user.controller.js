@@ -364,6 +364,21 @@ const changeUserPassword = async (req, res, next) => {
   }
 };
 
+const refreshUser = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await UserModel.getUserById(userId);
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   login,
   refreshToken,
@@ -374,4 +389,5 @@ export {
   resetPassword,
   updateUserInfo,
   changeUserPassword,
+  refreshUser,
 };

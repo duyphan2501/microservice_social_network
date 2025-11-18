@@ -36,7 +36,8 @@ const NavItem = ({
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const { refreshToken, isLoading } = useUserStore();
+  const { refreshToken, isLoading, refreshUser } = useUserStore();
+
   const { persist } = useContext(MyContext);
   const navigator = useNavigate();
   const location = useLocation();
@@ -66,8 +67,12 @@ const Sidebar = () => {
     let isMounted = true;
     const refresh = async () => {
       try {
-        if (user || !persist) return;
-        await refreshToken(axiosPrivate, persist);
+        if (user) return;
+        if (persist) {
+          await refreshToken();
+        } else {
+          await refreshUser();
+        }
       } catch (error) {
         console.error("Error refreshing token:", error);
         if (isMounted) {

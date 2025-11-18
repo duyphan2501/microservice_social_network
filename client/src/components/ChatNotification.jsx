@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { MyContext } from "../Context/MyContext";
 import useSocketStore from "../stores/useSocketStore";
@@ -8,6 +8,14 @@ export default function ChatNotification() {
   const mainSocket = useSocketStore((s) => s.mainSocket);
   const user = useUserStore((s) => s.user);
   const getUserInfo = useUserStore((s) => s.getUserInfo);
+  const audioRef = useRef(new Audio("/sound/message_notification.mp3"));
+
+  //Phat tin nhan
+  const playSound = () => {
+    audioRef.current.volume = 0.1;
+    audioRef.current.currentTime = 0.5;
+    audioRef.current.play();
+  };
 
   // messageQueue là array nhận từ context
   const { notificationQueue, setNotificationQueue } = useContext(MyContext);
@@ -24,6 +32,7 @@ export default function ChatNotification() {
     if (!current && notificationQueue.length > 0) {
       setCurrent(notificationQueue[0]);
       setNotificationQueue((prev) => prev.slice(3));
+      playSound();
     }
   }, [notificationQueue, current]);
 
@@ -75,21 +84,62 @@ export default function ChatNotification() {
   return (
     <div className="fixed bottom-5 right-5 z-50">
       {current && (
-        <div
-          className={`w-80 bg-white shadow-lg rounded-lg p-4 flex items-start space-x-3 border border-gray-200 
-            ${exiting ? "animate-slideOut" : "animate-slideIn"}`}
-          onAnimationEnd={handleAnimationEnd}
-        >
-          <img
-            className="w-12 h-12 rounded-full"
-            src={current.avatar_url}
-            alt={current.sender_id}
-          />
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900">{current.name}</p>
-            <p className="text-gray-700 text-sm">{current.content}</p>
-          </div>
-        </div>
+        <>
+          {current.type === "text" && (
+            <a
+              href="/inbox"
+              className={`w-80 bg-white shadow-lg rounded-lg p-4 flex items-start space-x-3 border border-gray-200 
+          ${exiting ? "animate-slideOut" : "animate-slideIn"}`}
+              onAnimationEnd={handleAnimationEnd}
+            >
+              <img
+                className="w-12 h-12 rounded-full"
+                src={current.avatar_url}
+                alt={current.sender_id}
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">{current.name}</p>
+                <p className="text-gray-700 text-sm">{current.content}</p>
+              </div>
+            </a>
+          )}
+
+          {current.type === "image" && (
+            <div
+              className={`w-80 bg-white shadow-lg rounded-lg p-4 flex items-start space-x-3 border border-gray-200 
+          ${exiting ? "animate-slideOut" : "animate-slideIn"}`}
+              onAnimationEnd={handleAnimationEnd}
+            >
+              <img
+                className="w-12 h-12 rounded-full"
+                src={current.avatar_url}
+                alt={current.sender_id}
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">{current.name}</p>
+                <p className="text-gray-700 text-sm">Has sent an image</p>
+              </div>
+            </div>
+          )}
+
+          {current.type === "video" && (
+            <div
+              className={`w-80 bg-white shadow-lg rounded-lg p-4 flex items-start space-x-3 border border-gray-200 
+          ${exiting ? "animate-slideOut" : "animate-slideIn"}`}
+              onAnimationEnd={handleAnimationEnd}
+            >
+              <img
+                className="w-12 h-12 rounded-full"
+                src={current.avatar_url}
+                alt={current.sender_id}
+              />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">{current.name}</p>
+                <p className="text-gray-700 text-sm">Has sent a video</p>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <style>

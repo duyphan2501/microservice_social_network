@@ -15,7 +15,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [ENV.CLIENT_URL],
+    // origin: ENV.CLIENT_URL,
+    origin: "http://localhost:5173",
     credentials: true,
   },
 });
@@ -37,6 +38,11 @@ io.on("connection", (socket) => {
   // --- Xử lý cho người dùng ĐÃ ĐĂNG NHẬP ---
   if (userId) {
     userSocketMap[userId] = socket.id;
+
+    //Cấp một room riêng thep userid
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} has joined his own room`);
+
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("join_conversation", (conversationId) => {
@@ -104,6 +110,12 @@ async function connectRabbitMQ() {
               "receive_message",
               event.data
             );
+
+            io.to(`user_${event.data.receiverId}`).emit(
+              "chat_notification",
+              event.data
+            );
+
             break;
           case "MESSAGE_STATUS_UPDATED":
             // Phát cập nhật trạng thái

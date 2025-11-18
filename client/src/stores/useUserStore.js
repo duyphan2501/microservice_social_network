@@ -190,7 +190,7 @@ const useUserStore = create((set, get) => {
 
   const getUserInfo = async (userId, axiosPrivate) => {
     try {
-      const res = await axiosPrivate.get(`/users/get-info/${userId}`);
+      const res = await API.get(`/users/get-info/${userId}`);
       return res.data.user;
     } catch (error) {
       const message = error.response?.data?.message;

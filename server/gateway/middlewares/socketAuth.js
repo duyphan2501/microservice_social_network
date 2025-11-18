@@ -12,6 +12,7 @@ const socketAuth = async (socket, next) => {
 
     if (token) {
       const payload = await verifyAccessToken(token);
+      console.log(payload);
       const userId = payload.userId;
 
       if (!userId) {

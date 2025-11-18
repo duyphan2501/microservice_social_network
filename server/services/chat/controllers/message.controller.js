@@ -39,7 +39,9 @@ const sendMessage = async (req, res, next) => {
   try {
     // messageData: { conversationId, senderId, content, type, media, tempId }
     const messageData = req.body;
-    const messageId = await MessageModel.saveNewMessage(messageData);
+    const { messageId, receiverId } = await MessageModel.saveNewMessage(
+      messageData
+    );
     const savedMessage = await MessageModel.getMessageById(messageId);
 
     const eventPayload = {
@@ -47,8 +49,10 @@ const sendMessage = async (req, res, next) => {
       data: {
         ...savedMessage,
         tempId: messageData.tempId,
+        receiverId,
       },
     };
+
     await sendQueue("chat_events_to_client", JSON.stringify(eventPayload));
 
     res.status(201).json({ savedMessage });

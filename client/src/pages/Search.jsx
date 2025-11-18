@@ -252,15 +252,13 @@ function SearchPage() {
       if (query.trim()) {
         // Search users
         const response = await axiosPrivate.get(
-          `/api/v1/friend/search/users?query=${encodeURIComponent(
-            query
-          )}&limit=20`
+          `/friend/search/users?query=${encodeURIComponent(query)}&limit=20`
         );
         setUsers(response.data.data.users || []);
       } else {
         // Load suggestions
         const response = await axiosPrivate.get(
-          "/api/v1/friend/search/suggestions?limit=20"
+          "/friend/search/suggestions?limit=20"
         );
         setUsers(response.data.data.suggestions || []);
       }

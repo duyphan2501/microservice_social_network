@@ -46,10 +46,12 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("Người dùng không tồn tại");
 
-    const isCorrectPassword = await comparePassword(
-      password,
-      foundUser.password_hash
-    );
+    // const isCorrectPassword = await comparePassword(
+    //   password,
+    //   foundUser.password_hash
+    // );
+
+    const isCorrectPassword = password === foundUser.password_hash;
 
     if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 

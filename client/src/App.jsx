@@ -16,6 +16,7 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import { ToastContainer } from "react-toastify";
 import NavigateToLogin from "./components/NavigateToLogin";
 import SettingPage from "./pages/SettingPage";
+import ChatNotification from "./components/ChatNotification";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path={"inbox"} element={<ChatPage />} />
         </Routes>
         <NavigateToLogin />
+        <ChatNotification />
       </BrowserRouter>
       <ToastContainer
         autoClose={3000}

@@ -9,6 +9,7 @@ const ContextProvider = ({ children }) => {
   const [isShowLoginNavigator, setIsShowLoginNavigator] = useState(false);
   const [verifyUser, setVerifyUser] = useState(null);
   const [chatUser, setChatUser] = useState(null);
+  const [notificationQueue, setNotificationQueue] = useState([]);
   const values = {
     persist,
     setPersist,
@@ -18,6 +19,8 @@ const ContextProvider = ({ children }) => {
     setChatUser,
     isShowLoginNavigator,
     setIsShowLoginNavigator,
+    notificationQueue,
+    setNotificationQueue,
   };
   return <MyContext.Provider value={values}>{children}</MyContext.Provider>;
 };

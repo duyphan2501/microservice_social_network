@@ -38,7 +38,12 @@ const MessageModel = {
           INSERT INTO message_media (message_id, media_url, media_public_id, media_type)
           VALUES ?
         `;
-        const mediaValues = media.map((m) => [messageId, m.url, m.publicId, m.type]);
+        const mediaValues = media.map((m) => [
+          messageId,
+          m.url,
+          m.publicId,
+          m.type,
+        ]);
         await connection.query(mediaInsertQuery, [mediaValues]); // <-- Dùng connection
       }
 
@@ -59,8 +64,11 @@ const MessageModel = {
         "SELECT user_id_1, user_id_2 FROM conversations WHERE id = ?",
         [conversationId]
       );
+
+      let receiverId;
+
       if (convoRows.length > 0) {
-        const receiverId =
+        receiverId =
           convoRows[0].user_id_1 === senderId
             ? convoRows[0].user_id_2
             : convoRows[0].user_id_1;
@@ -79,7 +87,7 @@ const MessageModel = {
       // Commit transaction
       await connection.commit();
 
-      return messageId;
+      return { messageId, receiverId };
     } catch (error) {
       // Rollback transaction nếu có lỗi
       await connection.rollback();

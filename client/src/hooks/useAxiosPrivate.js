@@ -43,7 +43,7 @@ const useAxiosPrivate = () => {
             };
             return axiosPrivate(prevRequest);
           } catch (err) {
-            useUserStore.getState().logout();
+            // useUserStore.getState().logout();
             return Promise.reject(err);
           }
         }

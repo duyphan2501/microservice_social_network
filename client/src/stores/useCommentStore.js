@@ -5,10 +5,6 @@ import useUserStore from "./useUserStore";
 
 export const useCommentStore = create((set, get) => ({
   isLoading: false,
-  comments: [],
-  likeCount: 0,
-  commentCount: 0,
-  liked: false,
 
   getPostComments: async (postId) => {
     set({ isLoading: true });
@@ -38,35 +34,6 @@ export const useCommentStore = create((set, get) => ({
     });
     return res.data.comment;
   },
-  
-  setComments: (newComments) => set({ comments: newComments }),
-  addCommentState: (comment) =>
-    set((state) => ({
-      ...state,
-      comments: [...state.comments, comment],
-      commentCount: state.commentCount + 1,
-    })),
-
-  setLikeCount: (count) => {
-    console.log("set to", count);
-    console.log(get().likeCount);
-    set({ likeCount: count });
-  },
-  setCommentCount: (count) => set({ commentCount: count }),
-  setLiked: (isLiked) => set({ liked: isLiked }),
-
-  replaceTempComment: (tempId, realComment) =>
-    set((state) => ({
-      ...state,
-      comments: state.comments.map((c) => (c.id === tempId ? realComment : c)),
-    })),
-
-  removeComment: (commentId) =>
-    set((state) => ({
-      ...state,
-      comments: state.comments.filter((c) => c.id !== commentId),
-      commentCount: state.commentCount - 1,
-    })),
 }));
 
 export default useCommentStore;

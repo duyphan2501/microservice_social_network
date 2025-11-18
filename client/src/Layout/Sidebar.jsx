@@ -8,17 +8,9 @@ import { toast } from "react-toastify";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 
 // Navigation Item Component
-const NavItem = ({
-  icon,
-  label,
-  isActive = false,
-  isCollapsed,
-  href = "#",
-  onClick,
-}) => {
+const NavItem = ({ icon, label, isActive = false, isCollapsed, onClick }) => {
   return (
-    <a
-      href={href}
+    <button
       onClick={onClick}
       className={`w-full flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-gray-100 transition-colors ${
         isActive ? "font-bold" : "font-normal"
@@ -28,7 +20,7 @@ const NavItem = ({
         {icon}
       </div>
       {!isCollapsed && <span className="text-base">{label}</span>}
-    </a>
+    </button>
   );
 };
 
@@ -38,18 +30,25 @@ const Sidebar = () => {
 
   const { refreshToken, isLoading, refreshUser } = useUserStore();
 
-  const { persist } = useContext(MyContext);
+  const { persist, setIsShowLoginNavigator } = useContext(MyContext);
   const navigator = useNavigate();
   const location = useLocation();
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const { connectMainSocket, disconnectMainSocket } = useSocketStore();
-
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotifications] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const axiosPrivate = useAxiosPrivate();
+
+  const handleNavigation = (href) => {
+    if (!user) {
+      setIsShowLoginNavigator(true);
+      return;
+    }
+    navigator(href);
+  };
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -74,9 +73,16 @@ const Sidebar = () => {
           await refreshUser();
         }
       } catch (error) {
-        console.error("Error refreshing token:", error);
         if (isMounted) {
-          if (["/auth"].includes(location.pathname)) return;
+          const allowedPaths = ["/", "/post/"];
+          const isAllowedPath =
+            allowedPaths.includes(location.pathname) ||
+            /^(\/post\/)([a-zA-Z0-9_-]+)(\/comments\/?)$/.test(
+              location.pathname
+            );
+
+          if (isAllowedPath) return;
+
           toast.error("Bạn cần phải đăng nhập trước!");
           navigator("/auth/login");
         }
@@ -91,8 +97,6 @@ const Sidebar = () => {
 
   useEffect(() => {
     let isMounted = false;
-
-    if (!user) return;
 
     if (!isMounted) {
       connectMainSocket();
@@ -127,7 +131,7 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Home",
-      href: "/",
+      onClick: () => navigator("/"),
     },
     {
       icon: (
@@ -143,7 +147,7 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Search",
-      href: "/search",
+      onClick: () => handleNavigation("/search"),
     },
     {
       icon: (
@@ -158,7 +162,7 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Messages",
-      href: "/inbox",
+      onClick: () => handleNavigation("/inbox"),
     },
     {
       icon: (
@@ -173,7 +177,6 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Notifications",
-      href: "#",
       hasIndicator: hasNewNotifications,
       onClick: (e) => {
         e.preventDefault();
@@ -194,7 +197,7 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Create",
-      href: "/create",
+      onClick: () => handleNavigation("/create"),
     },
     {
       icon: (
@@ -209,7 +212,7 @@ const Sidebar = () => {
         </div>
       ),
       label: "Profile",
-      href: "/profile",
+      onClick: () => handleNavigation("/profile"),
     },
   ];
 
@@ -263,7 +266,16 @@ const Sidebar = () => {
                   className="text-2xl font-semibold"
                   style={{ fontFamily: "Brush Script MT, cursive" }}
                 >
-                  {user ? user.full_name : ""}
+                  {user ? (
+                    user.full_name
+                  ) : (
+                    <a
+                      className="bg-black text-white p-2 rounded-lg hover:underline"
+                      href="/auth/login"
+                    >
+                      Login now
+                    </a>
+                  )}
                 </h1>
               )}
             </div>
@@ -277,7 +289,6 @@ const Sidebar = () => {
                   label={item.label}
                   isActive={location.pathname === item.href}
                   isCollapsed={isCollapsed}
-                  href={item.href}
                   onClick={item.onClick}
                 />
               ))}
@@ -339,12 +350,24 @@ const Sidebar = () => {
                     </button>
 
                     {/* Log out */}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors duration-150 text-left"
-                    >
-                      <span className="font-medium text-red-700">Log out</span>
-                    </button>
+                    {/* Log out */}
+                    {user ? (
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-800 hover:bg-gray-100 transition-colors duration-150 text-left"
+                      >
+                        <span className="font-medium text-red-700">
+                          Log out
+                        </span>
+                      </button>
+                    ) : (
+                      <a
+                        href="/auth/login"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-800 font-semibold hover:bg-gray-100 transition-colors duration-150 text-left"
+                      >
+                        <span className="">Login/Sign up</span>
+                      </a>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { MyContext } from "../Context/MyContext";
-import { X } from "lucide-react";
+import { Info, X } from "lucide-react";
 
 const NavigateToLogin = () => {
   const { setIsShowLoginNavigator, isShowLoginNavigator } =
@@ -9,7 +9,11 @@ const NavigateToLogin = () => {
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-100">
       <div className="p-5 bg-white rounded-lg z-200 w-80">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Info />
+            <p className="font-semibold text-lg subtitle">Thông báo</p>
+          </div>
           <button
             className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 cursor-pointer"
             onClick={() => setIsShowLoginNavigator(false)}

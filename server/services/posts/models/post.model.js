@@ -2,7 +2,6 @@ import { pool } from "../database/connectDB.js";
 
 const PostModel = {
   getPostsWithMedia: async (limit, offset, currentUserId) => {
-    console.log(currentUserId);
     // 1. Lấy danh sách bài đăng + trạng thái đã like chưa
     const postsQuery = `
       SELECT 

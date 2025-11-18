@@ -10,10 +10,6 @@ const socketAuth = async (socket, next) => {
         .find((row) => row.startsWith("accessToken"))
         ?.split("=")[1];
 
-    // if (!token) {
-    //   console.error("Socket Auth: No token provided");
-    //   return next(new Error("No token provide"));
-    // }
     if (token) {
       const payload = await verifyAccessToken(token);
       const userId = payload.userId;

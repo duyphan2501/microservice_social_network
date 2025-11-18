@@ -4,16 +4,21 @@
   "workspaces": [
     "gateway",
     "services/users",
-    "services/posts"
+    "services/posts",
+    "services/friend",
+    "services/chat"
   ],
   "scripts": {
     "dev:gateway": "npm --workspace gateway run dev",
     "dev:users": "npm --workspace services/users run dev",
     "dev:posts": "npm --workspace services/posts run dev",
+    "dev:friend": "npm --workspace services/friend run dev",
+    "dev:chat": "npm --workspace services/chat run dev",
     "start:gateway": "npm --workspace gateway run start",
     "start:users": "npm --workspace services/users run start",
     "start:posts": "npm --workspace services/posts run start",
-    "dev:all": "concurrently -n gateway,users -c green,blue,yellow \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:posts\""
+    "start:chat": "npm --workspace services/chat run start",
+    "dev:all": "concurrently -n gateway,users -c green,blue,yellow,gray,red \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:chat\" \"npm run dev:posts\" \"npm run dev:friend\""
   },
   "engines": {
     "node": ">=18"

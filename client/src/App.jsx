@@ -15,6 +15,8 @@ import Profile from "./pages/Profile";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import { ToastContainer } from "react-toastify";
 import NavigateToLogin from "./components/NavigateToLogin";
+import SettingPage from "./pages/SettingPage";
+import ChatNotification from "./components/ChatNotification";
 
 function App() {
   return (
@@ -34,10 +36,12 @@ function App() {
             <Route path="/post/:postId/comments" element={<CommentPage />} />
             <Route path="search" element={<Search />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<SettingPage />} />
           </Route>
           <Route path={"inbox"} element={<ChatPage />} />
         </Routes>
         <NavigateToLogin />
+        <ChatNotification />
       </BrowserRouter>
       <ToastContainer
         autoClose={3000}

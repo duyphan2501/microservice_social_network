@@ -8,6 +8,7 @@ const useUserStore = create((set, get) => {
     try {
       const res = await API.post(`/users/login`, user);
       set({ user: res.data.user, accessToken: res.data.accessToken });
+
       toast.success(res.data.message);
       return { success: true, loginUser: res.data.user };
     } catch (error) {
@@ -40,6 +41,18 @@ const useUserStore = create((set, get) => {
       throw error;
     } finally {
       set({ isLoading: { refresh: false } });
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const res = await API.get("/users/refresh-user");
+
+      set({
+        user: res.data.user,
+      });
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -163,7 +176,7 @@ const useUserStore = create((set, get) => {
   const changePassword = async (formData, axiosPrivate) => {
     set({ isLoading: { change: true } });
     try {
-      const res = await axiosPrivate.put(`/users/change-password`, formData);
+      const res = await API.put(`/users/change-password`, formData);
       toast.success(res.data.message);
       return true;
     } catch (error) {
@@ -177,7 +190,21 @@ const useUserStore = create((set, get) => {
 
   const getUserInfo = async (userId, axiosPrivate) => {
     try {
+      const res = await API.get(`/users/get-info/${userId}`);
+      return res.data.user;
+    } catch (error) {
+      const message = error.response?.data?.message;
+      console.error(error);
+      toast.error(message);
+    }
+  };
+
+  const refreshUserInfo = async (userId, axiosPrivate) => {
+    try {
       const res = await axiosPrivate.get(`/users/get-info/${userId}`);
+      set(() => ({
+        user: res.data.user,
+      }));
       return res.data.user;
     } catch (error) {
       const message = error.response?.data?.message;
@@ -228,6 +255,7 @@ const useUserStore = create((set, get) => {
     },
     login,
     refreshToken,
+    refreshUser,
     signUp,
     verifyAccount,
     sendVerificationEmail,
@@ -238,6 +266,7 @@ const useUserStore = create((set, get) => {
     changePassword,
     getUserInfo,
     fetchUserIfNeeded,
+    refreshUserInfo,
   };
 });
 

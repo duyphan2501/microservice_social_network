@@ -252,7 +252,11 @@ function SearchPage() {
       if (query.trim()) {
         // Search users - FIXED: Changed from /friend/search/users to /friends/search/users
         const response = await axiosPrivate.get(
-          `/friends/search/users?query=${encodeURIComponent(query)}&limit=20`
+          `/friends/search/users?query=${encodeURIComponent(
+            query
+          )}&limit=20``/friend/search/users?query=${encodeURIComponent(
+            query
+          )}&limit=20`
         );
         setUsers(response.data.data.users || []);
       } else {

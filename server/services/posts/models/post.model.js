@@ -94,7 +94,7 @@ const PostModel = {
         mediaItem.media_url,
         mediaItem.media_public_id,
         mediaItem.media_type,
-        mediaItem.display_order || index+1,
+        mediaItem.display_order || index + 1,
       ]);
 
       const mediaQuery = `
@@ -106,6 +106,115 @@ const PostModel = {
     }
 
     return postId;
+  },
+
+  toggleLike: async (postId, userId) => {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Kiểm tra đã like chưa
+      const [rows] = await connection.query(
+        `SELECT * FROM likes WHERE post_id = ? AND user_id = ?`,
+        [postId, userId]
+      );
+
+      let liked = false;
+
+      if (rows.length > 0) {
+        // Unlike
+        await connection.query(
+          `DELETE FROM likes WHERE post_id = ? AND user_id = ?`,
+          [postId, userId]
+        );
+
+        await connection.query(
+          `UPDATE posts SET likes_count = likes_count - 1 WHERE id = ?`,
+          [postId]
+        );
+
+        liked = false;
+      } else {
+        // Like
+        await connection.query(
+          `INSERT INTO likes (post_id, user_id) VALUES (?, ?)`,
+          [postId, userId]
+        );
+
+        await connection.query(
+          `UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?`,
+          [postId]
+        );
+
+        liked = true;
+      }
+
+      // Lấy likes_count mới nhất để trả về FE hoặc emit socket
+      const [[post]] = await connection.query(
+        `SELECT likes_count FROM posts WHERE id = ?`,
+        [postId]
+      );
+
+      await connection.commit();
+
+      return {
+        liked,
+        likes_count: post.likes_count,
+      };
+    } catch (err) {
+      await connection.rollback();
+      console.error("Toggle like error:", err);
+      throw err;
+    } finally {
+      connection.release();
+    }
+  },
+
+  addNewComment: async (postId, parentId = null, content, userId) => {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const insertQuery = `
+      INSERT INTO comments (post_id, parent_comment_id, content, user_id, created_at)
+      VALUES (?, ?, ?, ?, NOW())
+    `;
+
+      const insertValues = [postId, parentId, content, userId];
+
+      const [insertResult] = await connection.query(insertQuery, insertValues);
+
+      const newCommentId = insertResult.insertId;
+
+      // Add this query to increment the comments_count in the posts table
+      const updateCountQuery = `
+      UPDATE posts
+      SET comments_count = comments_count + 1
+      WHERE id = ?
+    `;
+
+      await connection.query(updateCountQuery, [postId]);
+
+      const [rows] = await connection.query(
+        `SELECT * FROM comments WHERE id = ?`,
+        [newCommentId]
+      );
+
+      if (rows.length === 0) {
+        throw new Error("Failed to retrieve the newly added comment.");
+      }
+
+      const newComment = rows[0];
+      await connection.commit();
+
+      return newComment;
+    } catch (err) {
+      await connection.rollback();
+      console.error("Add comment error:", err);
+      throw err;
+    } finally {
+      connection.release();
+    }
   },
 };
 

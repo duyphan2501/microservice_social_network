@@ -149,7 +149,7 @@ const FriendModel = {
       LIMIT ? OFFSET ?
     `;
 
-    const [rows] = await pool.execute(query, [
+    const [rows] = await pool.query(query, [
       userId,
       userId,
       userId,
@@ -322,6 +322,18 @@ const FriendModel = {
     } catch (error) {
       return [];
     }
+  },
+
+  async countFriends(userId) {
+    const query = `
+      SELECT COUNT(*) as count
+      FROM friend_relationships 
+      WHERE (user_id_1 = ? OR user_id_2 = ?) 
+        AND status = 'accepted'
+    `;
+
+    const [rows] = await pool.execute(query, [userId, userId]);
+    return rows[0].count;
   },
 };
 

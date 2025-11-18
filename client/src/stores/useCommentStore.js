@@ -25,6 +25,15 @@ export const useCommentStore = create((set, get) => ({
       set({ isLoading: false });
     }
   },
+
+  addComment: async (postId, parentId, content, axiosPrivate) => {
+    const res = await axiosPrivate.post("/posts/comments/add", {
+      postId,
+      parentId,
+      content,
+    });
+    return res.data.comment;
+  },
 }));
 
 export default useCommentStore;

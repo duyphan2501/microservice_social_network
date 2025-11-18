@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-dotenv.config({quiet:true});
+dotenv.config({ quiet: true });
 
 const generateAccessTokenAndSetCookie = async (res, userId) => {
   const token = await new Promise((resolve, reject) => {

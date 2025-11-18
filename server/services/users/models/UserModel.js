@@ -171,6 +171,23 @@ const UserModel = {
       console.error("Error counting search results:", error);
       return 0;
     }
+
+    // updateUserInfo: async (userId, fullname, username, bio, avatar_url) => {
+    //   const query = `
+    //     UPDATE users
+    //     set full_name = ?, username = ?, bio = ?, avatar_url = ?
+    //     where id = ?
+    //   `;
+
+    //   const [result] = await pool.query(query, [
+    //     fullname,
+    //     username,
+    //     bio,
+    //     avatar_url,
+    //     userId,
+    //   ]);
+
+    //   return result.affectedRows;
   },
 };
 

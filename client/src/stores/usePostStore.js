@@ -11,7 +11,7 @@ export const usePostStore = create((set, get) => ({
   page: 1,
   hasMore: true,
 
-  fetchPosts: async () => {
+  fetchPosts: async (axiosPrivate) => {
     const { isLoading, page, hasMore } = get();
 
     if (isLoading || !hasMore) return;
@@ -19,7 +19,7 @@ export const usePostStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await API.get(`/posts?page=${page}&limit=10`);
+      const response = await axiosPrivate.get(`/posts?page=${page}&limit=10`);
       const newPosts = response.data.posts;
 
       if (newPosts.length === 0) {
@@ -81,6 +81,17 @@ export const usePostStore = create((set, get) => ({
     set((state) => ({
       posts: [newPost, ...state.posts],
     }));
+  },
+
+  saveLike: async (postId, axiosPrivate) => {
+    try {
+      const res = await axiosPrivate.post(`/posts/${postId}/like`);
+      return res.data;
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+      return null
+    }
   },
 
   resetPosts: () =>

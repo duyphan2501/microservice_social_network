@@ -1,38 +1,159 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Drawer from "@mui/material/Drawer";
 
-// Component EditProfileModal
 const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    fullname: "",
     username: "",
     bio: "",
-    interests: "",
-    instagramBadge: true,
-    privacy: "public",
+    avatarFile: null,
   });
+  const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false); // track avatar bị xóa
+  const [isOpenImage, setOpenImage] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        name: profile.name || "",
-        username: profile.username || "",
-        bio: profile.bio || "",
-        interests: profile.interests || "",
-        instagramBadge: profile.instagramBadge !== false,
-        privacy: profile.privacy || "public",
-      });
+  const fileInputRef = useRef(null);
+
+  // Upload image
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, avatarFile: file }));
+      setPreviewAvatar(URL.createObjectURL(file));
+      setRemoveAvatar(false); // nếu chọn ảnh mới, không xóa nữa
     }
-  }, [profile]);
+  };
+
+  // Remove avatar
+  const handleRemoveAvatar = () => {
+    setPreviewAvatar(null);
+    setFormData((prev) => ({ ...prev, avatarFile: null }));
+    setRemoveAvatar(true);
+  };
+
+  // Load profile data khi modal mở
+  useEffect(() => {
+    if (isOpen && profile) {
+      setFormData({
+        fullname: profile?.full_name || "",
+        username: profile?.username || "",
+        bio: profile?.bio || "",
+        avatarFile: null,
+      });
+      setPreviewAvatar(null);
+      setRemoveAvatar(false);
+    }
+  }, [profile, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onSave(formData);
-    onClose();
+    onSave({ ...formData, removeAvatar }); // gửi luôn removeAvatar về server
+  };
+
+  // Logic hiển thị avatar
+  const renderAvatar = () => {
+    if (previewAvatar) {
+      return (
+        <div className="bg-gray-300 rounded-full w-40 h-40 flex justify-center items-center overflow-hidden">
+          <img
+            src={previewAvatar}
+            alt="avatar preview"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    } else if (!removeAvatar && profile.avatar_url) {
+      return (
+        <div className="bg-gray-300 rounded-full w-40 h-40 flex justify-center items-center overflow-hidden">
+          <img
+            src={profile.avatar_url}
+            alt="avatar preview"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div className="relative overflow-hidden bg-gray-300 rounded-full w-40 h-40 flex justify-center items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            height="180px"
+            viewBox="0 -960 960 960"
+            width="180px"
+            fill="#797979ff"
+            className="absolute top-3"
+          >
+            <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+          </svg>
+        </div>
+      );
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      {/* Drawer cho upload/remove */}
+      <Drawer
+        anchor="top"
+        open={isOpenImage}
+        onClose={() => setOpenImage(false)}
+        PaperProps={{
+          sx: {
+            width: 800,
+            marginX: "auto",
+            marginY: "100px",
+            borderRadius: "16px",
+          },
+        }}
+      >
+        <div className="flex pt-3 pb-3 flex-col items-center justify-center space-y-3">
+          <span className="capitalize mb-5 mt-2 text-xl">
+            Change profile photo
+          </span>
+          <div className="w-full border border-gray-200"></div>
+
+          <span
+            onClick={handleUploadClick}
+            className="capitalize w-full text-center font-bold text-blue-700 hover:text-blue-400 cursor-pointer"
+          >
+            Upload photo
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <div className="w-full border border-gray-200"></div>
+
+          {!removeAvatar && (profile.avatar_url || previewAvatar) && (
+            <>
+              <span
+                onClick={handleRemoveAvatar}
+                className="capitalize w-full text-center font-bold text-red-700 hover:text-red-400 cursor-pointer"
+              >
+                Remove current photo
+              </span>
+              <div className="w-full border border-gray-200"></div>
+            </>
+          )}
+
+          <span
+            onClick={() => setOpenImage(false)}
+            className="capitalize w-full text-center cursor-pointer"
+          >
+            Cancel
+          </span>
+        </div>
+      </Drawer>
+
+      {/* Modal chính */}
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -45,9 +166,19 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Name Section */}
+          {/* Avatar */}
+          <div
+            onClick={() => setOpenImage(true)}
+            className="block w-full flex justify-center cursor-pointer"
+          >
+            {renderAvatar()}
+          </div>
+
+          {/* Full name */}
           <div>
-            <label className="block text-base font-semibold mb-3">Name</label>
+            <label className="block text-base font-semibold mb-3">
+              Full name
+            </label>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <svg
                 className="w-5 h-5 text-gray-600"
@@ -58,37 +189,36 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
               </svg>
               <input
                 type="text"
-                value={formData.name}
+                value={formData.fullname}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, fullname: e.target.value })
                 }
-                placeholder="Name"
+                placeholder="Full name"
                 className="flex-1 bg-transparent outline-none text-gray-900"
               />
-              <button className="p-1.5 hover:bg-gray-200 rounded-full transition">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m6.36 6.36l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m6.36-6.36l4.24-4.24" />
-                </svg>
-              </button>
-            </div>
-            <div className="mt-2 text-sm text-gray-600 flex items-center gap-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
-              </svg>
-              <span>
-                {formData.name} (@{formData.username})
-              </span>
             </div>
           </div>
 
-          {/* Bio Section */}
+          {/* Username */}
+          <div>
+            <label className="block text-base font-semibold mb-3">
+              Username
+            </label>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              @
+              <input
+                type="text"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                placeholder="Username"
+                className="flex-1 bg-transparent outline-none text-gray-900"
+              />
+            </div>
+          </div>
+
+          {/* Bio */}
           <div>
             <label className="block text-base font-semibold mb-3">Bio</label>
             <textarea
@@ -99,98 +229,6 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
               placeholder="+ Write bio"
               className="w-full p-3 bg-gray-50 rounded-lg outline-none resize-none text-gray-900 placeholder:text-gray-400 min-h-[80px]"
             />
-          </div>
-
-          {/* Interests Section */}
-          <div>
-            <label className="block text-base font-semibold mb-3">
-              Interests
-            </label>
-            <input
-              type="text"
-              value={formData.interests}
-              onChange={(e) =>
-                setFormData({ ...formData, interests: e.target.value })
-              }
-              placeholder="Add interests"
-              className="w-full p-3 bg-gray-50 rounded-lg outline-none text-gray-900 placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* Links Section */}
-          <div className="flex items-center justify-between py-3 cursor-pointer hover:bg-gray-50 rounded-lg px-3 -mx-3">
-            <span className="text-base font-semibold">Links</span>
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
-
-          {/* Instagram Badge Toggle */}
-          <div className="py-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-base font-semibold">
-                Show Instagram badge
-              </span>
-              <button
-                onClick={() =>
-                  setFormData({
-                    ...formData,
-                    instagramBadge: !formData.instagramBadge,
-                  })
-                }
-                className={`w-12 h-7 rounded-full transition-colors relative ${
-                  formData.instagramBadge ? "bg-black" : "bg-gray-300"
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${
-                    formData.instagramBadge ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">
-              When turned off, the Threads badge on your Instagram profile will
-              also disappear.
-            </p>
-          </div>
-
-          {/* Profile Privacy Section */}
-          <div className="py-3">
-            <div className="flex items-center justify-between cursor-pointer hover:bg-gray-50 rounded-lg px-3 -mx-3 py-2">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-base font-semibold">
-                    Profile privacy
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500 capitalize">
-                      {formData.privacy}
-                    </span>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500">
-                  If you switch to private, only followers can see your threads.
-                  Your replies will be visible to followers and individual
-                  profiles you reply to.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 

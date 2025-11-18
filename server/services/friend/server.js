@@ -19,7 +19,9 @@ app.use(cookieParser());
 app.get("/health", (_, res) => res.json({ success: true, service: "friend" }));
 
 app.use("/friends", friendRouter);
-app.use("/search", searchRouter); // ← THÊM DÒNG NÀY
+app.use("/search", searchRouter);
+
+app.use("/", friendRouter);
 
 app.use(errorHandler);
 

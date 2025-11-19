@@ -371,11 +371,27 @@ const refreshUser = async (req, res, next) => {
     const userId = req.user.userId;
 
     const user = await UserModel.getUserById(userId);
+    const accessToken = req.cookies.accessToken;
 
     return res.status(200).json({
       success: true,
       user,
+      accessToken,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const searchUsers = async (req, res, next) => {
+  try {
+    const { term } = req.query;
+
+    if (!term || term === "") return res.status(200).json({ users: [] });
+
+    const users = await UserModel.searchUsers(term);
+
+    return res.status(200).json({ users });
   } catch (error) {
     next(error);
   }
@@ -392,4 +408,5 @@ export {
   updateUserInfo,
   changeUserPassword,
   refreshUser,
+  searchUsers,
 };

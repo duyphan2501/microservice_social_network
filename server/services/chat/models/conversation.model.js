@@ -1,17 +1,18 @@
 import { pool } from "../database/connectDB.js";
 
 const ConversationModel = {
-  getConversationsByUserId: async (userId) => {
+  getConversationsByUserId: async (userId, status = "active") => {
     const query = `
         SELECT
-            c.id AS conversation_id,
+            c.id,
             CASE
-                WHEN c.user_id_1 = ? THEN c.user_id_2
-                ELSE c.user_id_1
+                WHEN c.creator_id = ? THEN c.partner_id
+                ELSE c.creator_id
             END AS other_user_id,
             m.id AS message_id,
             m.sender_id,
             m.content,
+            c.status AS conversation_status,
             m.type AS message_type, 
             m.sent_at,
             COALESCE(ms.status, 'sent') AS message_status,
@@ -23,18 +24,38 @@ const ConversationModel = {
         LEFT JOIN
             message_statuses ms ON m.id = ms.message_id AND ms.receiver_id = ?
         WHERE
-            c.user_id_1 = ? OR c.user_id_2 = ?
+            (c.creator_id = ? OR c.partner_id = ?)
+        AND
+            c.status = ?
         ORDER BY
             m.sent_at DESC;
     `;
 
     try {
-      const [rows] = await pool.query(query, [userId, userId, userId, userId]);
+      const [rows] = await pool.query(query, [
+        userId,
+        userId,
+        userId,
+        userId,
+        status,
+      ]);
       return rows;
     } catch (error) {
       console.error("Error fetching conversations:", error);
       throw new Error("Could not retrieve conversations");
     }
+  },
+
+  getConversation: async (userId1, userId2) => {
+    const query = `SELECT id, status FROM conversations WHERE creator_id = ? AND partner_id = ? OR creator_id = ? AND partner_id = ? AND status != ?`;
+    const [rows] = await pool.query(query, [
+      userId1,
+      userId2,
+      userId2,
+      userId1,
+      "delete",
+    ]);
+    return rows.length > 0 ? rows[0] : null;
   },
 
   getConversationMessagesBy: async (
@@ -44,14 +65,14 @@ const ConversationModel = {
     currentUserId
   ) => {
     const [conversation] = await pool.query(
-      `SELECT user_id_1, user_id_2 FROM conversations WHERE id = ?`,
+      `SELECT creator_id, partner_id FROM conversations WHERE id = ?`,
       [conversationId]
     );
 
     if (!conversation.length) return [];
 
-    const { user_id_1, user_id_2 } = conversation[0];
-    const partnerId = currentUserId === user_id_1 ? user_id_2 : user_id_1;
+    const { creator_id, partner_id } = conversation[0];
+    const otherUserId = currentUserId === creator_id ? partner_id : creator_id;
 
     let query = `
     SELECT 
@@ -80,7 +101,7 @@ const ConversationModel = {
         m.conversation_id = ?
   `;
 
-    const params = [currentUserId, currentUserId, partnerId, conversationId];
+    const params = [currentUserId, currentUserId, otherUserId, conversationId];
 
     if (beforeId && beforeId != "undefined") {
       query += ` AND m.id < ?`;
@@ -120,6 +141,19 @@ const ConversationModel = {
     }
 
     return Array.from(messagesMap.values()).reverse();
+  },
+
+  createConversation: async (creatorId, partnerId) => {
+    const query =
+      "INSERT INTO conversations (creator_id, partner_id) VALUES (?,?)";
+    const [result] = await pool.query(query, [creatorId, partnerId]);
+    return result.affectedRows > 0 ? result.insertId : null;
+  },
+
+  updateStatusConversation: async (conversationId, status) => {
+    const query = "UPDATE conversations SET status = ? WHERE id = ?";
+    const [result] = await pool.query(query, [status, conversationId]);
+    return result.affectedRows;
   },
 };
 

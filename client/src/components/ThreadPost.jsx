@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatRelativeTime } from "../utils/DateFormat";
 import useUserStore from "../stores/useUserStore";
@@ -6,6 +6,7 @@ import PostMedia from "./PostMedia";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { useCallback } from "react";
 import usePostStore from "../stores/usePostStore";
+import { MyContext } from "../Context/MyContext";
 
 const ThreadPost = ({ post }) => {
   const [liked, setLiked] = useState(post.isLiked || false);
@@ -13,13 +14,19 @@ const ThreadPost = ({ post }) => {
   const navigate = useNavigate();
   const usersCache = useUserStore((state) => state.usersCache);
   const author = usersCache[post.user_id];
-  const axiosPrivate = useAxiosPrivate()
-  const {saveLike} = usePostStore()
-  
+  const axiosPrivate = useAxiosPrivate();
+  const user = useUserStore((state) => state.user);
+  const { saveLike } = usePostStore();
+  const { setIsShowLoginNavigator } = useContext(MyContext);
+
   const handleLike = useCallback(async () => {
+    if (!user) {
+      setIsShowLoginNavigator(true);
+      return;
+    }
     const res = await saveLike(post.id, axiosPrivate);
     setLiked(res.liked || false);
-    setLikeCount(res.likes_count)
+    setLikeCount(res.likes_count);
   }, [liked]);
 
   return (
@@ -99,40 +106,6 @@ const ThreadPost = ({ post }) => {
                 <span className="text-gray-600 text-sm">
                   {post.comments_count}
                 </span>
-              )}
-            </button>
-
-            <button className="flex items-center gap-2 hover:opacity-70 transition group">
-              <svg
-                className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <polyline points="17 1 21 5 17 9" />
-                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                <polyline points="7 23 3 19 7 15" />
-                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-              </svg>
-              {post.reposts > 0 && (
-                <span className="text-gray-600 text-sm">{post.reposts}</span>
-              )}
-            </button>
-
-            <button className="flex items-center gap-2 hover:opacity-70 transition group">
-              <svg
-                className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-              {post.shares > 0 && (
-                <span className="text-gray-600 text-sm">{post.shares}</span>
               )}
             </button>
           </div>

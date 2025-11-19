@@ -50,6 +50,7 @@ const useUserStore = create((set, get) => {
 
       set({
         user: res.data.user,
+        accessToken: res.data.accessToken
       });
     } catch (error) {
       throw error;
@@ -156,7 +157,7 @@ const useUserStore = create((set, get) => {
       return false;
     }
   };
-
+ 
   const updatePersonalInfo = async (name, phone, axiosPrivate) => {
     try {
       const res = await axiosPrivate.put(`/users/personal-info/update`, {
@@ -239,6 +240,11 @@ const useUserStore = create((set, get) => {
     }
   };
 
+  const searchUsers = async (term) => {
+    const res = await API.get(`/users/search?term=${term}`);
+    return res.data.users || [];
+  };
+
   return {
     usersCache: {},
     user: null,
@@ -267,6 +273,7 @@ const useUserStore = create((set, get) => {
     getUserInfo,
     fetchUserIfNeeded,
     refreshUserInfo,
+    searchUsers,
   };
 });
 

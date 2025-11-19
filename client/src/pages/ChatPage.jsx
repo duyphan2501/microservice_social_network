@@ -15,9 +15,10 @@ const MemoizedConversationItem = memo(ConversationItem);
 const ChatPage = () => {
   const user = useUserStore((state) => state.user);
   const [conversationsWithUsers, setConversationsWithUsers] = useState([]);
-  const {chatUser, setChatUser} = useContext(MyContext)
+  const { setChatUser, setSelectedConversationId, setIsOpenNewMessage } =
+    useContext(MyContext);
+  const [activeTab, setActiveTab] = useState(0); // 0: Messages, 1: Requests
 
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
   const mainSocket = useSocketStore((state) => state.mainSocket);
   const { getUserInfo } = useUserStore();
   const { getConversations } = useConversationStore();
@@ -42,9 +43,11 @@ const ChatPage = () => {
   const fetchConversations = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
+    const status = activeTab === 0 ? "active" : "new";
     try {
       const rawConversationsData = await getConversations(
         user.id,
+        status,
         axiosPrivate
       );
       const finalData = await processConversations(rawConversationsData);
@@ -54,23 +57,23 @@ const ChatPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, getConversations, axiosPrivate, getUserInfo]);
+  }, [user, getConversations, axiosPrivate, getUserInfo, activeTab]);
 
-  const handleClick = (user, conversationId) => {
-    setChatUser(user);
-    setSelectedConversationId(conversationId);
+  const handleClick = (conversation) => {
+    setChatUser(conversation.otherUser);
+    setSelectedConversationId(conversation.id);
   };
 
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+  }, [fetchConversations, activeTab]);
 
   const updateMessageStatusInState = useCallback(
     ({ messageId, status }) => {
       setConversationsWithUsers((prevConversations) => {
         return prevConversations.map((conversation) => {
           if (conversation.message_id == messageId) {
-            const newConversation = { ...conversation, message_status: status }
+            const newConversation = { ...conversation, message_status: status };
             return newConversation;
           }
           return conversation;
@@ -83,22 +86,23 @@ const ChatPage = () => {
   // 2. Lắng nghe tin nhắn mới
   const handleReceiveMessage = useCallback(
     (newMessage) => {
+      console.log(newMessage);
       setConversationsWithUsers((prevConversations) => {
         // Tạo bản sao mới của mảng
         return prevConversations.map((conversation) => {
           // Nếu tìm thấy cuộc hội thoại cần cập nhật tin nhắn mới
-          if (conversation.conversation_id == newMessage.conversation_id) {
+          if (conversation.id == newMessage.conversation_id) {
             // Tạo bản sao của object conversation và cập nhật tất cả các trường
             const newConversation = {
               ...conversation,
-              message_id: newMessage.id, 
+              message_id: newMessage.id,
               content: newMessage.content,
               message_type: newMessage.type,
-              message_status: newMessage.status || 'sent',
+              message_status: newMessage.status || "sent",
               media_count: newMessage.media_count,
               sender_id: newMessage.sender_id,
               sent_at: newMessage.sent_at,
-            }
+            };
             return newConversation;
           }
           // Nếu không phải, giữ nguyên object cũ
@@ -129,7 +133,10 @@ const ChatPage = () => {
             <h5 className="font-semibold text-2xl hidden md:block">
               {user.username}
             </h5>
-            <span className="hover:-translate-y-[0.5px] cursor-pointer">
+            <span
+              className="hover:-translate-y-[0.5px] cursor-pointer"
+              onClick={() => setIsOpenNewMessage(true)}
+            >
               <SquarePen />
             </span>
           </div>
@@ -145,14 +152,17 @@ const ChatPage = () => {
               type="radio"
               name="my_tabs_1"
               className="tab w-1/2 checked:bg-gray-100 checked:font-semibold"
-              aria-label="Tin nhắn"
+              aria-label="Mesagesages"
+              checked={activeTab === 0}
+              onChange={() => setActiveTab(0)}
             />
             <input
               type="radio"
               name="my_tabs_1"
               className="tab w-1/2 checked:bg-gray-100 checked:font-semibold"
-              aria-label="Chưa đọc"
-              defaultChecked
+              aria-label="Requests"
+              checked={activeTab === 1}
+              onChange={() => setActiveTab(1)}
             />
           </div>
         </div>
@@ -179,12 +189,10 @@ const ChatPage = () => {
               {conversationsWithUsers.map((item) => (
                 <div
                   className="cursor-pointer"
-                  key={item.conversation_id}
-                  onClick={() =>
-                    handleClick(item.otherUser, item.conversation_id)
-                  }
+                  key={item.id}
+                  onClick={() => handleClick(item)}
                 >
-                  <MemoizedConversationItem // Sử dụng phiên bản memo
+                  <MemoizedConversationItem
                     conversation={item}
                     isYou={item.sender_id === user.id}
                     isChatUserOnline={onlineUsers.includes(
@@ -200,7 +208,7 @@ const ChatPage = () => {
       </section>
       {/* right */}
       <section className="flex-1">
-        <ChatMain chatUser={chatUser} conversationId={selectedConversationId} />
+        <ChatMain />
       </section>
     </div>
   );

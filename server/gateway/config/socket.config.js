@@ -46,13 +46,13 @@ io.on("connection", (socket) => {
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("join_conversation", (conversationId) => {
-      socket.join(conversationId);
-      console.log(`User ${userId} joined room ${conversationId}`);
+      socket.join(`conversation_${conversationId}`);
+      console.log(`User ${userId} joined room conversation_${conversationId}`);
     });
 
     socket.on("leave_conversation", (conversationId) => {
-      socket.leave(conversationId);
-      console.log(`User ${socket.id} left room ${conversationId}`);
+      socket.leave(`conversation_${conversationId}`);
+      console.log(`User ${socket.id} left room conversation_${conversationId}`);
     });
   }
 
@@ -106,7 +106,7 @@ async function connectRabbitMQ() {
         switch (event.type) {
           case "NEW_MESSAGE_SAVED":
             // Phát tin nhắn đã lưu tới phòng chat
-            io.to(event.data.conversation_id).emit(
+            io.to(`conversation_${event.data.conversation_id}`).emit(
               "receive_message",
               event.data
             );
@@ -119,8 +119,10 @@ async function connectRabbitMQ() {
             break;
           case "MESSAGE_STATUS_UPDATED":
             // Phát cập nhật trạng thái
-            console.log("update to", event.data.conversationId);
-            io.to(event.data.conversationId).emit("status_updated", event.data);
+            io.to(`conversation_${event.data.conversationId}`).emit(
+              "status_updated",
+              event.data
+            );
             break;
         }
       }

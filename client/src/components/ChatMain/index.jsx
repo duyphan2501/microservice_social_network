@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import ChatFooter from "./ChatFooter";
 import ChatHeader from "./ChatHeader";
 import MessageItem from "../MessageItem";
@@ -8,10 +8,18 @@ import useConversationStore from "../../stores/useConversationStore";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useSocketStore from "../../stores/useSocketStore";
 import useMessageStore from "../../stores/useMessageStore";
+import { MyContext } from "../../Context/MyContext";
 
-const ChatMain = ({ chatUser, conversationId }) => {
+const ChatMain = () => {
+  const { chatUser, selectedConversationId, setSelectedConversationId } =
+    useContext(MyContext);
+
   const user = useUserStore((state) => state.user); // currentUser
-  const { getConversationMessages } = useConversationStore();
+  const {
+    getConversationMessages,
+    createNewConversation,
+  } = useConversationStore();
+
   const { uploadMessageImages, sendMessage, updateMessageStatus } =
     useMessageStore();
   const axiosPrivate = useAxiosPrivate();
@@ -29,7 +37,7 @@ const ChatMain = ({ chatUser, conversationId }) => {
   // Tải tin nhắn từ API ban đầu
   const fetchedMessages = async (limit = 20, beforeId = undefined) => {
     const data = await getConversationMessages(
-      conversationId,
+      selectedConversationId,
       limit,
       beforeId,
       axiosPrivate
@@ -48,15 +56,15 @@ const ChatMain = ({ chatUser, conversationId }) => {
   }, []);
 
   useEffect(() => {
-    // 1. Kết nối và tham gia phòng chat khi conversationId thay đổi
-    if (mainSocket && conversationId) {
-      mainSocket.emit("join_conversation", conversationId);
+    // 1. Kết nối và tham gia phòng chat khi selectedConversationId thay đổi
+    if (mainSocket && selectedConversationId) {
+      mainSocket.emit("join_conversation", selectedConversationId);
     }
 
     // 2. Lắng nghe tin nhắn mới
     const handleReceiveMessage = (newMessage) => {
       if (!newMessage.status) newMessage.status = "sent";
-      if (newMessage.conversation_id !== conversationId) {
+      if (newMessage.conversation_id !== selectedConversationId) {
         return;
       }
       if (newMessage.sender_id === user.id) {
@@ -83,7 +91,7 @@ const ChatMain = ({ chatUser, conversationId }) => {
       } else {
         setMessages((prev) => [...prev, newMessage]);
         updateMessageStatus(
-          conversationId,
+          selectedConversationId,
           newMessage.id,
           user.id,
           "delivered",
@@ -98,23 +106,24 @@ const ChatMain = ({ chatUser, conversationId }) => {
     mainSocket?.on("status_updated", updateMessageStatusInState);
 
     return () => {
-      // Dọn dẹp listener khi component unmount hoặc conversationId thay đổi
+      // Dọn dẹp listener khi component unmount hoặc selectedConversationId thay đổi
       mainSocket?.off("receive_message", handleReceiveMessage);
       mainSocket?.off("status_updated", updateMessageStatusInState);
-      if (mainSocket && conversationId) {
-        mainSocket.emit("leave_conversation", conversationId);
+      if (mainSocket && selectedConversationId) {
+        mainSocket.emit("leave_conversation", selectedConversationId);
       }
     };
-  }, [conversationId, user.id, updateMessageStatusInState]);
+  }, [selectedConversationId, user.id, updateMessageStatusInState]);
 
   // Effect cho việc cuộn trang và fetch API ban đầu
   useEffect(() => {
     scrollToBottom();
+    setMessages([]);
     // Đảm bảo fetch lại messages khi đổi conversation/chatUser
-    if (conversationId) {
+    if (selectedConversationId) {
       fetchedMessages();
     }
-  }, [chatUser, conversationId]);
+  }, [chatUser, selectedConversationId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -134,7 +143,7 @@ const ChatMain = ({ chatUser, conversationId }) => {
     // Tạo đối tượng tin nhắn giả định để hiển thị ngay lập tức
     const tempMessage = {
       id: tempId,
-      conversation_id: conversationId,
+      conversation_id: selectedConversationId,
       sender_id: user.id,
       content: content,
       type: images.length > 0 ? "image" : "text",
@@ -145,18 +154,32 @@ const ChatMain = ({ chatUser, conversationId }) => {
         media_file_type: "image",
       })),
     };
-
     addTempMessageToUI(tempMessage);
-    try {
-      const formData = new FormData();
-      images.forEach((file) => {
-        formData.append("message_images", file);
-      });
 
-      const uploadedImages = await uploadMessageImages(formData, axiosPrivate);
+    let currentConversationId = selectedConversationId;
+
+    if (!currentConversationId) {
+      currentConversationId = await createNewConversation(
+        chatUser.id,
+        axiosPrivate
+      );
+      setSelectedConversationId(currentConversationId);
+    }
+    
+
+    let uploadedImages = [];
+    try {
+      if (images.length > 0) {
+        const formData = new FormData();
+        images.forEach((file) => {
+          formData.append("message_images", file);
+        });
+
+        uploadedImages = await uploadMessageImages(formData, axiosPrivate);
+      }
 
       const messageData = {
-        conversationId: conversationId,
+        conversationId: currentConversationId,
         senderId: user.id,
         content: content.trim(),
         type: images.length > 0 ? "image" : "text",
@@ -177,13 +200,18 @@ const ChatMain = ({ chatUser, conversationId }) => {
   };
 
   const markChatAsRead = () => {
-    if (!mainSocket || !user.id || !conversationId || messages.length === 0)
+    if (
+      !mainSocket ||
+      !user.id ||
+      !selectedConversationId ||
+      messages.length === 0
+    )
       return;
     const lastMessage = messages[messages.length - 1];
     // Nếu tin nhắn cuối cùng là của người khác và chưa được đọc
     if (lastMessage.sender_id !== user.id && lastMessage.status !== "read") {
       updateMessageStatus(
-        conversationId,
+        selectedConversationId,
         lastMessage.id,
         user.id,
         "read",

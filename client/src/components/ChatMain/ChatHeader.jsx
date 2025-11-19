@@ -4,21 +4,21 @@ import { formatRelativeTime } from "../../utils/DateFormat";
 import { MyContext } from "../../Context/MyContext";
 
 const ChatHeader = ({ isChatUserOnline }) => {
-  const { chatSocket } = useSocketStore();
+  const { mainSocket } = useSocketStore();
   const { chatUser, setChatUser } = useContext(MyContext);
 
   useEffect(() => {
-    if (!chatSocket) return;
+    if (!mainSocket) return;
 
-    chatSocket.on("user_last_active_updates", (data) => {
+    mainSocket.on("user_last_active_updates", (data) => {
       if (chatUser.id === data.userId)
         setChatUser((prev) => ({ ...prev, last_active_at: data.timestamp }));
     });
 
     return () => {
-      chatSocket.off("user_last_active_updates");
+      mainSocket.off("user_last_active_updates");
     };
-  }, [chatSocket]);
+  }, [mainSocket]);
 
   return (
     <div className="p-4 border-b border-gray-200 ">
@@ -43,9 +43,9 @@ const ChatHeader = ({ isChatUserOnline }) => {
             <p className="font-medium ">{chatUser.full_name}</p>
             <div className="text-xs text-gray-600">
               {isChatUserOnline ? (
-                <p>Đang hoạt động</p>
+                <p>Online</p>
               ) : (
-                <p>Hoạt động {formatRelativeTime(chatUser.last_active_at, true)}</p>
+                <p>Online {formatRelativeTime(chatUser.last_active_at, true)}</p>
               )}
             </div>
           </div>

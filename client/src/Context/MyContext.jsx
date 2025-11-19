@@ -7,6 +7,8 @@ const ContextProvider = ({ children }) => {
     JSON.parse(localStorage.getItem("persist")) || false
   );
   const [isShowLoginNavigator, setIsShowLoginNavigator] = useState(false);
+  const [isOpenNewMessage, setIsOpenNewMessage] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [verifyUser, setVerifyUser] = useState(null);
   const [chatUser, setChatUser] = useState(null);
   const [notificationQueue, setNotificationQueue] = useState([]);
@@ -21,6 +23,10 @@ const ContextProvider = ({ children }) => {
     setIsShowLoginNavigator,
     notificationQueue,
     setNotificationQueue,
+    isOpenNewMessage,
+    setIsOpenNewMessage,
+    selectedConversationId,
+    setSelectedConversationId,
   };
   return <MyContext.Provider value={values}>{children}</MyContext.Provider>;
 };

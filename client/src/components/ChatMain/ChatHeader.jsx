@@ -11,8 +11,9 @@ const ChatHeader = ({ isChatUserOnline }) => {
     if (!mainSocket) return;
 
     mainSocket.on("user_last_active_updates", (data) => {
-      if (chatUser.id === data.userId)
+      if (chatUser.id === data.userId) {
         setChatUser((prev) => ({ ...prev, last_active_at: data.timestamp }));
+      }
     });
 
     return () => {
@@ -45,7 +46,9 @@ const ChatHeader = ({ isChatUserOnline }) => {
               {isChatUserOnline ? (
                 <p>Online</p>
               ) : (
-                <p>Online {formatRelativeTime(chatUser.last_active_at, true)}</p>
+                <p>
+                  Online {formatRelativeTime(chatUser.last_active_at, true)}
+                </p>
               )}
             </div>
           </div>

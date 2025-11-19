@@ -111,6 +111,7 @@ async function connectRabbitMQ() {
               event.data
             );
 
+            // Gửi notification riêng cho người nhận
             io.to(`user_${event.data.receiverId}`).emit(
               "chat_notification",
               event.data

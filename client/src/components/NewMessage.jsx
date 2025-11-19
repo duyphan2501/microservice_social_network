@@ -85,7 +85,7 @@ const NewMessage = () => {
     <div className="flex justify-center items-center fixed inset-0 bg-black/70 z-100">
       <div className="rounded-lg bg-white border border-gray-100 p-5 w-140 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="w-5"></p>
+          <p className="w-10"></p>
           <p className="font-semibold subtitle">New Message</p>
           <p
             className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 cursor-pointer"

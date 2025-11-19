@@ -2,7 +2,7 @@
 // Friend Service chỉ publish events qua RabbitMQ
 // Gateway sẽ nhận và emit qua Socket.IO cho client
 
-import { sendQueue, publishMessage } from "./rabbitMQ.js";
+import { sendQueue, publishFanout } from "./rabbitMQ.js";
 
 const EXCHANGES = {
   FRIEND_EVENTS: "friend_events",
@@ -51,7 +51,7 @@ class FriendEventPublisher {
     };
 
     // Publish to exchange cho các services khác subscribe
-    await publishMessage(EXCHANGES.FRIEND_EVENTS, JSON.stringify(event));
+    await publishFanout(EXCHANGES.FRIEND_EVENTS, JSON.stringify(event));
     console.log(`📡 Published to services: ${eventType}`);
   }
 

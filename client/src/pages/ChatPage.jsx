@@ -115,10 +115,10 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (!mainSocket) return;
-    mainSocket?.on("receive_message", handleReceiveMessage);
+    mainSocket?.on("chat_notification", handleReceiveMessage);
     mainSocket?.on("status_updated", updateMessageStatusInState);
     return () => {
-      mainSocket?.off("receive_message", handleReceiveMessage);
+      mainSocket?.off("chat_notification", handleReceiveMessage);
       mainSocket?.off("status_updated", updateMessageStatusInState);
     };
   }, [mainSocket, user?.id, updateMessageStatusInState, handleReceiveMessage]);
@@ -128,7 +128,7 @@ const ChatPage = () => {
   return (
     <div className="flex h-[calc(100vh-64px)] lg:h-screen max-h-screen">
       <section className="md:w-90 border-r border-gray-300 ">
-        <div className="flex flex-col gap-2 p-5">
+        <div className="flex flex-col gap-6 p-5">
           <div className="mt-5 flex justify-between items-center">
             <h5 className="font-semibold text-2xl hidden md:block">
               {user.username}
@@ -139,13 +139,6 @@ const ChatPage = () => {
             >
               <SquarePen />
             </span>
-          </div>
-          <div className="hidden md:block">
-            <input
-              type="text"
-              className="focus:outline-0 bg-gray-100 rounded-lg p-2 w-full"
-              placeholder="Tìm kiếm"
-            />
           </div>
           <div className="tabs tabs-box hidden md:block">
             <input
@@ -186,22 +179,30 @@ const ChatPage = () => {
             ))
           ) : (
             <>
-              {conversationsWithUsers.map((item) => (
-                <div
-                  className="cursor-pointer"
-                  key={item.id}
-                  onClick={() => handleClick(item)}
-                >
-                  <MemoizedConversationItem
-                    conversation={item}
-                    isYou={item.sender_id === user.id}
-                    isChatUserOnline={onlineUsers.includes(
-                      item.other_user_id.toString()
-                    )}
-                    otherUser={item.otherUser}
-                  />
-                </div>
-              ))}
+              {conversationsWithUsers.length > 0 ? (
+                conversationsWithUsers.map((item) => (
+                  <div
+                    className="cursor-pointer"
+                    key={item.id}
+                    onClick={() => handleClick(item)}
+                  >
+                    <MemoizedConversationItem
+                      conversation={item}
+                      isYou={item.sender_id === user.id}
+                      isChatUserOnline={onlineUsers.includes(
+                        item.other_user_id.toString()
+                      )}
+                      otherUser={item.otherUser}
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm px-5">
+                  {activeTab === 0
+                    ? "Chats will appear here after you send or receive a message"
+                    : "No new message requests at the moment."}
+                </p>
+              )}
             </>
           )}
         </div>

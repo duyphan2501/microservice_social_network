@@ -14,7 +14,7 @@ const SearchedUserItem = ({ user, isCheck = false }) => {
             />
           </div>
         </div>
-        <div className="md:flex flex-1 text-sm flex-col justify-center hidden ">
+        <div className="flex flex-1 text-sm flex-col justify-center ">
           <p className="font-medium">{user.full_name}</p>
           <p className="font-light">{user.username}</p>
         </div>

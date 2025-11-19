@@ -22,4 +22,23 @@ const checkAuth = async (req, res, next) => {
   }
 };
 
-export default checkAuth;
+const optionAuth = async (req, res, next) => {
+  const accessToken =
+    req.cookies.accessToken || req.headers?.authorization?.split(" ")[1];
+  if (!accessToken) {
+    req.user = null;
+    return next();
+  }
+  try {
+    const decodedToken = await verifyAccessToken(accessToken);
+    req.user = decodedToken;
+    next();
+  } catch (err) {
+    return res.status(403).json({
+      message: err.message || err,
+      success: false,
+    });
+  }
+};
+
+export { checkAuth, optionAuth };

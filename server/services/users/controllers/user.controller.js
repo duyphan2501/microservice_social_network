@@ -130,7 +130,7 @@ const refreshToken = async (req, res, next) => {
 
 const logout = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user?.userId;
     // clear cookie
     const options = {
       httpOnly: true,
@@ -141,7 +141,9 @@ const logout = async (req, res) => {
     res.clearCookie("refreshToken", options);
 
     // update db
-    await UserModel.setRefreshToken(userId, null, null);
+    if (userId) {
+      await UserModel.setRefreshToken(userId, null, null);
+    }
 
     return res.status(200).json({
       message: "Đăng xuất thành công",

@@ -45,6 +45,12 @@ const MessageModel = {
           m.publicId,
           m.type,
         ]);
+        const mediaValues = media.map((m) => [
+          messageId,
+          m.url,
+          m.publicId,
+          m.type,
+        ]);
         await connection.query(mediaInsertQuery, [mediaValues]); // <-- Dùng connection
       }
 
@@ -65,6 +71,9 @@ const MessageModel = {
         "SELECT creator_id, partner_id FROM conversations WHERE id = ?",
         [conversationId]
       );
+
+      let receiverId;
+
       if (convoRows.length > 0) {
         receiverId =
           convoRows[0].creator_id === senderId

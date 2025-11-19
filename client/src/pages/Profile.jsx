@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import EditProfileModal from "../components/EditProfile";
-import ThreadPost from "../components/ThreadPost";
-import NewThreadModal from "../components/NewThreadModal";
+import EditProfileModal from "../components/EditProfile.jsx";
+import ThreadPost from "../components/ThreadPost.jsx";
+import NewThreadModal from "../components/NewThreadModal.jsx";
 import useUserStore from "../stores/useUserStore.js";
 import useFriendStore from "../stores/useFriendStore.js";
 import useAxiosPrivate from "../hooks/useAxiosPrivate.js";

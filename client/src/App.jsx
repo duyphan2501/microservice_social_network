@@ -16,6 +16,7 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import { ToastContainer } from "react-toastify";
 import NavigateToLogin from "./components/NavigateToLogin";
 import SettingPage from "./pages/SettingPage";
+import ChatNotification from "./components/ChatNotification";
 import NewMessage from "./components/NewMessage";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
           <Route path={"inbox"} element={<ChatPage />} />
         </Routes>
         <NavigateToLogin />
+        <ChatNotification />
         <NewMessage />
       </BrowserRouter>
       <ToastContainer

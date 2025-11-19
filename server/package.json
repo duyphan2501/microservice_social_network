@@ -14,7 +14,6 @@
     "dev:posts": "npm --workspace services/posts run dev",
     "dev:friend": "npm --workspace services/friend run dev",
     "dev:chat": "npm --workspace services/chat run dev",
-
     "start:gateway": "npm --workspace gateway run start",
     "start:users": "npm --workspace services/users run start",
     "start:posts": "npm --workspace services/posts run start",

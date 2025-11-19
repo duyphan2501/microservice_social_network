@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MoreHorizontal, Image, Smile, MapPin, AlignLeft } from "lucide-react";
-import MediaUpload from "./MediaUpload";
+import MediaUpload from "./MediaUpload.jsx";
 import useUserStore from "../stores/useUserStore.js";
 import usePostStore from "../stores/usePostStore.js";
 import useAxiosPrivate from "../hooks/useAxiosPrivate.js";

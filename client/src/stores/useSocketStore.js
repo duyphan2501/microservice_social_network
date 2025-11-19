@@ -7,7 +7,7 @@ const SOCKET_GATEWAY_URL =
   import.meta.env.VITE_SOCKET_GATEWAY_URL || "http://localhost:3000";
 
 const useSocketStore = create((set, get) => ({
-  mainSocket: null, 
+  mainSocket: null,
   onlineUsers: [],
 
   connectMainSocket: () => {
@@ -23,7 +23,7 @@ const useSocketStore = create((set, get) => ({
       const newSocket = io(SOCKET_GATEWAY_URL, {
         withCredentials: true,
         // Gửi token (nếu có). Gateway sẽ kiểm tra và gán userId hoặc để null (khách)
-        auth: { token: accessToken || null }, 
+        auth: { token: accessToken || null },
       });
 
       // Bắt các lỗi kết nối
@@ -43,7 +43,6 @@ const useSocketStore = create((set, get) => ({
 
       // Lưu socket vào store
       set({ mainSocket: newSocket });
-
     } catch (error) {
       console.error("Error in connectMainSocket:", error);
     }

@@ -11,6 +11,7 @@ const ContextProvider = ({ children }) => {
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [verifyUser, setVerifyUser] = useState(null);
   const [chatUser, setChatUser] = useState(null);
+  const [notificationQueue, setNotificationQueue] = useState([]);
   const values = {
     persist,
     setPersist,
@@ -20,6 +21,8 @@ const ContextProvider = ({ children }) => {
     setChatUser,
     isShowLoginNavigator,
     setIsShowLoginNavigator,
+    notificationQueue,
+    setNotificationQueue,
     isOpenNewMessage,
     setIsOpenNewMessage,
     selectedConversationId,

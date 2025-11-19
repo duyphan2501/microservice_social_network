@@ -15,7 +15,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [ENV.CLIENT_URL],
+    // origin: ENV.CLIENT_URL,
+    origin: "http://localhost:5173",
     credentials: true,
   },
 });
@@ -37,6 +38,11 @@ io.on("connection", (socket) => {
   // --- Xử lý cho người dùng ĐÃ ĐĂNG NHẬP ---
   if (userId) {
     userSocketMap[userId] = socket.id;
+
+    //Cấp một room riêng thep userid
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} has joined his own room`);
+
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("join_conversation", (conversationId) => {
@@ -104,6 +110,12 @@ async function connectRabbitMQ() {
               "receive_message",
               event.data
             );
+
+            io.to(`user_${event.data.receiverId}`).emit(
+              "chat_notification",
+              event.data
+            );
+
             break;
           case "MESSAGE_STATUS_UPDATED":
             // Phát cập nhật trạng thái
@@ -111,6 +123,71 @@ async function connectRabbitMQ() {
               "status_updated",
               event.data
             );
+            break;
+        }
+      }
+    });
+
+    // ==================== FRIEND EVENTS ====================
+    await consumeQueue("friend_events_to_client", (msg) => {
+      if (msg) {
+        const event = JSON.parse(msg);
+        console.log("📨 [FRIEND]", event.type, event.data);
+
+        const { targetUserId, ...eventData } = event.data;
+
+        switch (event.type) {
+          case "friend_request_received":
+            // Emit to user nhận friend request
+            emitToUser(targetUserId, "friend_request_received", {
+              fromUserId: event.data.fromUserId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "friend_request_accepted":
+            // Emit to user gửi request ban đầu
+            emitToUser(targetUserId, "friend_request_accepted", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "unfriended":
+            // Emit to user bị unfriend
+            emitToUser(targetUserId, "unfriended", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          case "user_blocked":
+            // Emit to user bị block
+            emitToUser(targetUserId, "user_blocked", {
+              userId: event.data.userId,
+              timestamp: event.data.timestamp,
+            });
+            break;
+
+          default:
+            console.log("Unknown friend event type:", event.type);
+        }
+      }
+    });
+
+    // ==================== NOTIFICATION EVENTS ====================
+    await consumeQueue("notification_events_to_client", (msg) => {
+      if (msg) {
+        const event = JSON.parse(msg);
+        console.log("📨 [NOTIFICATION]", event.type);
+
+        switch (event.type) {
+          case "new_notification":
+            emitToUser(event.data.userId, "new_notification", event.data);
+            break;
+
+          case "notification_read":
+            emitToUser(event.data.userId, "notification_read", event.data);
             break;
         }
       }

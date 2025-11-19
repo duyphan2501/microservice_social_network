@@ -49,14 +49,10 @@ const generateRefreshTokenAndSetCookie = async (res, userId) => {
 
 const verifyRefreshToken = async (refreshToken) => {
   return new Promise((resolve, reject) => {
-    jwt.verify(
-      refreshToken,
-      ENV.REFRESH_TOKEN_SECRET_KEY,
-      (err, payload) => {
-        if (err) return reject(err);
-        return resolve(payload);
-      }
-    );
+    jwt.verify(refreshToken, ENV.REFRESH_TOKEN_SECRET_KEY, (err, payload) => {
+      if (err) return reject(err);
+      return resolve(payload);
+    });
   });
 };
 
@@ -64,7 +60,7 @@ const verifyAccessToken = async (accessToken) => {
   return new Promise((resolve, reject) => {
     jwt.verify(
       accessToken,
-      ENV.ACCESS_TOKEN_SECRET_KEY,
+      process.env.ACCESS_TOKEN_SECRET_KEY,
       (err, payload) => {
         if (err) return reject(err);
         return resolve(payload);

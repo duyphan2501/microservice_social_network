@@ -45,12 +45,7 @@ const MessageModel = {
           m.publicId,
           m.type,
         ]);
-        const mediaValues = media.map((m) => [
-          messageId,
-          m.url,
-          m.publicId,
-          m.type,
-        ]);
+        
         await connection.query(mediaInsertQuery, [mediaValues]); // <-- Dùng connection
       }
 

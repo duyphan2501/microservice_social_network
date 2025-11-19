@@ -9,8 +9,6 @@ const SearchController = {
       const currentUserId = req.user.userId;
       const { query = "", limit = 20, offset = 0 } = req.query;
 
-      console.log("🔍 Current user ID:", currentUserId); // LOG
-
       // Tìm kiếm users qua User Service (RabbitMQ)
       const searchResult = await userServiceMQ.searchUsers(
         query,
@@ -19,8 +17,6 @@ const SearchController = {
       );
 
       const users = searchResult.users || [];
-
-      console.log("📦 Found users:", users.length); // LOG
 
       if (users.length === 0) {
         return res.status(200).json({
@@ -37,29 +33,20 @@ const SearchController = {
       // Lấy friendship status cho mỗi user
       const usersWithFriendshipStatus = await Promise.all(
         users.map(async (user) => {
-          // ✅ FIX: Dùng user.userId thay vì user.id
           const userIdToCheck = user.userId || user.id;
 
-          console.log("👤 Processing user:", {
-            username: user.username,
-            userId: userIdToCheck,
-          }); // LOG
-
           if (!userIdToCheck) {
-            console.error("❌ User ID is undefined:", user);
             return null;
           }
 
           if (userIdToCheck === currentUserId) {
-            console.log("⏭️ Skipping current user");
             return null; // Skip current user
           }
 
-          // ✅ Validate IDs trước khi query
           if (!currentUserId || !userIdToCheck) {
-            console.error("❌ Invalid IDs:", { currentUserId, userIdToCheck });
             return {
               ...user,
+              id: userIdToCheck,
               friendshipStatus: "none",
               friendshipActionUserId: null,
               mutualFriendsCount: 0,
@@ -71,18 +58,12 @@ const SearchController = {
             parseInt(userIdToCheck)
           );
 
-          console.log("🤝 Friendship relation:", relation); // LOG
-
-          // Lấy mutual friends count
-          const mutualFriends = await FriendModel.getMutualFriends(
-            parseInt(currentUserId),
-            parseInt(userIdToCheck),
-            5
-          );
+          // Tạm thời bỏ qua mutual friends để tránh lỗi
+          const mutualFriendsCount = 0;
 
           return {
             ...user,
-            id: userIdToCheck, // ✅ Đảm bảo luôn có id field
+            id: userIdToCheck,
             friendshipStatus: relation
               ? relation.status === "pending" &&
                 relation.action_user_id === currentUserId
@@ -92,15 +73,13 @@ const SearchController = {
                 : relation.status
               : "none",
             friendshipActionUserId: relation?.action_user_id,
-            mutualFriendsCount: mutualFriends.length,
+            mutualFriendsCount,
           };
         })
       );
 
       // Filter out null values (current user)
       const filteredUsers = usersWithFriendshipStatus.filter(Boolean);
-
-      console.log("✅ Filtered users:", filteredUsers.length); // LOG
 
       res.status(200).json({
         success: true,
@@ -152,7 +131,7 @@ const SearchController = {
           (user) =>
             user.username?.toLowerCase().includes(lowerQuery) ||
             user.full_name?.toLowerCase().includes(lowerQuery) ||
-            user.fullName?.toLowerCase().includes(lowerQuery) || // ✅ Thêm camelCase
+            user.fullName?.toLowerCase().includes(lowerQuery) ||
             user.email?.toLowerCase().includes(lowerQuery)
         );
       }
@@ -164,11 +143,11 @@ const SearchController = {
 
       // Add friendSince from relationship data
       const friendsWithDetails = paginatedFriends.map((user) => {
-        const userId = user.userId || user.id; // ✅ Handle both field names
+        const userId = user.userId || user.id;
         const friendRelation = friends.find((f) => f.friend_id === userId);
         return {
           ...user,
-          id: userId, // ✅ Normalize id field
+          id: userId,
           friendSince: friendRelation?.created_at,
         };
       });
@@ -218,13 +197,13 @@ const SearchController = {
 
       // Kết hợp thông tin mutual count
       const suggestionsWithDetails = users.map((user) => {
-        const userId = user.userId || user.id; // ✅ Handle both field names
+        const userId = user.userId || user.id;
         const suggestion = suggestions.find(
           (s) => s.suggested_user_id === userId
         );
         return {
           ...user,
-          id: userId, // ✅ Normalize id field
+          id: userId,
           mutualFriendsCount: suggestion?.mutual_count || 0,
           friendshipStatus: "none",
         };

@@ -25,6 +25,13 @@ io.use(socketAuth);
 
 const userSocketMap = {};
 
+const emitToUser = (userId, eventName, data) => {
+  const socketId = userSocketMap[userId];
+  if (socketId) {
+    io.to(socketId).emit(eventName, data);
+  }
+};
+
 io.on("connection", (socket) => {
   // socket.userId sẽ là userId thật (string) hoặc null (nếu là khách)
   const userId = socket.userId;

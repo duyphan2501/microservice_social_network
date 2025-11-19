@@ -134,6 +134,18 @@ const UserModel = {
 
     return result.affectedRows;
   },
+
+  searchUsers: async (searchTerm) => {
+    const searchQuery = `%${searchTerm}%`;
+
+    const query = `
+    SELECT * FROM users
+    WHERE username LIKE ? OR full_name LIKE ?
+    LIMIT 10`;
+
+    const [rows] = await pool.query(query, [searchQuery, searchQuery]);
+    return rows;
+  },
 };
 
 export default UserModel;

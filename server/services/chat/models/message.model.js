@@ -10,6 +10,7 @@ const MessageModel = {
       media = [],
     } = messageData;
     let messageId = null;
+    let receiverId = null;
 
     // 1. Lấy một kết nối cụ thể từ pool
     const connection = await pool.getConnection();
@@ -38,7 +39,12 @@ const MessageModel = {
           INSERT INTO message_media (message_id, media_url, media_public_id, media_type)
           VALUES ?
         `;
-        const mediaValues = media.map((m) => [messageId, m.url, m.publicId, m.type]);
+        const mediaValues = media.map((m) => [
+          messageId,
+          m.url,
+          m.publicId,
+          m.type,
+        ]);
         await connection.query(mediaInsertQuery, [mediaValues]); // <-- Dùng connection
       }
 
@@ -56,30 +62,35 @@ const MessageModel = {
       // 4. Thêm trạng thái tin nhắn cho người gửi và người nhận (giả định 1-1 chat)
       const [convoRows] = await connection.query(
         // <-- Dùng connection
-        "SELECT user_id_1, user_id_2 FROM conversations WHERE id = ?",
+        "SELECT creator_id, partner_id FROM conversations WHERE id = ?",
         [conversationId]
       );
       if (convoRows.length > 0) {
-        const receiverId =
-          convoRows[0].user_id_1 === senderId
-            ? convoRows[0].user_id_2
-            : convoRows[0].user_id_1;
+        receiverId =
+          convoRows[0].creator_id === senderId
+            ? convoRows[0].partner_id
+            : convoRows[0].creator_id;
 
         const statusInsertQuery = `
           INSERT INTO message_statuses (message_id, receiver_id, status)
           VALUES (?, ?, 'sent')
         `;
-        await connection.query(statusInsertQuery, [
-          messageId,
-          receiverId,
-          messageId,
-        ]);
+        await connection.query(statusInsertQuery, [messageId, receiverId]);
       }
+
+      const updateActiveConvQuery =
+        "UPDATE conversations SET status = ? WHERE id = ? AND creator_id != ? AND status = ?";
+      await connection.query(updateActiveConvQuery, [
+        "active",
+        conversationId,
+        senderId,
+        "new",
+      ]);
 
       // Commit transaction
       await connection.commit();
 
-      return messageId;
+      return { messageId, receiverId };
     } catch (error) {
       // Rollback transaction nếu có lỗi
       await connection.rollback();

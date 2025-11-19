@@ -10,6 +10,7 @@ import {
   updateUserInfo,
   changeUserPassword,
   refreshUser,
+  searchUsers,
 } from "../controllers/user.controller.js";
 import checkAuth from "../../chat/middlewares/checkAuth.js";
 import { uploadImg } from "../middlewares/cloudinary.middleware.js";
@@ -31,5 +32,6 @@ router.delete("/logout", checkAuth, logout);
 router.get("/get-info/:userId", getUserInfo);
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password", resetPassword);
+router.get("/search", searchUsers);
 
 export default router;

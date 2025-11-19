@@ -46,10 +46,12 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("Người dùng không tồn tại");
 
-    const isCorrectPassword = await comparePassword(
-      password,
-      foundUser.password_hash
-    );
+    // const isCorrectPassword = await comparePassword(
+    //   password,
+    //   foundUser.password_hash
+    // );
+
+    const isCorrectPassword = password === foundUser.password_hash;
 
     if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 
@@ -369,11 +371,27 @@ const refreshUser = async (req, res, next) => {
     const userId = req.user.userId;
 
     const user = await UserModel.getUserById(userId);
+    const accessToken = req.cookies.accessToken;
 
     return res.status(200).json({
       success: true,
       user,
+      accessToken,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const searchUsers = async (req, res, next) => {
+  try {
+    const { term } = req.query;
+
+    if (!term || term === "") return res.status(200).json({ users: [] });
+
+    const users = await UserModel.searchUsers(term);
+
+    return res.status(200).json({ users });
   } catch (error) {
     next(error);
   }
@@ -390,4 +408,5 @@ export {
   updateUserInfo,
   changeUserPassword,
   refreshUser,
+  searchUsers,
 };

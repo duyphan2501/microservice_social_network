@@ -95,7 +95,7 @@ const ChatFooter = ({ onSendMessage }) => {
           <input
             type="text"
             className="focus:outline-none w-full"
-            placeholder="Nhắn tin..."
+            placeholder="Type here..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
           />

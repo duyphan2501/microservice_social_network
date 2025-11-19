@@ -7,11 +7,11 @@ const ConversationItem = ({
   otherUser,
 }) => {
   const renderMessage = () => {
-    let text = `${isYou ? "Bạn: " : ""}`;
+    let text = `${isYou ? "You: " : ""}`;
     if (conversation.media_count === 0) {
       text = text + `${conversation.content}`;
     } else {
-      text = text + `Đã gửi ${conversation.media_count} ảnh`;
+      text = text + `Sent ${conversation.media_count} images`;
     }
     return text
   };

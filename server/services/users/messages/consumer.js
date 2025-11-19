@@ -92,7 +92,64 @@ const startConsumer = async () => {
         }
       }
     });
+    const verifyQueueName = "user.verify_exists";
+    await channel.assertQueue(verifyQueueName, { durable: true });
 
+    await channel.consume(verifyQueueName, async (msg) => {
+      if (msg) {
+        try {
+          const content = msg.content.toString();
+          const properties = msg.properties;
+
+          const { userId } = JSON.parse(content);
+
+          // Kiểm tra user có tồn tại không
+          const user = await UserModel.getUserById(userId);
+          const exists = user !== null;
+
+          // Response
+          const response = {
+            success: true,
+            exists: exists,
+            userId: userId,
+          };
+
+          if (properties.replyTo && properties.correlationId) {
+            channel.sendToQueue(
+              properties.replyTo,
+              Buffer.from(JSON.stringify(response)),
+              {
+                correlationId: properties.correlationId,
+                persistent: true,
+              }
+            );
+          }
+
+          channel.ack(msg);
+        } catch (error) {
+          console.error("Error processing verify_exists:", error);
+
+          if (msg.properties.replyTo && msg.properties.correlationId) {
+            const errorResponse = {
+              success: false,
+              exists: false,
+              error: error.message,
+            };
+
+            channel.sendToQueue(
+              msg.properties.replyTo,
+              Buffer.from(JSON.stringify(errorResponse)),
+              {
+                correlationId: msg.properties.correlationId,
+                persistent: true,
+              }
+            );
+          }
+
+          channel.ack(msg);
+        }
+      }
+    });
     console.log("All consumers started successfully");
   } catch (error) {
     console.error("Consumer startup error:", error);

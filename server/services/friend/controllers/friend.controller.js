@@ -2,23 +2,33 @@
 import FriendModel from "../models/friend.model.js";
 import { FriendEventPublisher } from "../messages/friendEvents.js";
 import userServiceMQ from "../messages/userService.js";
-import createHttpError from "http-errors";
 
 const FriendController = {
   // Gửi lời mời kết bạn
   async sendFriendRequest(req, res) {
     try {
       const currentUserId = req.user.userId;
-      const { targetUserId } = req.body;
+      const { targetUserId, friendId } = req.body;
+      const targetId = targetUserId || friendId;
 
-      if (!targetUserId) {
+      if (!targetId) {
         return res.status(400).json({
           success: false,
           message: "Target user ID is required",
         });
       }
 
-      if (currentUserId === targetUserId) {
+      const currentUserIdInt = parseInt(currentUserId);
+      const targetIdInt = parseInt(targetId);
+
+      if (isNaN(currentUserIdInt) || isNaN(targetIdInt)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid user ID format",
+        });
+      }
+
+      if (currentUserIdInt === targetIdInt) {
         return res.status(400).json({
           success: false,
           message: "Cannot send friend request to yourself",
@@ -26,7 +36,8 @@ const FriendController = {
       }
 
       // Verify target user exists via RabbitMQ
-      const userExists = await userServiceMQ.verifyUserExists(targetUserId);
+      const userExists = await userServiceMQ.verifyUserExists(targetIdInt);
+
       if (!userExists) {
         return res.status(404).json({
           success: false,
@@ -36,8 +47,8 @@ const FriendController = {
 
       // Kiểm tra trạng thái hiện tại
       const existingRelation = await FriendModel.getFriendshipStatus(
-        currentUserId,
-        targetUserId
+        currentUserIdInt,
+        targetIdInt
       );
 
       if (existingRelation) {
@@ -61,12 +72,12 @@ const FriendController = {
         }
       }
 
-      await FriendModel.sendFriendRequest(currentUserId, targetUserId);
+      await FriendModel.sendFriendRequest(currentUserIdInt, targetIdInt);
 
       // Publish event qua RabbitMQ
       await FriendEventPublisher.publishFriendRequestSent(
-        currentUserId,
-        targetUserId
+        currentUserIdInt,
+        targetIdInt
       );
 
       res.status(200).json({

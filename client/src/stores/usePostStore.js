@@ -54,7 +54,6 @@ export const usePostStore = create((set, get) => ({
       return res.data.post;
     } catch (error) {
       console.error(error);
-      toast.error(error.response.data.message || error);
     } finally {
       set({ isLoading: false });
     }
@@ -84,14 +83,8 @@ export const usePostStore = create((set, get) => ({
   },
 
   saveLike: async (postId, axiosPrivate) => {
-    try {
-      const res = await axiosPrivate.post(`/posts/${postId}/like`);
-      return res.data;
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response.data.message || error);
-      return null
-    }
+    const res = await axiosPrivate.post(`/posts/${postId}/like`);
+    return res.data;
   },
 
   resetPosts: () =>
@@ -102,6 +95,20 @@ export const usePostStore = create((set, get) => ({
       isLoading: false,
       error: null,
     }),
+
+  deletePost: async (postId, axiosPrivate) => {
+    try {
+      await axiosPrivate.delete(`/posts/delete/${postId}`);
+      set((state) => ({
+        posts: state.posts.filter((post) => post.id !== postId),
+      }));
+      toast.success("Post deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+    } finally {
+    }
+  },
 }));
 
 export default usePostStore;

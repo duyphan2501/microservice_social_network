@@ -1,36 +1,111 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { formatRelativeTime } from "../utils/DateFormat";
+import { formatDate } from "../utils/DateFormat";
 import useUserStore from "../stores/useUserStore";
 import PostMedia from "./PostMedia";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { useCallback } from "react";
 import usePostStore from "../stores/usePostStore";
 import { MyContext } from "../Context/MyContext";
+import { toast } from "react-toastify";
+import useSocketStore from "../stores/useSocketStore";
+import useCommentStore from "../stores/useCommentStore";
 
-const ThreadPost = ({ post }) => {
+const ThreadPost = ({ post, isCommentPage = false }) => {
   const [liked, setLiked] = useState(post.isLiked || false);
-  const [likeCount, setLikeCount] = useState(post.likes_count);
+  const [likeCount, setLikeCount] = useState(post.likes_count || 0);
+  const [isOpen3dotMenu, setIsOpen3dotMenu] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments_count || 0);
+
+  const { saveLike, deletePost } = usePostStore();
+  const { mainSocket } = useSocketStore();
+  const { addCommentState } = useCommentStore();
+
+  const { setIsShowLoginNavigator } = useContext(MyContext);
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+  const axiosPrivate = useAxiosPrivate();
+
   const usersCache = useUserStore((state) => state.usersCache);
   const author = usersCache[post.user_id];
-  const axiosPrivate = useAxiosPrivate();
   const user = useUserStore((state) => state.user);
-  const { saveLike } = usePostStore();
-  const { setIsShowLoginNavigator } = useContext(MyContext);
+
+  const updatePostLikes = (data) => {
+    setLikeCount(data.likes_count);
+  };
+
+  const receiveNewComment = (comment) => {
+    if (post.id.toString() === comment.post_id.toString()) {
+      if (user.id !== comment.user_id) addCommentState(comment);
+    }
+    setCommentCount((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    if (mainSocket && post.id && isCommentPage) {
+      mainSocket.emit("join_postRoom", post.id);
+      mainSocket?.on("update_post_likes", updatePostLikes);
+      mainSocket?.on("receive_new_comment", receiveNewComment);
+    }
+
+    return () => {
+      mainSocket?.off("update_post_likes", updatePostLikes);
+      mainSocket?.off("receive_new_comment", receiveNewComment);
+      if (mainSocket && post.id && isCommentPage) {
+        mainSocket.emit("leave_postRoom", post.id);
+      }
+    };
+  }, [post?.id, mainSocket, isCommentPage]);
 
   const handleLike = useCallback(async () => {
     if (!user) {
       setIsShowLoginNavigator(true);
       return;
     }
-    const res = await saveLike(post.id, axiosPrivate);
-    setLiked(res.liked || false);
-    setLikeCount(res.likes_count);
-  }, [liked]);
+    try {
+      const res = await saveLike(post.id, axiosPrivate);
+      setLiked(res.liked || false);
+      setLikeCount(res.likes_count);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+      if (error.response?.status === 404) {
+        window.location.reload();
+      }
+    }
+  }, [user, post.id]);
+
+  const handleCopyLink = () => {
+    const postLink = `${window.location.origin}/post/${post.id}/comments`;
+    navigator.clipboard.writeText(postLink).then(
+      () => {
+        toast.success("Post link copied to clipboard!");
+      },
+      (err) => {
+        toast.error("Could not copy text: ", err);
+      }
+    );
+  };
+
+  const handleDeletePost = async () => {
+    await deletePost(post.id, axiosPrivate);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen3dotMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <article className="px-4 py-4 hover:bg-gray-50 transition border-b border-gray-200">
+    <article className="px-4 py-4 hover:bg-gray-50 transition bg-white">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden">
@@ -49,15 +124,39 @@ const ThreadPost = ({ post }) => {
                 {author?.username || "username"}
               </span>
               <span className="text-gray-500 text-xs">
-                &bull; {formatRelativeTime(post.created_at)}
+                {formatDate(post.created_at)}
               </span>
             </div>
-            <button className="p-1 hover:bg-gray-200 rounded-lg">
+            <button
+              className="p-1 hover:bg-gray-200 rounded-lg relative"
+              ref={menuRef}
+              onClick={() => setIsOpen3dotMenu(!isOpen3dotMenu)}
+            >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="5" r="2" />
                 <circle cx="12" cy="12" r="2" />
                 <circle cx="12" cy="19" r="2" />
               </svg>
+              {isOpen3dotMenu && (
+                <div className="absolute top-8 right-0 bg-white border border-gray-200 rounded-lg shadow-lg w-40 z-10 overflow-hidden">
+                  <ul className="flex flex-col">
+                    <li
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={handleCopyLink}
+                    >
+                      Copy Post Link
+                    </li>
+                    {post.user_id === user.id && (
+                      <li
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={handleDeletePost}
+                      >
+                        Delete Post
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </button>
           </div>
 
@@ -102,10 +201,8 @@ const ThreadPost = ({ post }) => {
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
-              {post.comments_count > 0 && (
-                <span className="text-gray-600 text-sm">
-                  {post.comments_count}
-                </span>
+              {commentCount > 0 && (
+                <span className="text-gray-600 text-sm">{commentCount}</span>
               )}
             </button>
           </div>

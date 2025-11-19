@@ -18,4 +18,18 @@ function formatRelativeTime(dateInput, isLastActive = false) {
   return `${Math.floor(diffDay / 365)} years ago`;
 }
 
-export { formatRelativeTime };
+const formatDate = (dateInput) => {
+  // Formats a date to a readable string format like "January 1, 2023 12:00 PM"
+  const date = new Date(dateInput);
+  const options = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  };
+  return date.toLocaleString(undefined, options); 
+}
+
+export { formatRelativeTime, formatDate };

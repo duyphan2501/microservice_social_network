@@ -11,6 +11,7 @@ import {
   changeUserPassword,
   refreshUser,
   searchUsers,
+  getUserByUsername,
 } from "../controllers/user.controller.js";
 import { uploadImg } from "../middlewares/cloudinary.middleware.js";
 import { checkAuth, optionAuth } from "../middlewares/auth.middleware.js";
@@ -33,5 +34,6 @@ router.get("/get-info/:userId", getUserInfo);
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password", resetPassword);
 router.get("/search", searchUsers);
+router.get("/username/:username", getUserByUsername);
 
 export default router;

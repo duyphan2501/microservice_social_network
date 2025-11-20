@@ -1,9 +1,10 @@
 import { pool } from "../database/connectDB.js";
 
 const PostModel = {
-  getPostsWithMedia: async (limit, offset, currentUserId) => {
+  getPostsWithMedia: async (limit, offset, postUserId, currentUserId) => {
     // 1. Lấy danh sách bài đăng + trạng thái đã like chưa
-    const postsQuery = `
+    const postsQueryParams = [];
+    let postsQuery = `
       SELECT 
           p.*, 
           EXISTS (
@@ -11,14 +12,16 @@ const PostModel = {
             WHERE l.post_id = p.id AND l.user_id = ?
           ) AS isLiked
       FROM posts p WHERE p.is_deleted = FALSE
-      ORDER BY p.id DESC
-      LIMIT ? OFFSET ?
     `;
-    const [posts] = await pool.query(postsQuery, [
-      currentUserId,
-      limit,
-      offset,
-    ]);
+    postsQueryParams.push(currentUserId);
+    if (postUserId && postUserId != 0) {
+      postsQuery += ` AND p.user_id = ?`;
+      postsQueryParams.push(postUserId);
+    }
+    postsQuery += ` ORDER BY p.id DESC LIMIT ? OFFSET ?`;
+    postsQueryParams.push(limit, offset);
+
+    const [posts] = await pool.query(postsQuery, postsQueryParams);
 
     if (posts.length === 0) return [];
 

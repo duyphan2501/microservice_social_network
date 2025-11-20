@@ -27,7 +27,7 @@ const ReplyInput = ({ username, className = "", onSubmit }) => {
         value={content}
         disabled={!user}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={`Trả lời ${username}...`}
+        placeholder={`Reply ${username}...`}
         className="flex-grow bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button className="text-gray-400 hover:text-black" type="submit">
@@ -99,7 +99,7 @@ const Comment = ({ comment, level = 0, onReply, showReplyInput, onSubmit }) => {
             onClick={handleReplyClick}
             className="text-gray-500 text-xs font-semibold hover:text-gray-700 transition"
           >
-            Trả lời
+            Reply
           </button>
         </div>
 
@@ -111,8 +111,8 @@ const Comment = ({ comment, level = 0, onReply, showReplyInput, onSubmit }) => {
             className="text-gray-600 text-sm font-semibold mt-3 ml-3 hover:text-gray-800 transition"
           >
             {showReplies
-              ? "— Ẩn phản hồi"
-              : `— Xem ${comment.replies.length} phản hồi`}
+              ? "— Hide replies"
+              : `— View ${comment.replies.length} repl${comment.replies.length > 1 ? "ies" : "y"}`}
           </button>
         )}
 

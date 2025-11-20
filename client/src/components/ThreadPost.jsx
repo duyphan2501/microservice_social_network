@@ -11,7 +11,8 @@ import { toast } from "react-toastify";
 import useSocketStore from "../stores/useSocketStore";
 import useCommentStore from "../stores/useCommentStore";
 
-const ThreadPost = ({ post, isCommentPage = false }) => {
+const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
+  const user = useUserStore((state) => state.user);
   const [liked, setLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.likes_count || 0);
   const [isOpen3dotMenu, setIsOpen3dotMenu] = useState(false);
@@ -27,8 +28,7 @@ const ThreadPost = ({ post, isCommentPage = false }) => {
   const axiosPrivate = useAxiosPrivate();
 
   const usersCache = useUserStore((state) => state.usersCache);
-  const author = usersCache[post.user_id];
-  const user = useUserStore((state) => state.user);
+  const author = postAuthor || usersCache[post.user_id];
 
   const updatePostLikes = (data) => {
     setLikeCount(data.likes_count);
@@ -108,7 +108,7 @@ const ThreadPost = ({ post, isCommentPage = false }) => {
     <article className="px-4 py-4 hover:bg-gray-50 transition bg-white">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer" onClick={() => navigate(`/profile/${author?.username}`)}>
             <img
               src={author?.avatar_url}
               alt=""

@@ -42,9 +42,9 @@ const ReplyInput = ({ username, className = "", onSubmit }) => {
 // Component hiển thị 1 comment (và replies của nó)
 const Comment = ({ comment, level = 0, onReply, showReplyInput, onSubmit }) => {
   const usersCache = useUserStore((state) => state.usersCache);
-  const commentUser = usersCache[comment.user_id];
-  const hasReplies = comment.replies && comment.replies.length > 0;
   const user = useUserStore((state) => state.user);
+  const commentUser = usersCache[comment.user_id] || user;
+  const hasReplies = comment.replies && comment.replies.length > 0;
   const [showReplies, setShowReplies] = useState(false);
 
   const toggleReplies = () => setShowReplies((prev) => !prev);

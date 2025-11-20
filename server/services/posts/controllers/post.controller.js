@@ -200,7 +200,6 @@ const addComment = async (req, res, next) => {
       userId
     );
 
-    const post = await PostModel.getPostById(postId, userId);
     if (post.user_id !== userId) {
       if (parentId) {
         const getParentComment = await CommentModel.getCommentById(parentId);

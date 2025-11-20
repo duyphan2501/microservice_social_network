@@ -72,6 +72,43 @@ const useNotificationStore = create((set, get) => ({
       toast.error("Can't read notifications");
     }
   },
+
+  responseFriendRequest: async (fromUserId, notificationId, type) => {
+    try {
+      if (!["accept", "decline"].includes(type)) return false;
+
+      if (type === "accept") {
+        const resFriendAccept = await API.post("/friends/accept", {
+          fromUserId,
+        });
+
+        if (!resFriendAccept.data.success) return false;
+      }
+
+      if (type === "decline") {
+        const resFriendDecline = await API.post("/friends/decline", {
+          fromUserId,
+        });
+
+        if (!resFriendDecline.data.success) return false;
+      }
+
+      // Gửi phản hồi cho notification (cả accept / decline)
+      const resNotification = await API.post(
+        "/notifications/response/friend-request",
+        {
+          fromUserId,
+          notificationId,
+          type,
+        }
+      );
+
+      return resNotification.data.success || false;
+    } catch (error) {
+      console.error("Error processing friend request:", error);
+      return false;
+    }
+  },
 }));
 
 export default useNotificationStore;

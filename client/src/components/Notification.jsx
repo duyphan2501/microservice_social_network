@@ -4,9 +4,45 @@ import { useEffect } from "react";
 import useUserStore from "../stores/useUserStore";
 import usePostStore from "../stores/usePostStore";
 
-const NotificationItem = ({ notification }) => {
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isConfirmed, setIsConfirmed] = useState(false);
+const NotificationItem = ({
+  notification,
+  handleAcceptRequest,
+  handleDeclineRequest,
+}) => {
+  const [isLoadingAccept, setIsLoadingAccept] = useState(false);
+  const [isLoadingDecline, setIsLoadingDecline] = useState(false);
+
+  const responseFriendRequest = useNotificationStore(
+    (s) => s.responseFriendRequest
+  );
+
+  const acceptFriend = async () => {
+    setIsLoadingAccept(true);
+    const res = await responseFriendRequest(
+      notification.sender_id,
+      notification.id,
+      "accept"
+    );
+    handleAcceptRequest(
+      notification.id,
+      notification.recipient_id,
+      notification.sender_name,
+      notification.sender_id,
+      notification.avatar
+    );
+    setIsLoadingAccept(false);
+  };
+
+  const declineFriend = async () => {
+    setIsLoadingDecline(true);
+    const res = await responseFriendRequest(
+      notification.sender_id,
+      notification.id,
+      "decline"
+    );
+    handleDeclineRequest(notification.id);
+    setIsLoadingDecline(false);
+  };
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
@@ -39,36 +75,75 @@ const NotificationItem = ({ notification }) => {
         </p>
       </div>
 
-      {notification.post.media.length !== 0 && (
+      {notification?.post?.media?.[0] && (
         <div className="w-11 h-11 bg-gray-200 rounded flex items-center justify-center flex-shrink-0 text-xl">
           {notification.thumbnail}
           <img src={notification.post.media[0].media_url} alt="" />
         </div>
       )}
 
-      {notification.type === "follow" && (
-        <button
-          onClick={() => setIsFollowing(!isFollowing)}
-          className={`px-6 py-1.5 rounded-lg font-semibold text-sm transition-colors flex-shrink-0 ${
-            isFollowing
-              ? "bg-gray-200 text-gray-900 hover:bg-gray-300"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          {isFollowing ? "Bạn bè" : "Add friend"}
-        </button>
-      )}
-
-      {notification?.type === "followRequest" && !isConfirmed && (
+      {notification?.type === "friend_request" && (
         <div className="flex gap-2 flex-shrink-0">
           <button
-            onClick={() => setIsConfirmed(true)}
-            className="px-5 py-1.5 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors"
+            onClick={acceptFriend}
+            disabled={isLoadingAccept}
+            className="px-5 py-1.5 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
           >
-            Accept
+            {isLoadingAccept ? (
+              <svg
+                className="w-4 h-4 animate-spin text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                ></path>
+              </svg>
+            ) : (
+              "Accept"
+            )}
           </button>
-          <button className="px-5 py-1.5 bg-gray-200 text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors">
-            Delete
+
+          <button
+            onClick={declineFriend}
+            disabled={isLoadingDecline}
+            className="px-5 py-1.5 bg-gray-200 text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+          >
+            {isLoadingDecline ? (
+              <svg
+                className="w-4 h-4 animate-spin text-gray-900"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                ></path>
+              </svg>
+            ) : (
+              "Decline"
+            )}
           </button>
         </div>
       )}
@@ -76,7 +151,13 @@ const NotificationItem = ({ notification }) => {
   );
 };
 
-const NotificationSection = ({ title, notifications, hasBlueIndicator }) => (
+const NotificationSection = ({
+  title,
+  notifications,
+  hasBlueIndicator,
+  handleAcceptRequest,
+  handleDeclineRequest,
+}) => (
   <div className="mb-2">
     <div className="flex items-center gap-2 px-4 py-2">
       <h3 className="text-gray-900 font-bold text-base">{title}</h3>
@@ -85,7 +166,12 @@ const NotificationSection = ({ title, notifications, hasBlueIndicator }) => (
       )}
     </div>
     {notifications.map((notif) => (
-      <NotificationItem key={notif.id} notification={notif} />
+      <NotificationItem
+        handleAcceptRequest={handleAcceptRequest}
+        handleDeclineRequest={handleDeclineRequest}
+        key={notif.id}
+        notification={notif}
+      />
     ))}
   </div>
 );
@@ -99,6 +185,7 @@ const groupByDate = (items) => {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const grouped = {
+    friendRequest: [],
     new: [],
     today: [],
     thisWeek: [],
@@ -108,8 +195,12 @@ const groupByDate = (items) => {
 
   items.forEach((item) => {
     const createdAt = new Date(item.created_at);
-
-    if (!item.is_read) {
+    if (item.type === "friend_request") {
+      grouped.friendRequest.push({
+        ...item,
+        createdAt: formatTime(item.created_at),
+      });
+    } else if (!item.is_read) {
       grouped.new.push({ ...item, createdAt: formatTime(item.created_at) });
     } else if (createdAt >= todayStart) {
       grouped.today.push({ ...item, createdAt: formatTime(item.created_at) });
@@ -167,6 +258,44 @@ const Notification = () => {
   const fetchPostIfNeeded = usePostStore((s) => s.fetchPostIfNeeded);
 
   const [notificationsData, setNotificationsData] = useState([]);
+  const handleAcceptRequest = (
+    notiId,
+    recipient_id,
+    sender_name,
+    sender_id,
+    avatar_url
+  ) => {
+    const tempNoti = {
+      id: notiId,
+      recipient_id,
+      sender_name,
+      sender_id,
+      type: "friend_accepted",
+      entity_id: sender_id,
+      entity_type: "user",
+      content: "and you are friends now",
+      is_read: false,
+      created_at: "now",
+      avatar: avatar_url,
+    };
+
+    setNotificationsData((prev) => ({
+      ...prev,
+      // Xóa notification cũ khỏi friendRequest
+      friendRequest: prev.friendRequest.filter((item) => item.id !== notiId),
+      // Thêm notification mới vào new
+      new: [tempNoti, ...prev.new],
+    }));
+  };
+
+  const handleDeclineRequest = (notificationId) => {
+    setNotificationsData((prev) => ({
+      ...prev,
+      friendRequest: prev.friendRequest.filter(
+        (item) => item.id !== notificationId
+      ),
+    }));
+  };
 
   useEffect(() => {
     const fetchNotificationData = async () => {
@@ -226,14 +355,18 @@ const Notification = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* {notifications.followRequests?.length > 0 && (
+        {notificationsData.friendRequest?.length > 0 && (
           <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
             title="Friend request"
-            notifications={notifications.followRequests}
+            notifications={notificationsData.friendRequest}
           />
-        )} */}
+        )}
         {notificationsData.new?.length > 0 && (
           <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
             title="New"
             notifications={notificationsData.new}
             hasBlueIndicator={true}
@@ -241,18 +374,24 @@ const Notification = () => {
         )}
         {notificationsData.today?.length > 0 && (
           <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
             title="Today"
             notifications={notificationsData.today}
           />
         )}
         {notificationsData.yesterday?.length > 0 && (
           <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
             title="Yesterday"
             notifications={notificationsData.yesterday}
           />
         )}
         {notificationsData.thisWeek?.length > 0 && (
           <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
             title="This week"
             notifications={notificationsData.thisWeek}
           />

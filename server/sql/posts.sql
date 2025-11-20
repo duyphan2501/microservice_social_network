@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS posts (
     comments_count INT UNSIGNED NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    is_deleted BOOLEAN DEFAULT FALSE,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bảng post_media mới để lưu trữ nhiều tệp media cho một bài đăng

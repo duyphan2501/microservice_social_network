@@ -65,6 +65,19 @@ const NotificationModel = {
       throw error;
     }
   },
+
+  removeNotification: async (id) => {
+    try {
+      const query = `
+        DELETE FROM notifications
+        WHERE id = ?
+      `;
+
+      await pool.execute(query, [id]);
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default NotificationModel;

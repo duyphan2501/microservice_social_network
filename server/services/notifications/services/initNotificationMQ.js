@@ -198,6 +198,64 @@ const initNotificationMQ = async () => {
       }
     );
 
+    await subscribeDirect(
+      "friend_request_pubsub",
+      "add_friend_event",
+      async (msg) => {
+        const msgJSON = JSON.parse(msg);
+
+        const senderInfo = await getSenderInfo(msgJSON.sender_id);
+
+        const notification = {
+          recipient_id: msgJSON.recipient_id,
+          sender_id: msgJSON.sender_id,
+          sender_name: senderInfo.username,
+          sender_avatar: senderInfo.avatar_url,
+          type: "friend_request",
+          entity_type: "user",
+          entity_id: msgJSON.sender_id,
+          content: "has sent you a friend request",
+        };
+
+        await NotificationModel.addNotification(notification);
+
+        publishDirect(
+          "events_notificaiton",
+          "new_unread_notification",
+          JSON.stringify(notification)
+        );
+      }
+    );
+
+    await subscribeDirect(
+      "friend_request_pubsub",
+      "friend_response",
+      async (msg) => {
+        const msgJSON = JSON.parse(msg);
+
+        const senderInfo = await getSenderInfo(msgJSON.sender_id);
+
+        const notification = {
+          recipient_id: msgJSON.recipient_id,
+          sender_id: msgJSON.sender_id,
+          sender_name: senderInfo.username,
+          sender_avatar: senderInfo.avatar_url,
+          type: "friend_accepted",
+          entity_type: "user",
+          entity_id: msgJSON.sender_id,
+          content: "has accepted your friend request",
+        };
+
+        await NotificationModel.addNotification(notification);
+
+        publishDirect(
+          "events_notificaiton",
+          "new_unread_notification",
+          JSON.stringify(notification)
+        );
+      }
+    );
+
     console.log("Notification MQ initialized successfully");
   } catch (error) {
     console.error("Error connecting to RabbitMQ in Gateway:", error);

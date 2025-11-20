@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
+import { toast } from "react-toastify";
 const useFriendStore = create((set, get) => ({
   friends: [],
   count: 0,
@@ -14,6 +15,23 @@ const useFriendStore = create((set, get) => ({
       console.error("Error fetching friend count:", error);
       toast.error("Failed to fetch friend count");
       return 0;
+    }
+  },
+
+  acceptFriendRequest: async (fromUserId, notificationId) => {
+    try {
+      const res = await API.post("/friends/accept", {
+        fromUserId,
+        notificationId,
+      });
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        return res.data.success;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to accept the request!");
     }
   },
 }));

@@ -2,6 +2,7 @@
 import FriendModel from "../models/friend.model.js";
 import { FriendEventPublisher } from "../messages/friendEvents.js";
 import userServiceMQ from "../messages/userService.js";
+import { publishDirect } from "../../../gateway/messages/rabbitMQ.js";
 
 const FriendController = {
   // Gửi lời mời kết bạn
@@ -73,6 +74,17 @@ const FriendController = {
       }
 
       await FriendModel.sendFriendRequest(currentUserIdInt, targetIdInt);
+
+      const addFriendEventData = {
+        sender_id: currentUserIdInt,
+        recipient_id: targetIdInt,
+      };
+
+      publishDirect(
+        "friend_request_pubsub",
+        "add_friend_event",
+        JSON.stringify(addFriendEventData)
+      );
 
       // Publish event qua RabbitMQ
       await FriendEventPublisher.publishFriendRequestSent(

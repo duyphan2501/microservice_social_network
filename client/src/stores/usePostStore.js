@@ -10,6 +10,7 @@ export const usePostStore = create((set, get) => ({
   error: null,
   page: 1,
   hasMore: true,
+  postsCache: {},
 
   fetchPosts: async (axiosPrivate) => {
     const { isLoading, page, hasMore } = get();
@@ -90,7 +91,33 @@ export const usePostStore = create((set, get) => ({
     } catch (error) {
       console.error(error);
       toast.error(error.response.data.message || error);
-      return null
+      return null;
+    }
+  },
+
+  fetchPostIfNeeded: async (postId) => {
+    const { postsCache } = get();
+
+    if (postsCache[postId]) {
+      return postsCache[postId];
+    }
+
+    try {
+      const response = await API.get(`/posts/${postId}`);
+      const postInfo = response.data.post;
+
+      // Cập nhật cache
+      set((state) => ({
+        postsCache: {
+          ...state.postsCache,
+          [postId]: postInfo,
+        },
+      }));
+
+      return postInfo;
+    } catch (error) {
+      console.error(`Could not fetch post ${postId}:`, error);
+      return null;
     }
   },
 

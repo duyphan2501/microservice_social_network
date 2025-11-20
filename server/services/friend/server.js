@@ -7,6 +7,7 @@ import { checkConnection } from "./database/connectDB.js";
 import friendRouter from "./routes/friend.route.js";
 import searchRouter from "./routes/search.route.js"; // ← THÊM DÒNG NÀY
 import express from "express";
+import initFriendMQ from "./messages/initFriendMQ.js";
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get("/health", (_, res) => res.json({ success: true, service: "friend" }));
+
+initFriendMQ();
 
 app.use("/friends", friendRouter);
 app.use("/search", searchRouter);

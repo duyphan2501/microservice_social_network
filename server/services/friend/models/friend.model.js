@@ -120,7 +120,7 @@ const FriendModel = {
       LIMIT ? OFFSET ?
     `;
 
-    const [rows] = await pool.execute(query, [
+    const [rows] = await pool.query(query, [
       userId,
       userId,
       userId,
@@ -268,7 +268,7 @@ const FriendModel = {
       limitInt, // for LIMIT
     ];
 
-    const [rows] = await pool.execute(sql, params);
+    const [rows] = await pool.query(sql, params);
     return rows;
   },
 

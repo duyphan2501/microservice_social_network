@@ -9,12 +9,14 @@ DROP TABLE IF EXISTS conversations;
 -- Bảng conversations (Hội thoại 1-1)
 CREATE TABLE IF NOT EXISTS conversations (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id_1 BIGINT UNSIGNED NOT NULL,
-    user_id_2 BIGINT UNSIGNED NOT NULL,
+    creator_id BIGINT UNSIGNED NOT NULL,
+    partner_id BIGINT UNSIGNED NOT NULL,
     last_message_id BIGINT UNSIGNED NULL,
+    status ENUM('new', 'waiting', 'active', 'delete') DEFAULT 'new' NOT NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     -- Đảm bảo mỗi cặp user chỉ có 1 cuộc hội thoại (lưu ID nhỏ trước)
-    UNIQUE KEY unique_conversation (user_id_1, user_id_2)
+    UNIQUE KEY unique_conversation (creator_id, partner_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 	
 -- Bảng messages
@@ -60,11 +62,11 @@ CREATE TABLE IF NOT EXISTS message_statuses (
 
 -- Kiểm tra kết quả
 	
-INSERT INTO conversations (user_id_1, user_id_2)
+INSERT INTO conversations (creator_id, partner_id, status)
 VALUES 
-(1, 2),
-(1, 3),
-(2, 3);
+(1, 2, 'active'),
+(1, 3, 'active'),
+(2, 3, 'active');
 
 INSERT INTO messages (conversation_id, sender_id, content, type)
 VALUES
@@ -114,11 +116,6 @@ WHERE id = 1;
 INSERT INTO message_statuses (message_id, receiver_id, status, read_at)
 VALUES (@last_msg_id, 2, 'delivered', NULL);
 
--- Kiểm tra lại kết quả
-SELECT * FROM messages WHERE id = @last_msg_id;
-SELECT * FROM message_media WHERE message_id = @last_msg_id;
-SELECT * FROM message_statuses WHERE message_id = @last_msg_id;
-SELECT * FROM conversations WHERE id = 1;
-
-select * from message_statuses;
-SELECT * FROM message_media WHERE message_id = 26;
+	
+select * from conversations;
+select * from messages;

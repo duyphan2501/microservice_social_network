@@ -1,11 +1,12 @@
 import { useContext, useEffect, useState, useRef } from "react"; // Thêm useRef
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { data, Outlet, useLocation, useNavigate } from "react-router-dom";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
 import useSocketStore from "../stores/useSocketStore";
-import Notification from "../Components/Notification";
+import Notification from "../components/Notification";
 import { toast } from "react-toastify";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import useNotificationStore from "../stores/useNotificationStore";
 
 // Navigation Item Component
 const NavItem = ({ icon, label, isActive = false, isCollapsed, onClick }) => {
@@ -41,6 +42,31 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const axiosPrivate = useAxiosPrivate();
+  const mainSocket = useSocketStore((s) => s.mainSocket);
+
+  //Fetch du lieu cho noti
+  const getNotifications = useNotificationStore((s) => s.getNotifications);
+  const notifications = useNotificationStore((s) => s.notifications);
+  const [notificationsUnreadNumber, setNotificationsUnreadNumber] = useState(0);
+
+  //Audio
+  const audioRef = useRef(new Audio("/sound/new_notification.mp3"));
+  //Phat tin nhan
+  const playSound = () => {
+    audioRef.current.volume = 0.5;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play();
+  };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getNotifications(user?.id);
+  }, [user]);
+
+  //Set so unread notification
+  useEffect(() => {
+    setNotificationsUnreadNumber(notifications?.new?.length || 0);
+  }, [notifications]);
 
   const handleNavigation = (href) => {
     if (!user) {
@@ -49,6 +75,23 @@ const Sidebar = () => {
     }
     navigator(href);
   };
+
+  //Listen socket unread notification
+  useEffect(() => {
+    if (!mainSocket) return;
+
+    const handleNewUnread = () => {
+      setNotificationsUnreadNumber((prev) => prev + 1);
+      playSound();
+    };
+
+    mainSocket.on("new_unread_notification", handleNewUnread);
+
+    // Cleanup khi unmount hoặc re-render
+    return () => {
+      mainSocket.off("new_unread_notification", handleNewUnread);
+    };
+  }, [mainSocket]); // chỉ chạy lại khi socket thay đổi
 
   // Đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -281,7 +324,7 @@ const Sidebar = () => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-1">
+            {/* <nav className="flex-1 relative py-4 px-3 space-y-1">
               {navItems.map((item, index) => (
                 <NavItem
                   key={index}
@@ -292,6 +335,41 @@ const Sidebar = () => {
                   onClick={item.onClick}
                 />
               ))}
+            </nav> */}
+
+            <nav className="flex-1 py-4 px-3 space-y-1">
+              {navItems.map((item, index) => {
+                if (item.label === "Notifications") {
+                  return (
+                    <div className="relative">
+                      <NavItem
+                        key={index}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={location.pathname === item.href}
+                        isCollapsed={isCollapsed}
+                        onClick={item.onClick}
+                      />
+                      {notificationsUnreadNumber !== 0 && (
+                        <span className="absolute top-1 left-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full text-center flex items-center justify-center">
+                          {notificationsUnreadNumber}
+                        </span>
+                      )}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <NavItem
+                      key={index}
+                      icon={item.icon}
+                      label={item.label}
+                      isActive={location.pathname === item.href}
+                      isCollapsed={isCollapsed}
+                      onClick={item.onClick}
+                    />
+                  );
+                }
+              })}
             </nav>
 
             {/* Bottom Section */}

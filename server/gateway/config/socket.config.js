@@ -191,6 +191,46 @@ async function connectRabbitMQ() {
       }
     });
 
+    //Ban be tạo bài post mới
+    await subscribeDirect(
+      "events_notificaiton",
+      "new_friend_post",
+      async (msg) => {
+        const data = JSON.parse(msg);
+        console.log("post data", msg);
+      }
+    );
+
+    await subscribeDirect(
+      "events_notificaiton",
+      "new_unread_notification",
+      async (msg) => {
+        const data = JSON.parse(msg);
+        if (Array.isArray(data)) {
+          data.map((noti) => {
+            io.to(`user_${noti.recipient_id}`).emit(
+              "new_unread_notification",
+              noti
+            );
+          });
+        } else {
+          io.to(`user_${data.recipient_id}`).emit(
+            "new_unread_notification",
+            data
+          );
+        }
+      }
+    );
+
+    await subscribeDirect(
+      "events_notificaiton",
+      "new_friend_comment",
+      async (msg) => {
+        const data = JSON.parse(msg);
+        console.log("post data", msg);
+      }
+    );
+
     await subscribeDirect(
       "post_events_pubsub",
       "post_like_updated",

@@ -1,7 +1,8 @@
 import createHttpError from "http-errors";
 import PostModel from "../models/post.model.js";
 import { uploadFiles, uploadVideoLarge } from "../helpers/upload.js";
-import { publishDirect } from "../messages/rabbitMQ.js";
+import { publishDirect, sendQueue } from "../messages/rabbitMQ.js";
+import CommentModel from "../models/comment.model.js";
 
 const getPosts = async (req, res, next) => {
   try {
@@ -62,8 +63,18 @@ const createNewPost = async (req, res, next) => {
     const userId = req.user.userId;
 
     const postId = await PostModel.createPost(content, media, userId);
+
     if (!postId)
       throw createHttpError.createHttpError("Thêm dữ liệu vào DB thất bại");
+
+    const post = await PostModel.getPostById(postId);
+
+    publishDirect(
+      "post_events_pubsub",
+      "post_friend_create",
+      JSON.stringify(post)
+    );
+    console.log(post);
 
     return res.status(200).json({
       message: "Tạo bài viết thành công",
@@ -139,6 +150,20 @@ const saveLike = async (req, res, next) => {
 
     const result = await PostModel.toggleLike(postId, userId);
 
+    if (result.liked === true) {
+      const post = await PostModel.getPostById(postId, userId);
+      if (post.user_id !== userId) {
+        publishDirect(
+          "post_events_pubsub",
+          "post_friend_like",
+          JSON.stringify({
+            sender: userId,
+            post,
+          })
+        );
+      }
+    }
+
     await publishDirect(
       "post_events_pubsub",
       "post_like_updated",
@@ -168,6 +193,53 @@ const addComment = async (req, res, next) => {
       content,
       userId
     );
+
+    const post = await PostModel.getPostById(postId, userId);
+    if (post.user_id !== userId) {
+      if (parentId) {
+        const getParentComment = await CommentModel.getCommentById(parentId);
+        if (getParentComment?.user_id !== comment.user_id) {
+          publishDirect(
+            "post_events_pubsub",
+            "post_friend_comment",
+            JSON.stringify({
+              sender: userId,
+              post,
+              content,
+              parentUserId: getParentComment[0]?.user_id || null,
+            })
+          );
+        }
+      } else {
+        const getParentComment = await CommentModel.getCommentById(parentId);
+        publishDirect(
+          "post_events_pubsub",
+          "post_friend_comment",
+          JSON.stringify({
+            sender: userId,
+            post,
+            content,
+            parentUserId: getParentComment?.user_id || null,
+          })
+        );
+      }
+    } else {
+      if (parentId) {
+        const getParentComment = await CommentModel.getCommentById(parentId);
+        if (getParentComment?.user_id !== comment.user_id) {
+          publishDirect(
+            "post_events_pubsub",
+            "post_friend_comment",
+            JSON.stringify({
+              sender: userId,
+              post,
+              content,
+              parentUserId: getParentComment?.user_id || null,
+            })
+          );
+        }
+      }
+    }
 
     await publishDirect(
       "post_events_pubsub",

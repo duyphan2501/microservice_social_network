@@ -6,7 +6,8 @@
     "services/users",
     "services/posts",
     "services/friend",
-    "services/chat"
+    "services/chat",
+    "services/notifications"
   ],
   "scripts": {
     "dev:gateway": "npm --workspace gateway run dev",
@@ -14,11 +15,12 @@
     "dev:posts": "npm --workspace services/posts run dev",
     "dev:friend": "npm --workspace services/friend run dev",
     "dev:chat": "npm --workspace services/chat run dev",
+    "dev:notifications": "npm --workspace services/notifications run dev",
     "start:gateway": "npm --workspace gateway run start",
     "start:users": "npm --workspace services/users run start",
     "start:posts": "npm --workspace services/posts run start",
     "start:chat": "npm --workspace services/chat run start",
-    "dev:all": "concurrently -n gateway,users -c green,blue,yellow,gray,red \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:chat\" \"npm run dev:posts\" \"npm run dev:friend\""
+    "dev:all": "concurrently -n gateway,users,chat,posts,friend,notifications -c green,blue,yellow,gray,red,white \"npm run dev:gateway\" \"npm run dev:users\" \"npm run dev:chat\" \"npm run dev:posts\" \"npm run dev:friend\" \"npm run dev:notifications\""
   },
   "engines": {
     "node": ">=18"

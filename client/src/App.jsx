@@ -17,6 +17,7 @@ import { ToastContainer } from "react-toastify";
 import NavigateToLogin from "./components/NavigateToLogin";
 import SettingPage from "./pages/SettingPage";
 import ChatNotification from "./components/ChatNotification";
+import NewMessage from "./components/NewMessage";
 
 function App() {
   return (
@@ -42,11 +43,12 @@ function App() {
         </Routes>
         <NavigateToLogin />
         <ChatNotification />
+        <NewMessage />
       </BrowserRouter>
       <ToastContainer
         autoClose={3000}
         pauseOnHover={true}
-        position="top-center"
+        position="top-center" 
       />
     </>
   );

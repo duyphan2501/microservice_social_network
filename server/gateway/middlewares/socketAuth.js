@@ -3,31 +3,34 @@ import { verifyAccessToken } from "../helpers/jwt.helper.js";
 const socketAuth = async (socket, next) => {
   try {
     const cookieString = socket.handshake.headers.cookie;
-    const token =
+
+    let token =
       socket.handshake.auth.token ||
       cookieString
         ?.split("; ")
         .find((row) => row.startsWith("accessToken"))
         ?.split("=")[1];
 
-    if (token) {
-      const payload = await verifyAccessToken(token);
-      console.log(payload);
-      const userId = payload.userId;
-
-      if (!userId) {
-        console.error("Socket Auth: Invalid token payload");
-        return next(new Error("Socket connection rejected: Invalid token"));
-      }
-      socket.userId = userId;
-    } else {
-      socket.userId = null;
+    if (!token) {
+      socket.userId = null; 
+      return next();
     }
 
+    let payload;
+    try {
+      payload = await verifyAccessToken(token);
+    } catch (err) {
+      if (err.message === "jwt expired") {
+        return next(new Error("TOKEN_EXPIRED"));
+      }
+      return next(new Error("INVALID_TOKEN"));
+    }
+
+    socket.userId = payload.userId;
     next();
   } catch (error) {
-    console.error("Socket Auth Error:", error.message);
-    next(error);
+    console.log("SocketAuthError:", error);
+    next(new Error("AUTH_ERROR"));
   }
 };
 

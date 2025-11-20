@@ -79,7 +79,7 @@ const Home = () => {
             posts.map((post) => (
               <div
                 key={post.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+                className="bg-white border rounded-2xl border-gray-200 overflow-hidden"
               >
                 <ThreadPost post={post} />
               </div>

@@ -4,6 +4,7 @@ import { checkAuth, optionAuth } from "../middlewares/auth.middleware.js";
 import {
   addComment,
   createNewPost,
+  deletePost,
   getPost,
   getPostComments,
   getPosts,
@@ -16,6 +17,7 @@ const postRouter = express.Router();
 
 postRouter.get("/", optionAuth, getPosts);
 postRouter.post("/create", checkAuth, createNewPost);
+postRouter.delete("/delete/:id", checkAuth, deletePost);
 postRouter.post(
   "/upload-media",
   checkAuth,

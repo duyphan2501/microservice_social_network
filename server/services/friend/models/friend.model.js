@@ -104,29 +104,36 @@ const FriendModel = {
   },
 
   // Lấy danh sách bạn bè (chỉ trả về friend IDs)
+  // Lấy danh sách bạn bè (chỉ trả về friend IDs)
   async getFriendsList(userId, limit = 50, offset = 0) {
-    const query = `
-      SELECT 
-        CASE 
-          WHEN user_id_1 = ? THEN user_id_2 
-          ELSE user_id_1 
-        END as friend_id,
-        created_at,
-        updated_at
-      FROM friend_relationships 
-      WHERE (user_id_1 = ? OR user_id_2 = ?) 
-        AND status = 'accepted'
-      ORDER BY updated_at DESC
-      LIMIT ? OFFSET ?
-    `;
+    // Parse TẤT CẢ các tham số sang integer
+    const userIdInt = parseInt(userId, 10);
+    const limitInt = parseInt(limit, 10);
+    const offsetInt = parseInt(offset, 10);
 
-    const [rows] = await pool.query(query, [
-      userId,
-      userId,
-      userId,
-      limit,
-      offset,
-    ]);
+    // Validate
+    if (isNaN(userIdInt) || isNaN(limitInt) || isNaN(offsetInt)) {
+      console.error("Invalid parameters:", { userId, limit, offset });
+      return [];
+    }
+
+    // Dùng string template cho LIMIT và OFFSET vì MySQL có vấn đề với prepared statements
+    const query = `
+    SELECT 
+      CASE 
+        WHEN user_id_1 = ? THEN user_id_2 
+        ELSE user_id_1 
+      END as friend_id,
+      created_at,
+      updated_at
+    FROM friend_relationships 
+    WHERE (user_id_1 = ? OR user_id_2 = ?) 
+      AND status = 'accepted'
+    ORDER BY updated_at DESC
+    LIMIT ${limitInt} OFFSET ${offsetInt}
+  `;
+
+    const [rows] = await pool.execute(query, [userIdInt, userIdInt, userIdInt]);
     return rows;
   },
 

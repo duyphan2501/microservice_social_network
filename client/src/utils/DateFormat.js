@@ -7,14 +7,29 @@ function formatRelativeTime(dateInput, isLastActive = false) {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return isLastActive ? "1 phút trước" : "Vừa xong";
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHour < 24) return `${diffHour} giờ trước`;
-  if (diffDay === 1) return "Hôm qua";
-  if (diffDay < 7) return `${diffDay} ngày trước`;
-  if (diffDay < 30) return `${Math.floor(diffDay / 7)} tuần trước`;
-  if (diffDay < 365) return `${Math.floor(diffDay / 30)} tháng trước`;
-  return `${Math.floor(diffDay / 365)} năm trước`;
+  if (diffSec < 60) return isLastActive ? "1 minute ago" : "Just now";
+  if (diffMin < 2) return `${diffMin} minute ago`;
+  if (diffMin < 60) return `${diffMin} minutes ago`;
+  if (diffHour < 24) return `${diffHour} hours ago`;
+  if (diffDay === 1) return "Yesterday";
+  if (diffDay < 7) return `${diffDay} days ago`;
+  if (diffDay < 30) return `${Math.floor(diffDay / 7)} weeks ago`;
+  if (diffDay < 365) return `${Math.floor(diffDay / 30)} months ago`;
+  return `${Math.floor(diffDay / 365)} years ago`;
 }
 
-export { formatRelativeTime };
+const formatDate = (dateInput) => {
+  // Formats a date to a readable string format like "January 1, 2023 12:00 PM"
+  const date = new Date(dateInput);
+  const options = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  };
+  return date.toLocaleString(undefined, options); 
+}
+
+export { formatRelativeTime, formatDate };

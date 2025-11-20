@@ -10,7 +10,7 @@ const PostModel = {
             SELECT 1 FROM likes l 
             WHERE l.post_id = p.id AND l.user_id = ?
           ) AS isLiked
-      FROM posts p
+      FROM posts p WHERE p.is_deleted = FALSE
       ORDER BY p.id DESC
       LIMIT ? OFFSET ?
     `;
@@ -50,7 +50,7 @@ const PostModel = {
             WHERE l.post_id = p.id AND l.user_id = ?
           ) AS isLiked
       FROM posts p
-      WHERE p.id = ?
+      WHERE p.id = ? AND p.is_deleted = FALSE
       LIMIT 1
     `;
     const [rows] = await pool.query(query, [currentUserId, postId]);
@@ -215,6 +215,11 @@ const PostModel = {
     } finally {
       connection.release();
     }
+  },
+  deletePostById: async (postId, userId) => {
+    const query = `UPDATE posts SET is_deleted = ? WHERE id = ? AND user_id = ?`;
+    const [result] = await pool.query(query, [true, postId, userId]);
+    return result.affectedRows > 0;
   },
 };
 

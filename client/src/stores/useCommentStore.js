@@ -5,6 +5,31 @@ import useUserStore from "./useUserStore";
 
 export const useCommentStore = create((set, get) => ({
   isLoading: false,
+  comments: [],
+
+  setComments: (comments) => {
+    set({ comments });
+  },
+
+  addCommentState: (comment) => {
+    set((state) => ({
+      comments: [...state.comments, comment],
+    }));
+  },
+
+  replaceTempComment: (tempId, newComment) => {
+    set((state) => ({
+      comments: state.comments.map((comment) =>
+        comment.id === tempId ? newComment : comment
+      ),
+    }));
+  },
+
+  removeCommentById: (commentId) => {
+    set((state) => ({
+      comments: state.comments.filter((comment) => comment.id !== commentId),
+    }));
+  },
 
   getPostComments: async (postId) => {
     set({ isLoading: true });

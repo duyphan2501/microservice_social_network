@@ -252,11 +252,7 @@ function SearchPage() {
       if (query.trim()) {
         // Search users - FIXED: Changed from /friend/search/users to /friends/search/users
         const response = await axiosPrivate.get(
-          `/friends/search/users?query=${encodeURIComponent(
-            query
-          )}&limit=20``/friend/search/users?query=${encodeURIComponent(
-            query
-          )}&limit=20`
+          `/friends/search/users?query=${encodeURIComponent(query)}&limit=20`
         );
         setUsers(response.data.data.users || []);
       } else {
@@ -278,56 +274,57 @@ function SearchPage() {
   const handleUserAction = async (user, action) => {
     setActionLoading(true);
 
+    const userId = user.userId || user.id;
+
     try {
       let response;
 
       switch (action) {
         case "send":
-          // Send friend request - FIXED: Changed from /friend/friends/request to /friends/request
           response = await axiosPrivate.post("/friends/request", {
-            targetUserId: user.id,
+            targetUserId: userId,
+            friendId: userId,
           });
 
-          // Update user status in list
           setUsers((prev) =>
             prev.map((u) =>
-              u.id === user.id ? { ...u, friendshipStatus: "request_sent" } : u
+              (u.userId || u.id) === userId
+                ? { ...u, friendshipStatus: "request_sent" }
+                : u
             )
           );
           break;
 
         case "accept":
-          // Accept friend request - FIXED: Changed from /friend/friends/accept to /friends/accept
           response = await axiosPrivate.post("/friends/accept", {
-            fromUserId: user.id,
+            fromUserId: userId,
           });
 
-          // Update user status in list
           setUsers((prev) =>
             prev.map((u) =>
-              u.id === user.id ? { ...u, friendshipStatus: "accepted" } : u
+              (u.userId || u.id) === userId
+                ? { ...u, friendshipStatus: "accepted" }
+                : u
             )
           );
           break;
 
         case "unfriend":
-          // Unfriend - FIXED: Changed from /friend/friends/unfriend to /friends/unfriend
           if (window.confirm(`Unfriend ${user.username}?`)) {
             response = await axiosPrivate.delete("/friends/unfriend", {
-              data: { friendUserId: user.id },
+              data: { friendUserId: userId },
             });
 
-            // Update user status in list
             setUsers((prev) =>
               prev.map((u) =>
-                u.id === user.id ? { ...u, friendshipStatus: "none" } : u
+                (u.userId || u.id) === userId
+                  ? { ...u, friendshipStatus: "none" }
+                  : u
               )
             );
           }
           break;
       }
-
-      console.log("Action response:", response?.data);
     } catch (err) {
       console.error(`Error ${action}:`, err);
       alert(err.response?.data?.message || `Failed to ${action}`);

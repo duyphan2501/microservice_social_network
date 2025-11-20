@@ -55,7 +55,6 @@ export const usePostStore = create((set, get) => ({
       return res.data.post;
     } catch (error) {
       console.error(error);
-      toast.error(error.response.data.message || error);
     } finally {
       set({ isLoading: false });
     }
@@ -129,6 +128,20 @@ export const usePostStore = create((set, get) => ({
       isLoading: false,
       error: null,
     }),
+
+  deletePost: async (postId, axiosPrivate) => {
+    try {
+      await axiosPrivate.delete(`/posts/delete/${postId}`);
+      set((state) => ({
+        posts: state.posts.filter((post) => post.id !== postId),
+      }));
+      toast.success("Post deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response.data.message || error);
+    } finally {
+    }
+  },
 }));
 
 export default usePostStore;

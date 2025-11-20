@@ -23,10 +23,11 @@ const getPost = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (!id) throw createHttpError.BadRequest("Thiếu mã bài viết");
+    if (!id) throw createHttpError.BadRequest("Post ID is required");
     const userId = req.user?.userId || req.query.userId || 0;
 
     const post = await PostModel.getPostById(id, userId);
+    if (!post) throw createHttpError.NotFound("Post is deleted or not exist");
 
     return res.status(200).json({
       post,
@@ -146,7 +147,9 @@ const saveLike = async (req, res, next) => {
     const postId = parseInt(req.params.postId || 0, 10);
     const userId = req.user?.userId;
 
-    if (postId === 0) throw createHttpError.BadRequest("Thiếu mã bài đăng");
+    if (postId === 0) throw createHttpError.BadRequest("Post ID is required");
+    // const post = await PostModel.getPostById(postId, userId);
+    // if (!post) throw createHttpError.NotFound("Post is deleted or not exist");
 
     const result = await PostModel.toggleLike(postId, userId);
 
@@ -182,10 +185,13 @@ const saveLike = async (req, res, next) => {
 const addComment = async (req, res, next) => {
   try {
     const { postId, parentId, content } = req.body;
-
-    if (!postId) throw createHttpError.BadRequest("Thiếu mã bài viết");
-    if (!content) throw createHttpError.BadRequest("Vui lòng nhập bình luận");
     const userId = req.user?.userId || 0;
+
+    if (!postId) throw createHttpError.BadRequest("Post ID is required");
+    const post = await PostModel.getPostById(postId, userId);
+
+    if (!post) throw createHttpError.NotFound("Post is deleted or not exist");
+    if (!content) throw createHttpError.BadRequest("Please enter content");
 
     const comment = await PostModel.addNewComment(
       postId,
@@ -249,7 +255,27 @@ const addComment = async (req, res, next) => {
 
     return res
       .status(201)
-      .json({ message: "Thêm bình luận thành công", comment });
+      .json({ message: "Add comment sucessfully", comment });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deletePost = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId || 0;
+
+    if (!id) throw createHttpError.BadRequest("Post ID is required");
+    const result = await PostModel.deletePostById(id, userId);
+
+    if (!result)
+      throw createHttpError.Forbidden(
+        "You are not allowed to delete this post"
+      );
+    return res.status(200).json({
+      message: "Delete post successfully",
+    });
   } catch (error) {
     next(error);
   }
@@ -263,4 +289,5 @@ export {
   uploadPostMedia,
   saveLike,
   addComment,
+  deletePost,
 };

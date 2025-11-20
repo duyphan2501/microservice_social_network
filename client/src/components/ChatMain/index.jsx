@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import ChatFooter from "./ChatFooter";
 import ChatHeader from "./ChatHeader";
 import MessageItem from "../MessageItem";
@@ -8,34 +8,73 @@ import useConversationStore from "../../stores/useConversationStore";
 import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import useSocketStore from "../../stores/useSocketStore";
 import useMessageStore from "../../stores/useMessageStore";
+import { MyContext } from "../../Context/MyContext";
 
-const ChatMain = ({ chatUser, conversationId }) => {
+const ChatMain = () => {
+  const {
+    chatUser,
+    selectedConversationId,
+    setSelectedConversationId,
+    setIsOpenNewMessage,
+  } = useContext(MyContext);
+
   const user = useUserStore((state) => state.user); // currentUser
-  const { getConversationMessages } = useConversationStore();
+  const { getConversationMessages, createNewConversation } =
+    useConversationStore();
+
   const { uploadMessageImages, sendMessage, updateMessageStatus } =
     useMessageStore();
   const axiosPrivate = useAxiosPrivate();
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // pagination / loading older messages
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+
   // Lấy instance mainSocket từ store
   const mainSocket = useSocketStore((state) => state.mainSocket);
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
 
   // Cuộn xuống cuối danh sách tin nhắn khi có tin nhắn mới
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = true) => {
+    // If we have a container, prefer scrolling container to keep consistent behavior
+    const container = messagesContainerRef.current;
+    if (container) {
+      // scroll to bottom of container
+      const behaviour = smooth ? { behavior: "smooth" } : undefined;
+      // use scrollTop to avoid scrollIntoView oddities when we adjust scrollTop manually
+      container.scrollTop = container.scrollHeight - container.clientHeight;
+      // fallback: ensure messagesEndRef is in view
+      messagesEndRef.current?.scrollIntoView(behaviour);
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
-  // Tải tin nhắn từ API ban đầu
+  // Tải tin nhắn từ API ban đầu hoặc load thêm (beforeId)
   const fetchedMessages = async (limit = 20, beforeId = undefined) => {
+    if (!selectedConversationId) return 0;
+
     const data = await getConversationMessages(
-      conversationId,
+      selectedConversationId,
       limit,
       beforeId,
       axiosPrivate
     );
-    // Data từ API đã có sẵn trường 'status'
-    setMessages(data);
+
+    if (beforeId) {
+      // Khi load thêm → prepend lên đầu
+      setMessages((prev) => [...data, ...prev]);
+
+      if (data.length < limit) setHasMore(false);
+    } else {
+      // Khi load lần đầu
+      setMessages(data);
+    }
+
+    return data.length;
   };
 
   // Hàm cập nhật state tin nhắn khi có sự kiện mainSocket
@@ -48,42 +87,59 @@ const ChatMain = ({ chatUser, conversationId }) => {
   }, []);
 
   useEffect(() => {
-    // 1. Kết nối và tham gia phòng chat khi conversationId thay đổi
-    if (mainSocket && conversationId) {
-      mainSocket.emit("join_conversation", conversationId);
+    // 1. Kết nối và tham gia phòng chat khi selectedConversationId thay đổi
+    if (mainSocket && selectedConversationId) {
+      mainSocket.emit("join_conversation", selectedConversationId);
     }
 
     // 2. Lắng nghe tin nhắn mới
     const handleReceiveMessage = (newMessage) => {
       if (!newMessage.status) newMessage.status = "sent";
-      if (newMessage.conversation_id !== conversationId) {
+      if (newMessage.conversation_id !== selectedConversationId) {
         return;
       }
+      // If the message was sent by current user
       if (newMessage.sender_id === user.id) {
+        if (!newMessage.tempId) return;
         setMessages((prevMessages) => {
-          // Tìm tin nhắn tạm thời dựa trên tempId
           const index = prevMessages.findIndex(
-            (msg) =>
-              msg.id === newMessage.tempId || msg.tempId === newMessage.tempId
+            (msg) => msg.id == newMessage.tempId
           );
 
           if (index !== -1) {
-            // Nếu tìm thấy, thay thế tin nhắn tạm bằng tin nhắn chính thức
             const updatedMessages = [...prevMessages];
             updatedMessages[index] = {
               ...updatedMessages[index],
-              id: newMessage.id, // Gán ID thật
+              id: newMessage.id,
               status: "sent",
             };
             return updatedMessages;
           } else {
+            // fallback: append
             return [...prevMessages, newMessage];
           }
         });
       } else {
-        setMessages((prev) => [...prev, newMessage]);
+        setMessages((prev) => {
+          const newArr = [...prev, newMessage];
+
+          // if user is at (or near) bottom -> auto scroll
+          const container = messagesContainerRef.current;
+          const isAtBottom = container
+            ? container.scrollHeight - container.scrollTop - container.clientHeight <
+              150
+            : true;
+
+          // set state then scroll in next tick
+          setTimeout(() => {
+            if (isAtBottom) scrollToBottom();
+          }, 50);
+
+          return newArr;
+        });
+
         updateMessageStatus(
-          conversationId,
+          selectedConversationId,
           newMessage.id,
           user.id,
           "delivered",
@@ -93,70 +149,100 @@ const ChatMain = ({ chatUser, conversationId }) => {
     };
 
     // 3. Lắng nghe cập nhật trạng thái (dấu tích)
-    // Dùng useCallback bên trên để đảm bảo useEffect chạy mượt mà
     mainSocket?.on("receive_message", handleReceiveMessage);
     mainSocket?.on("status_updated", updateMessageStatusInState);
 
     return () => {
-      // Dọn dẹp listener khi component unmount hoặc conversationId thay đổi
+      // Dọn dẹp listener khi component unmount hoặc selectedConversationId thay đổi
       mainSocket?.off("receive_message", handleReceiveMessage);
       mainSocket?.off("status_updated", updateMessageStatusInState);
-      if (mainSocket && conversationId) {
-        mainSocket.emit("leave_conversation", conversationId);
+      if (mainSocket && selectedConversationId) {
+        mainSocket.emit("leave_conversation", selectedConversationId);
       }
     };
-  }, [conversationId, user.id, updateMessageStatusInState]);
+  }, [selectedConversationId, user.id, updateMessageStatusInState, mainSocket]);
 
   // Effect cho việc cuộn trang và fetch API ban đầu
   useEffect(() => {
-    scrollToBottom();
+    // reset
+    setMessages([]);
+    setHasMore(true);
+
     // Đảm bảo fetch lại messages khi đổi conversation/chatUser
-    if (conversationId) {
-      fetchedMessages();
+    if (selectedConversationId) {
+      (async () => {
+        await fetchedMessages();
+        // scroll to bottom after messages rendered
+        setTimeout(() => scrollToBottom(false), 50);
+      })();
     }
-  }, [chatUser, conversationId]);
+  }, [chatUser, selectedConversationId]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [chatUser, messages]);
+    // mỗi khi messages thay đổi, nếu ở bottom thì scroll
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const isAtBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+    if (isAtBottom) {
+      // small delay để DOM cập nhật
+      setTimeout(() => scrollToBottom(), 50);
+    }
+  }, [messages, chatUser]);
 
   const addTempMessageToUI = (tempMessage) => {
     setMessages((prev) => [...prev, tempMessage]);
+    // after adding temp message, scroll to bottom
+    setTimeout(() => scrollToBottom(), 50);
   };
 
   const handleSendMessage = async (e, content, images) => {
     e.preventDefault();
 
     if (!content.trim() && images.length === 0) return;
-    // Tạo một ID tạm thời (ví dụ dùng UUID library)
-    const tempId = Date.now().toString();
+    let tempId = null;
 
-    // Tạo đối tượng tin nhắn giả định để hiển thị ngay lập tức
-    const tempMessage = {
-      id: tempId,
-      conversation_id: conversationId,
-      sender_id: user.id,
-      content: content,
-      type: images.length > 0 ? "image" : "text",
-      sent_at: new Date().toISOString(),
-      status: "sending",
-      media: images.map((file) => ({
-        media_url: file.preview,
-        media_file_type: "image",
-      })),
-    };
+    let currentConversationId = selectedConversationId;
 
-    addTempMessageToUI(tempMessage);
+    if (!currentConversationId) {
+      currentConversationId = await createNewConversation(
+        chatUser.id,
+        axiosPrivate
+      );
+      setSelectedConversationId(currentConversationId);
+    } else {
+      tempId = `temp-${Date.now()}`;
+      const tempMessage = {
+        id: tempId,
+        conversation_id: selectedConversationId,
+        sender_id: user.id,
+        content: content,
+        type: images.length > 0 ? "image" : "text",
+        sent_at: new Date().toISOString(),
+        status: "sending",
+        media: images.map((file) => ({
+          media_url: file.preview,
+          media_file_type: "image",
+        })),
+      };
+      addTempMessageToUI(tempMessage);
+    }
+
+    let uploadedImages = [];
     try {
-      const formData = new FormData();
-      images.forEach((file) => {
-        formData.append("message_images", file);
-      });
+      if (images.length > 0) {
+        const formData = new FormData();
+        images.forEach((file) => {
+          formData.append("message_images", file);
+        });
 
-      const uploadedImages = await uploadMessageImages(formData, axiosPrivate);
+        uploadedImages = await uploadMessageImages(formData, axiosPrivate);
+      }
 
       const messageData = {
-        conversationId: conversationId,
+        conversationId: currentConversationId,
         senderId: user.id,
         content: content.trim(),
         type: images.length > 0 ? "image" : "text",
@@ -166,29 +252,62 @@ const ChatMain = ({ chatUser, conversationId }) => {
 
       await sendMessage(messageData, axiosPrivate);
     } catch (error) {
-      const lastIndex = messages.length - 1;
-      const updatedMessages = [...messages];
-      updatedMessages[lastIndex] = {
-        ...updatedMessages[lastIndex],
-        status: "error",
-      };
-      setMessages(updatedMessages);
+      // mark last message as error
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        if (lastIndex >= 0) {
+          updated[lastIndex] = { ...updated[lastIndex], status: "error" };
+        }
+        return updated;
+      });
     }
   };
 
   const markChatAsRead = () => {
-    if (!mainSocket || !user.id || !conversationId || messages.length === 0)
+    if (
+      !mainSocket ||
+      !user.id ||
+      !selectedConversationId ||
+      messages.length === 0
+    )
       return;
     const lastMessage = messages[messages.length - 1];
-    // Nếu tin nhắn cuối cùng là của người khác và chưa được đọc
     if (lastMessage.sender_id !== user.id && lastMessage.status !== "read") {
       updateMessageStatus(
-        conversationId,
+        selectedConversationId,
         lastMessage.id,
         user.id,
         "read",
         axiosPrivate
       );
+    }
+  };
+
+  // Handle scroll: load more when near top + mark as read
+  const handleScroll = async () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // mark read on scroll
+    markChatAsRead();
+
+    if (isFetching || !hasMore) return;
+
+    // if near top -> load older messages
+    if (container.scrollTop < 50) {
+      setIsFetching(true);
+
+      const firstMessageId = messages[0]?.id;
+      const oldHeight = container.scrollHeight;
+
+      await fetchedMessages(20, firstMessageId);
+
+      // preserve scroll position to avoid jump
+      const newHeight = container.scrollHeight;
+      container.scrollTop = newHeight - oldHeight + container.scrollTop; // keep user's viewport stable
+
+      setIsFetching(false);
     }
   };
 
@@ -204,9 +323,10 @@ const ChatMain = ({ chatUser, conversationId }) => {
 
           {/* Phần hiển thị tin nhắn - Thêm onClick để bắt sự kiện người dùng tương tác */}
           <div
+            ref={messagesContainerRef}
             className="flex-1 overflow-y-auto p-4 bg-gray-50"
             onClick={markChatAsRead} // Đánh dấu đã đọc khi click vào khung chat
-            onScroll={markChatAsRead} // Hoặc khi cuộn (tùy UX bạn chọn)
+            onScroll={handleScroll} // Hoặc khi cuộn (tùy UX bạn chọn)
           >
             {messages &&
               messages.map((message) => (
@@ -235,7 +355,10 @@ const ChatMain = ({ chatUser, conversationId }) => {
             </div>
             <h5 className="font-medium text-lg">Tin nhắn của bạn</h5>
             <p>Gửi ảnh hoặc tin nhắn cho bạn bè</p>
-            <button className="bg-black py-1 px-2  rounded-lg text-white cursor-pointer hover:bg-gray-700 active:bg-gray-800">
+            <button
+              className="bg-black py-1 px-2  rounded-lg text-white cursor-pointer hover:bg-gray-700 active:bg-gray-800"
+              onClick={() => setIsOpenNewMessage(true)}
+            >
               Gửi tin nhắn
             </button>
           </div>

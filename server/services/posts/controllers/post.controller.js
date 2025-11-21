@@ -9,8 +9,9 @@ const getPosts = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-    const userId = req.user?.userId || req.query.userId || 0;
-    const posts = await PostModel.getPostsWithMedia(limit, offset, userId);
+    const userId = req.query.userId || 0;
+    const currentUserId = req.user?.userId || req.query.userId || 0;
+    const posts = await PostModel.getPostsWithMedia(limit, offset, userId, currentUserId);
     res.status(200).json({
       posts,
     });
@@ -211,7 +212,7 @@ const addComment = async (req, res, next) => {
               sender: userId,
               post,
               content,
-              parentUserId: getParentComment[0]?.user_id || null,
+              parentUserId: getParentComment?.user_id || null,
             })
           );
         }

@@ -12,7 +12,7 @@ export const usePostStore = create((set, get) => ({
   hasMore: true,
   postsCache: {},
 
-  fetchPosts: async (axiosPrivate) => {
+  fetchPosts: async (axiosPrivate, postUserId = 0) => {
     const { isLoading, page, hasMore } = get();
 
     if (isLoading || !hasMore) return;
@@ -20,7 +20,9 @@ export const usePostStore = create((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await axiosPrivate.get(`/posts?page=${page}&limit=10`);
+      const response = await axiosPrivate.get(
+        `/posts?page=${page}&limit=10&userId=${postUserId}`
+      );
       const newPosts = response.data.posts;
 
       if (newPosts.length === 0) {
@@ -32,12 +34,24 @@ export const usePostStore = create((set, get) => ({
       const { fetchUserIfNeeded } = useUserStore.getState();
       await Promise.all(userIdsToFetch.map((id) => fetchUserIfNeeded(id)));
 
-      set((state) => ({
-        posts: [...state.posts, ...newPosts],
-        page: state.page + 1,
-        hasMore: newPosts.length === 10,
-        isLoading: false,
-      }));
+      set((state) => {
+        const existingPostIds = new Set(state.posts.map(post => post.id));
+        const uniqueNewPosts = newPosts.filter(post => !existingPostIds.has(post.id));
+        const updatedPosts = [...state.posts, ...uniqueNewPosts];
+        return {
+          posts: updatedPosts,
+          page: state.page + 1,
+          hasMore: newPosts.length === 10,
+          isLoading: false,
+        };
+      });
+
+      // set((state) => ({
+      //   posts: [...state.posts, ...newPosts],
+      //   page: state.page + 1,
+      //   hasMore: newPosts.length === 10,
+      //   isLoading: false,
+      // }));
     } catch (error) {
       set({
         error: error.message || "Lỗi khi tải bài viết",

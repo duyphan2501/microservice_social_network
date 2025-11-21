@@ -177,7 +177,7 @@ const useUserStore = create((set, get) => {
   const changePassword = async (formData, axiosPrivate) => {
     set({ isLoading: { change: true } });
     try {
-      const res = await API.put(`/users/change-password`, formData);
+      const res = await axiosPrivate.put(`/users/change-password`, formData);
       toast.success(res.data.message);
       return true;
     } catch (error) {
@@ -191,7 +191,7 @@ const useUserStore = create((set, get) => {
 
   const getUserInfo = async (userId, axiosPrivate) => {
     try {
-      const res = await API.get(`/users/get-info/${userId}`);
+      const res = await axiosPrivate.get(`/users/get-info/${userId}`);
       return res.data.user;
     } catch (error) {
       const message = error.response?.data?.message;
@@ -245,6 +245,11 @@ const useUserStore = create((set, get) => {
     return res.data.users || [];
   };
 
+  const getUserByUsername = async (username) => {
+      const res = await API.get(`/users/username/${username}`);
+      return res.data.user || null;
+  };
+
   return {
     usersCache: {},
     user: null,
@@ -274,6 +279,7 @@ const useUserStore = create((set, get) => {
     fetchUserIfNeeded,
     refreshUserInfo,
     searchUsers,
+    getUserByUsername,
   };
 });
 

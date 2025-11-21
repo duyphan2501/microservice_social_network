@@ -235,7 +235,7 @@ const CommentPage = () => {
               ref={loadMoreRef}
               className="h-8 flex justify-center items-center text-gray-400 text-sm"
             >
-              Đang tải thêm...
+              Loading...
             </div>
           )}
         </div>
@@ -255,7 +255,7 @@ const CommentPage = () => {
               value={commentText}
               disabled={!user}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Viết bình luận..."
+              placeholder="Write comment..."
               className="flex-grow bg-gray-100 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               onKeyDown={(e) =>
                 e.key === "Enter" && handleSubmitComment(commentText)

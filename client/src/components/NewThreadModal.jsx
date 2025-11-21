@@ -6,16 +6,23 @@ import usePostStore from "../stores/usePostStore.js";
 import useAxiosPrivate from "../hooks/useAxiosPrivate.js";
 import BiLoader from "./Biloader.jsx";
 import { toast } from "react-toastify";
+import { useContext } from "react";
+import { MyContext } from "../Context/MyContext.jsx";
 
 // Component: NewThreadModal
-const NewThreadModal = ({ isOpen, onClose }) => {
+const NewThreadModal = () => {
+  const {isOpenNewPostModal, setIsOpenNewPostModal} = useContext(MyContext);
   const [content, setContent] = useState("");
   const user = useUserStore((state) => state.user);
   const [media, setMedia] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { uploadPostMedia, createNewPost } = usePostStore();
   const axiosPrivate = useAxiosPrivate();
-  if (!isOpen) return null;
+  const onClose = () => {
+    setIsOpenNewPostModal(false);
+  };
+
+  if (!isOpenNewPostModal) return null;
 
   const handlePost = async () => {
     if (isLoading) return;

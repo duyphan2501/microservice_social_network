@@ -18,6 +18,7 @@ import NavigateToLogin from "./components/NavigateToLogin";
 import SettingPage from "./pages/SettingPage";
 import ChatNotification from "./components/ChatNotification";
 import NewMessage from "./components/NewMessage";
+import NewThreadModal from "./components/NewThreadModal";
 
 function App() {
   return (
@@ -36,7 +37,7 @@ function App() {
             <Route path="inbox" element={<ChatPage />} />
             <Route path="/post/:postId/comments" element={<CommentPage />} />
             <Route path="search" element={<Search />} />
-            <Route path="profile" element={<Profile />} />
+            <Route path="profile/:username" element={<Profile />} />
             <Route path="settings" element={<SettingPage />} />
           </Route>
           <Route path={"inbox"} element={<ChatPage />} />
@@ -44,11 +45,12 @@ function App() {
         <NavigateToLogin />
         <ChatNotification />
         <NewMessage />
+        <NewThreadModal />
       </BrowserRouter>
       <ToastContainer
         autoClose={3000}
         pauseOnHover={true}
-        position="top-center" 
+        position="top-center"
       />
     </>
   );

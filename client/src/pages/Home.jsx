@@ -1,37 +1,40 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useContext } from "react";
 import ThreadPost from "../components/ThreadPost";
-import NewThreadModal from "../components/NewThreadModal";
 import usePostStore from "../stores/usePostStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import useUserStore from "../stores/useUserStore";
 import { MyContext } from "../Context/MyContext";
-import { useContext } from "react";
 
-// Main Component
 const Home = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { posts, isLoading, hasMore, fetchPosts, } = usePostStore();
+  const fetchPosts = usePostStore((state) => state.fetchPosts);
+  const resetPosts = usePostStore((state) => state.resetPosts);
+  const posts = usePostStore((state) => state.posts);
+  const isLoading = usePostStore((state) => state.isLoading);
+  const hasMore = usePostStore((state) => state.hasMore);
   const observerElem = useRef(null);
   const user = useUserStore((state) => state.user);
-  const { setIsShowLoginNavigator } =
+  const { setIsShowLoginNavigator, setIsOpenNewPostModal } =
     useContext(MyContext);
-  const axiosPrivate = useAxiosPrivate()
+
+  const axiosPrivate = useAxiosPrivate();
 
   const handleClickNewPost = () => {
     if (!user) setIsShowLoginNavigator(true);
-    else setIsModalOpen(true);
+    else setIsOpenNewPostModal(true);
   };
 
   const handleObserver = useCallback(
     (entries) => {
       const target = entries[0];
+
       if (target.isIntersecting && hasMore && !isLoading) {
-        fetchPosts(); // Gọi hàm fetch từ store
+        fetchPosts(axiosPrivate);
       }
     },
-    [isLoading, hasMore, fetchPosts]
+    [hasMore, isLoading, fetchPosts, axiosPrivate]
   );
 
+  // IntersectionObserver để load thêm
   useEffect(() => {
     const option = {
       root: null,
@@ -49,11 +52,19 @@ const Home = () => {
     };
   }, [handleObserver]);
 
+  // Gọi fetch lần đầu
   useEffect(() => {
     if (posts.length === 0) {
       fetchPosts(axiosPrivate);
     }
-  }, [fetchPosts, posts.length]);
+  }, [posts.length, axiosPrivate, fetchPosts]);
+
+  // reset posts khi rời trang
+  useEffect(() => {
+    return () => {
+      resetPosts();
+    };
+  }, [resetPosts]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,26 +86,27 @@ const Home = () => {
 
         {/* Posts Feed */}
         <div className="space-y-4">
-          {posts &&
-            posts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-white border rounded-2xl border-gray-200 overflow-hidden"
-              >
-                <ThreadPost post={post} />
-              </div>
-            ))}
+          {posts.length > 0
+            ? posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="bg-white border rounded-2xl border-gray-200 overflow-hidden"
+                >
+                  <ThreadPost post={post} />
+                </div>
+              ))
+            : !isLoading && (
+                <div className="p-8 text-center text-gray-500">
+                  <p>No posts yet</p>
+                </div>
+              )}
         </div>
       </div>
-      <div ref={observerElem} style={{ padding: "20px", textAlign: "center" }}>
-        {isLoading && <h4>Đang tải thêm bài viết...</h4>}
-        {!hasMore && !isLoading && <h4>Đã tải hết tất cả bài viết.</h4>}
-      </div>
 
-      <NewThreadModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <div ref={observerElem} style={{ padding: "20px", textAlign: "center" }}>
+        {isLoading && <h4>Loading for more posts...</h4>}
+        {!hasMore && !isLoading && posts.length > 0 && <h4>No more posts.</h4>}
+      </div>
     </div>
   );
 };

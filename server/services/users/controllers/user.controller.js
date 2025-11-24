@@ -46,12 +46,12 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("User does not exist");
 
-    // const isCorrectPassword = await comparePassword(
-    //   password,
-    //   foundUser.password_hash
-    // );
+    const isCorrectPassword = await comparePassword(
+      password,
+      foundUser.password_hash
+    );
 
-    const isCorrectPassword = password === foundUser.password_hash;
+    // const isCorrectPassword = password === foundUser.password_hash;
 
     if (!isCorrectPassword) throw new createHttpError.Unauthorized("Password is incorrect");
 

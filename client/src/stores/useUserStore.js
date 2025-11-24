@@ -15,10 +15,12 @@ const useUserStore = create((set, get) => {
       if (error.response) {
         const message = error.response.data?.message || message;
         if (error.response.status === 401 && error.response.data.notVerified) {
+          console.log("Account not verified");
           const user = error.response.data?.user;
           toast.info(message || "Please verify your account");
           return { success: false, loginUser: user };
         } else {
+          console.error("Login error:", message);
           toast.error(message || "Failed to sign up");
         }
       }

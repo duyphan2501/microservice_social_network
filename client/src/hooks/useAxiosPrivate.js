@@ -25,8 +25,10 @@ const useAxiosPrivate = () => {
       (response) => response,
       async (error) => {
         const prevRequest = error?.config;
-        if (prevRequest.url.includes("users/refresh-token")) {
-          prevRequest._retry = true;
+        if (
+          prevRequest.url.includes("/users/login") ||
+          prevRequest.url.includes("/users/refresh-token")
+        ) {
           return Promise.reject(error);
         }
         if (
@@ -36,6 +38,7 @@ const useAxiosPrivate = () => {
         ) {
           prevRequest._retry = true;
           try {
+            console.log("Attempting to refresh token...");
             const refreshed = await refreshToken();
             prevRequest.headers = {
               ...prevRequest.headers,
@@ -43,7 +46,8 @@ const useAxiosPrivate = () => {
             };
             return axiosPrivate(prevRequest);
           } catch (err) {
-            useUserStore.getState().logout();
+            console.error("Token refresh failed:", err);
+            // useUserStore.getState().logout();
             return Promise.reject(err);
           }
         }

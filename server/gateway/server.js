@@ -57,15 +57,6 @@ app.use(
 );
 
 app.use(
-  "/api/v1/friends",
-  createProxyMiddleware({
-    target: FRIEND_TARGET,
-    changeOrigin: true,
-    pathRewrite: { "^/api/v1/friends": "" },
-  })
-);
-
-app.use(
   "/api/v1/notifications",
   createProxyMiddleware({
     target: NOTIFICATION_TARGET,

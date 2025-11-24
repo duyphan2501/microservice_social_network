@@ -11,6 +11,9 @@ const Signup = () => {
   const [user, setUser] = useState({
     email: "",
     fullname: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
  
   const navigate = useNavigate();
@@ -18,6 +21,7 @@ const Signup = () => {
   const { signUp, isLoading } = useUserStore();
 
   const handleUserChange = (field, value) => {
+    console.log(field, value);
     setUser((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -68,15 +72,15 @@ const Signup = () => {
                 label="Password"
                 value={user.password}
                 type="password"
-                handleChange={(e) => handleUserChange("password", e.target.value)}
+                handleChange={(value) => handleUserChange("password", value)}
               />
 
               <PasswordTextField
                 label="Confirm Password"
                 value={user.confirmPassword}
                 type="password"
-                handleChange={(e) =>
-                  handleUserChange("confirmPassword", e.target.value)
+                handleChange={(value) =>
+                  handleUserChange("confirmPassword", value)
                 }
               />
             </div>

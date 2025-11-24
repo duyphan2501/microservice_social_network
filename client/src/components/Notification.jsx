@@ -459,6 +459,7 @@ const Notification = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
     const fetchNotificationData = async () => {
       if (!user?.id) return;
 
@@ -509,12 +510,12 @@ const Notification = () => {
   }
 
   if (
-    notificationsData &&
+    (notificationsData &&
     notificationsData.new?.length === 0 &&
     notificationsData.friendRequest?.length === 0 &&
     notificationsData.today?.length === 0 &&
     notificationsData.thisWeek?.length === 0 &&
-    notificationsData.thisMonth?.length === 0
+    notificationsData.thisMonth?.length === 0) || !user
   ) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-white">

@@ -12,7 +12,7 @@ const NavigateToLogin = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Info />
-            <p className="font-semibold text-lg subtitle">Thông báo</p>
+            <p className="font-semibold text-lg subtitle">Announcement</p>
           </div>
           <button
             className="p-1 rounded-full hover:bg-gray-100 active:bg-gray-200 cursor-pointer"
@@ -22,14 +22,14 @@ const NavigateToLogin = () => {
           </button>
         </div>
         <div className="my-3 text-center">
-          <p>Bạn cần phải đăng nhập để dùng chức năng này</p>
+          <p>Please login first to use this feature</p>
         </div>
         <div className="flex justify-center">
           <a
             href="auth/login"
             className=" px-5 py-2 text-white bg-black hover:bg-gray-900 rounded-lg"
           >
-            Đăng nhập ngay
+            Login now
           </a>
         </div>
       </div>

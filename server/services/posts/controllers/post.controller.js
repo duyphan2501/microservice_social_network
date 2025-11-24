@@ -76,9 +76,7 @@ const createNewPost = async (req, res, next) => {
       "post_friend_create",
       JSON.stringify(post)
     );
-    console.log(post);
-
-    return res.status(200).json({
+    return res.status(201).json({
       message: "Tạo bài viết thành công",
       postId,
     });

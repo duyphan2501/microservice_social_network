@@ -85,7 +85,7 @@ const DialogChangePassword = ({
     >
       <DialogTitle sx={{ paddingBottom: 1 }}>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-semibold">Đổi Mật Khẩu</span>
+          <span className="text-xl font-semibold">Change Password</span>
           <IconButton
             size="small"
             onClick={handleCloseModal}
@@ -199,7 +199,7 @@ const DialogChangePassword = ({
             },
           }}
         >
-          Hủy
+          Cancel
         </Button>
 
         <Button

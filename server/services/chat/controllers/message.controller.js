@@ -39,6 +39,19 @@ const sendMessage = async (req, res, next) => {
   try {
     // messageData: { conversationId, senderId, content, type, media, tempId }
     const messageData = req.body;
+
+    if (!messageData.conversationId || !messageData.senderId)
+      throw createHttpError.BadRequest("ConversationId, senderId is required.");
+
+    if (
+      (!messageData.content || messageData.content.trim() === "") &&
+      (!messageData.media || messageData.media.length === 0)
+    ) {
+      throw createHttpError.BadRequest(
+        "Message content or media must be provided."
+      );
+    }
+
     const { messageId, receiverId } = await MessageModel.saveNewMessage(
       messageData
     );
@@ -73,7 +86,9 @@ const updateMessageStatus = async (req, res, next) => {
 
     await sendQueue("chat_events_to_client", JSON.stringify(eventPayload));
 
-    return res.status(200).json({ message: "Cập nhật status thành công" });
+    return res
+      .status(200)
+      .json({ message: "Update message status successfully" });
   } catch (error) {
     next(error);
   }

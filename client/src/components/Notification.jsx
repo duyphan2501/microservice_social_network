@@ -347,6 +347,38 @@ const Notification = () => {
     );
   }
 
+  if (
+    notificationsData &&
+    notificationsData.new?.length === 0 &&
+    notificationsData.today?.length === 0 &&
+    notificationsData.thisWeek?.length === 0 &&
+    notificationsData.thisMonth?.length === 0
+  ) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-white">
+        
+        <div className="w-16 h-16 mb-4 text-gray-300">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-16 h-16"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 6v6m0 6h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9
+            4.03-9 9-9 9 4.03 9 9z"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-400 text-lg font-semibold">No notifications</p>
+      </div>
+    );
+  }
+
   // Khi có dữ liệu, render bình thường
   return (
     <div className="h-full flex flex-col bg-white">
@@ -394,6 +426,14 @@ const Notification = () => {
             handleDeclineRequest={handleDeclineRequest}
             title="This week"
             notifications={notificationsData.thisWeek}
+          />
+        )}
+        {notificationsData.thisMonth?.length > 0 && (
+          <NotificationSection
+            handleAcceptRequest={handleAcceptRequest}
+            handleDeclineRequest={handleDeclineRequest}
+            title="This month"
+            notifications={notificationsData.thisMonth}
           />
         )}
       </div>

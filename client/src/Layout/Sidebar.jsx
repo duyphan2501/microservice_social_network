@@ -128,7 +128,7 @@ const Sidebar = () => {
 
           if (isAllowedPath) return;
 
-          toast.error("Bạn cần phải đăng nhập trước!");
+          toast.error("You have to login first!");
           navigator("/auth/login");
         }
       }

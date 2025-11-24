@@ -47,12 +47,12 @@ const Login = () => {
     <div className="rounded-xl shadow border-gray-100 bg-white z-10 w-100 overflow-hidden">
       <form className="p-5" onSubmit={handleLogin}>
         <h3 className="font-bold text-center mb-5 text-3xl uppercase title">
-          Đăng nhập tài khoản
+          Login account
         </h3>
         <div className="flex gap-5 flex-col">
           <TextField
             id="outlined-basic"
-            label="Email hoặc username"
+            label="Email or username"
             variant="outlined"
             value={user.account}
             onChange={(e) => handleChange("account", e.target.value)}
@@ -61,7 +61,7 @@ const Login = () => {
             size={"medium"}
             value={user.password}
             handleChange={(value) => handleChange("password", value)}
-            label="Mật khẩu"
+            label="Password"
           />
         </div>
         <div className=" flex items-center justify-between mt-3">
@@ -81,27 +81,27 @@ const Login = () => {
                 }}
               />
             }
-            label="Ghi nhớ đăng nhập"
+            label="Remember me"
             className="remember-me"
           />
           <a
             href="/auth/forgot-password"
             className="text-sm font-semibold italic text-gray-600 hover:underline"
           >
-            Quên mật khẩu?
+            Forgot password?
           </a>
         </div>
         <Button
           className="!bg-gray-700 !text-white !min-h-10 !font-bold !uppercase gap-2 items-center !w-full !mt-3"
           type="submit"
         >
-          {!isLoading.login ? "Đăng nhập" : <BiLoader size={20} />}
+          {!isLoading.login ? "Login" : <BiLoader size={20} />}
         </Button>
       </form>
       <div className="bg-gray-800 text-center py-2 text-white text-sm">
-        Chưa có tài khoản?{" "}
+        Haven't any account?{" "}
         <a href="/auth/sign-up" className="italic hover:underline">
-          Đăng ký ngay
+          Register now
         </a>
       </div>
     </div>

@@ -83,33 +83,9 @@ const getConversationByUser = async (req, res, next) => {
   }
 };
 
-const updateStatusConversaion = async (req, res, next) => {
-  try {
-    const { conversationId, status } = req.body;
-
-    if (!conversationId || !status)
-      throw createHttpError.BadRequest("ConversationId and status is required");
-
-    const affectedRows = await ConversationModel.updateStatusConversation(
-      conversationId,
-      status
-    );
-
-    if (affectedRows === 0)
-      throw createHttpError.InternalServerError("Update status failed");
-
-    return res.status(200).json({
-      messages: "Update status sucessfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export {
   getConversations,
   getConversationMessages,
   createNewConversation,
   getConversationByUser,
-  updateStatusConversaion,
 };

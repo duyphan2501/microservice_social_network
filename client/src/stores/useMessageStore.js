@@ -36,7 +36,7 @@ const useMessageStore = create((set, get) => ({
     axiosPrivate
   ) => {
     try {
-      await axiosPrivate.post(`/chat/messages/status`, {
+      await axiosPrivate.put(`/chat/messages/status`, {
         conversationId,
         messageId,
         userId,

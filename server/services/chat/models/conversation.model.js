@@ -149,12 +149,6 @@ const ConversationModel = {
     const [result] = await pool.query(query, [creatorId, partnerId]);
     return result.affectedRows > 0 ? result.insertId : null;
   },
-
-  updateStatusConversation: async (conversationId, status) => {
-    const query = "UPDATE conversations SET status = ? WHERE id = ?";
-    const [result] = await pool.query(query, [status, conversationId]);
-    return result.affectedRows;
-  },
 };
 
 export default ConversationModel;

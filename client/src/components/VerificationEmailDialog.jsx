@@ -20,7 +20,7 @@ const VerificationEmailDialog = ({closeDialog}) => {
       <div className="fixed inset-0 z-200 flex items-center justify-center">
         <div className="rounded-md bg-white p-5 relative shadow-lg">
           <form className="" onSubmit={handleSendEmail}>
-            <h5 className="mb-5 font-bold text-lg">Vui lòng nhập email cần xác thực</h5>
+            <h5 className="mb-5 font-bold text-lg">Please provide email to verify</h5>
             <TextField
               id="outlined-basic"
               label="Email"

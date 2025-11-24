@@ -50,7 +50,7 @@ const useUserStore = create((set, get) => {
 
       set({
         user: res.data.user,
-        accessToken: res.data.accessToken
+        accessToken: res.data.accessToken,
       });
     } catch (error) {
       throw error;
@@ -157,7 +157,7 @@ const useUserStore = create((set, get) => {
       return false;
     }
   };
- 
+
   const updatePersonalInfo = async (name, phone, axiosPrivate) => {
     try {
       const res = await axiosPrivate.put(`/users/personal-info/update`, {
@@ -245,9 +245,15 @@ const useUserStore = create((set, get) => {
     return res.data.users || [];
   };
 
-  const getUserByUsername = async (username) => {
-      const res = await API.get(`/users/username/${username}`);
-      return res.data.user || null;
+  const getUserByUsername = async (username, axiosPrivate) => {
+    const res = await axiosPrivate.get(`/users/username/${username}`);
+    return res.data.user || null;
+  };
+
+  const setUser = (user) => {
+    set({
+      user,
+    });
   };
 
   return {
@@ -280,6 +286,7 @@ const useUserStore = create((set, get) => {
     refreshUserInfo,
     searchUsers,
     getUserByUsername,
+    setUser,
   };
 });
 

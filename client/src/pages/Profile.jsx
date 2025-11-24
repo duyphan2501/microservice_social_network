@@ -9,6 +9,8 @@ import { useParams } from "react-router-dom";
 import usePostStore from "../stores/usePostStore.js";
 import { useRef } from "react";
 import ProfileHeader from "../components/ProfileHeader.jsx";
+import API from "../API/axiosInstance.js";
+import { useNavigate } from "react-router-dom";
 
 // Main Profile Component
 const ProfilePage = () => {
@@ -16,15 +18,18 @@ const ProfilePage = () => {
 
   const axiosPrivate = useAxiosPrivate();
   const loaderRef = useRef(null);
-
-  const [user, setUser] = useState(null);
+  const user = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   const { getUserByUsername, refreshUserInfo } = useUserStore();
   const countFriends = useFriendStore((s) => s.countFriends);
 
   const { posts, hasMore, fetchPosts, resetPosts } = usePostStore();
+
+  const navigator = useNavigate();
 
   const getProfile = async (userId) => {
     if (!userId) return;
@@ -77,7 +82,7 @@ const ProfilePage = () => {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const data = await getUserByUsername(username);
+        const data = await getUserByUsername(username, axiosPrivate);
         setUser(data);
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -93,7 +98,7 @@ const ProfilePage = () => {
 
     getProfile(user.id);
     resetPosts();
-  }, [user?.id]);
+  }, [user]);
 
   const handleSaveProfile = async (updatedProfile) => {
     try {
@@ -102,15 +107,22 @@ const ProfilePage = () => {
 
       for (const key in updatedProfile) {
         if (updatedProfile[key] !== null)
-          formData.append(key, updatedProfile[key]);
+          console.log(`key ${key}: ${updatedProfile[key]}`);
+        formData.append(key, updatedProfile[key]);
       }
 
+      setLoadingEdit(true);
       const res = await axiosPrivate.put("/users/update-info", formData);
 
       if (res.data.success) {
         toast.success("Update successfully!");
+        const newUser = res.data.user;
+        setUser(newUser);
+        navigator(`/profile/${newUser.username}`);
         await refreshUserInfo(user.id, axiosPrivate);
       }
+
+      setLoadingEdit(false);
     } catch (error) {
       const message = error?.response?.data?.message || "Update failed!";
       toast.error(message);
@@ -178,6 +190,7 @@ const ProfilePage = () => {
 
       {/* EDIT MODAL */}
       <EditProfileModal
+        Loading={loadingEdit}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         profile={profile}

@@ -1,4 +1,3 @@
-
 const ProfileHeader = ({ profile, onEditClick }) => {
   return (
     <div className="bg-white rounded-t-2xl p-6 md:p-8">
@@ -6,7 +5,15 @@ const ProfileHeader = ({ profile, onEditClick }) => {
         {/* Left side - Profile Info */}
         <div className="flex-1">
           <div className="flex items-start gap-4">
-            {profile?.avatar_url == null ? (
+            {profile?.avatar_url ? (
+              <div className="w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-full flex-shrink-0">
+                <img
+                  src={profile?.avatar_url}
+                  alt="avatar preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
               <div className="w-20 relative flex justify-center items-center h-20 md:w-24 md:h-24 overflow-hidden rounded-full bg-gray-300 to-pink-500 flex-shrink-0">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -18,14 +25,6 @@ const ProfileHeader = ({ profile, onEditClick }) => {
                 >
                   <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
                 </svg>
-              </div>
-            ) : (
-              <div className="w-20 h-20 md:w-24 md:h-24 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0">
-                <img
-                  src={profile.avatar_url}
-                  alt="avatar preview"
-                  className="w-full h-full object-cover"
-                />
               </div>
             )}
 

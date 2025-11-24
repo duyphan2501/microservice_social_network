@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Drawer from "@mui/material/Drawer";
 
-const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
+const EditProfileModal = ({ isOpen, onClose, profile, onSave, Loading }) => {
   const [formData, setFormData] = useState({
     fullname: "",
     username: "",
@@ -43,6 +43,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
         username: profile?.username || "",
         bio: profile?.bio || "",
         avatarFile: null,
+        base_avatar_url: profile?.avatar_url || "",
       });
       setPreviewAvatar(null);
       setRemoveAvatar(false);
@@ -237,8 +238,15 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
           <button
             onClick={handleSave}
             className="w-full py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-800 transition"
+            disabled={Loading}
           >
-            Done
+            {Loading ? (
+              <div className="size-full flex justify-center items-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              "Done"
+            )}
           </button>
         </div>
       </div>

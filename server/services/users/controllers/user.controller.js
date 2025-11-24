@@ -35,7 +35,9 @@ const login = async (req, res, next) => {
     const { account, password } = req.body;
 
     if (!account || !password)
-      throw new createHttpError.BadRequest("Please provide account and password");
+      throw new createHttpError.BadRequest(
+        "Please provide account and password"
+      );
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(account);
 
@@ -43,8 +45,7 @@ const login = async (req, res, next) => {
       ? await UserModel.getUserByUserName(account)
       : await UserModel.getUserByEmail(account);
 
-    if (!foundUser)
-      throw new createHttpError.NotFound("User does not exist");
+    if (!foundUser) throw new createHttpError.NotFound("User does not exist");
 
     const isCorrectPassword = await comparePassword(
       password,
@@ -53,7 +54,8 @@ const login = async (req, res, next) => {
 
     // const isCorrectPassword = password === foundUser.password_hash;
 
-    if (!isCorrectPassword) throw new createHttpError.Unauthorized("Password is incorrect");
+    if (!isCorrectPassword)
+      throw new createHttpError.Unauthorized("Password is incorrect");
 
     // generate token and set cookie
     const accessToken = await generateAccessTokenAndSetCookie(
@@ -158,7 +160,8 @@ const getUserInfo = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    if (!userId) throw createHttpError.BadRequest("UserId parameter is required");
+    if (!userId)
+      throw createHttpError.BadRequest("UserId parameter is required");
 
     const foundUser = await UserModel.getUserById(userId);
 
@@ -275,7 +278,8 @@ const resetPassword = async (req, res, next) => {
 
 const updateUserInfo = async (req, res, next) => {
   try {
-    const { userId, fullname, username, bio } = req.body;
+    const { userId, fullname, username, bio, base_avatar_url, removeAvatar } =
+      req.body;
     const file = req.file;
 
     if (!userId) throw createHttpError.BadRequest("Missing userId");
@@ -289,7 +293,7 @@ const updateUserInfo = async (req, res, next) => {
       throw createHttpError.BadRequest("This username already be used!");
     }
 
-    let avatar_url = null;
+    let avatar_url = base_avatar_url;
 
     if (file) {
       const { url, public_id } = await uploadFileToCloudinary(
@@ -297,6 +301,10 @@ const updateUserInfo = async (req, res, next) => {
         "avatars"
       );
       avatar_url = url;
+    }
+
+    if (removeAvatar === "true") {
+      avatar_url = null;
     }
 
     const result = await UserModel.updateUserInfo(
@@ -307,9 +315,12 @@ const updateUserInfo = async (req, res, next) => {
       avatar_url
     );
 
+    const userNew = await UserModel.getUserById(userId);
+
     return res.status(200).json({
       success: true,
       message: "Update user successfully",
+      user: filterFieldUser(userNew),
     });
   } catch (error) {
     next(error);

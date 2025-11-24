@@ -164,7 +164,7 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
                     >
                       Copy Post Link
                     </li>
-                    {post?.user_id === user?.id && (
+                    {post.user_id === user.id && (
                       <li
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={handleDeletePost}

@@ -285,7 +285,7 @@ const updateUserInfo = async (req, res, next) => {
 
     const user = await UserModel.getUserByUserName(username);
 
-    if (user.id != userId) {
+    if (user && user?.id != userId) {
       throw createHttpError.BadRequest("This username already be used!");
     }
 
@@ -412,7 +412,7 @@ const getUserByUsername = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};  
+};
 
 export {
   login,

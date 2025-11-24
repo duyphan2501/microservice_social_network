@@ -82,7 +82,7 @@ export default function ChatNotification() {
     return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <a href="/inbox" className="fixed bottom-5 right-5 z-50">
       {current && (
         <>
           {current.type === "text" && (
@@ -163,6 +163,6 @@ export default function ChatNotification() {
           }
         `}
       </style>
-    </div>
+    </a>
   );
 }

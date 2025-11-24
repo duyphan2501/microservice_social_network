@@ -18,8 +18,9 @@ const ProfilePage = () => {
 
   const axiosPrivate = useAxiosPrivate();
   const loaderRef = useRef(null);
-  const user = useUserStore((s) => s.user);
-  const setUser = useUserStore((s) => s.setUser);
+
+  const [user, setUser] = useState();
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(false);

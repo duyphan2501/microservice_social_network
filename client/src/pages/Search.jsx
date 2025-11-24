@@ -53,15 +53,29 @@ const UserCard = ({ user, onAction, loading }) => {
   return (
     <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <img
-          src={
-            user.avatar_url ||
-            user.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-          }
-          alt={user.full_name || user.displayName}
-          className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
-        />
+        {user?.avatar_url ? (
+          <img
+            src={
+              user.avatar_url ||
+              user.avatar ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+            }
+            alt={user.full_name || user.displayName}
+            className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
+          />
+        ) : (
+          <div className="relative overflow-hidden bg-gray-300 rounded-full w-12 h-12 flex justify-center items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 -960 960 960"
+              fill="#797979ff"
+              className="absolute top-2 size-12"
+            >
+              <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+            </svg>
+          </div>
+        )}
+
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
             <span className="font-semibold text-gray-900 truncate">

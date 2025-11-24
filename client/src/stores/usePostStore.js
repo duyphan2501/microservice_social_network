@@ -35,8 +35,10 @@ export const usePostStore = create((set, get) => ({
       await Promise.all(userIdsToFetch.map((id) => fetchUserIfNeeded(id)));
 
       set((state) => {
-        const existingPostIds = new Set(state.posts.map(post => post.id));
-        const uniqueNewPosts = newPosts.filter(post => !existingPostIds.has(post.id));
+        const existingPostIds = new Set(state.posts.map((post) => post.id));
+        const uniqueNewPosts = newPosts.filter(
+          (post) => !existingPostIds.has(post.id)
+        );
         const updatedPosts = [...state.posts, ...uniqueNewPosts];
         return {
           posts: updatedPosts,
@@ -129,7 +131,7 @@ export const usePostStore = create((set, get) => ({
 
       return postInfo;
     } catch (error) {
-      console.error(`Could not fetch post ${postId}:`, error);
+      // console.error(`Could not fetch post ${postId}:`, error);
       return null;
     }
   },

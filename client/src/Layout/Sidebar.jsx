@@ -290,7 +290,7 @@ const Sidebar = () => {
           <aside
             className={`${
               isCollapsed ? "w-20" : "w-64"
-            } border-r border-gray-200 bg-white transition-all duration-300 flex-col fixed h-full z-50 hidden lg:flex`}
+            } border-r border-gray-200 bg-white transition-all duration-300 flex-col fixed h-full z-50 flex`}
           >
             {/* Logo */}
             <div className="h-24 flex items-center px-6 border-b border-gray-200">
@@ -468,13 +468,13 @@ const Sidebar = () => {
           {/* Main Content */}
           <main
             className={`flex-1 overflow-auto bg-gray-50 pb-16 lg:pb-0 transition-all duration-300 ${
-              isCollapsed ? "lg:ml-20" : "lg:ml-64"
+              isCollapsed ? "ml-22" : "lg:ml-64"
             }`}
           >
             <Outlet />
           </main>
 
-          {/* Mobile Bottom Navigation */}
+          {/* Mobile Bottom Navigation
           <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40">
             {[0, 1, 2, 3].map((index) => (
               <a
@@ -485,12 +485,12 @@ const Sidebar = () => {
                 <div className="w-6 h-6">{navItems[index].icon}</div>
               </a>
             ))}
-          </nav>
+          </nav> */}
 
           {/* Notification Panel */}
           {showNotifications && (
             <div
-              className={`hidden lg:block fixed top-0 h-full w-96 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out z-40 shadow-lg ${
+              className={`block fixed top-0 h-full w-96 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out z-40 shadow-lg ${
                 isCollapsed ? "left-20" : "left-64"
               }`}
             >

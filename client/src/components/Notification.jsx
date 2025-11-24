@@ -3,6 +3,7 @@ import useNotificationStore from "../stores/useNotificationStore";
 import { useEffect } from "react";
 import useUserStore from "../stores/useUserStore";
 import usePostStore from "../stores/usePostStore";
+import { useNavigate } from "react-router-dom";
 
 const NotificationItem = ({
   notification,
@@ -11,6 +12,7 @@ const NotificationItem = ({
 }) => {
   const [isLoadingAccept, setIsLoadingAccept] = useState(false);
   const [isLoadingDecline, setIsLoadingDecline] = useState(false);
+  const navigator = useNavigate();
 
   const responseFriendRequest = useNotificationStore(
     (s) => s.responseFriendRequest
@@ -44,10 +46,169 @@ const NotificationItem = ({
     setIsLoadingDecline(false);
   };
 
+  if (notification.entity_type === "user") {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+        <div className="flex flex-col items-center flex-shrink-0">
+          {notification?.avatar ? (
+            <a
+              href={`/profile/${notification.sender_name}`}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer"
+            >
+              <img
+                src={notification?.avatar}
+                alt=""
+                className="size-full object-cover"
+              />
+            </a>
+          ) : (
+            <a
+              href={`/profile/${notification.sender_name}`}
+              className="relative overflow-hidden bg-gray-300 rounded-full size-10 flex justify-center items-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="180px"
+                viewBox="0 -960 960 960"
+                width="180px"
+                fill="#797979ff"
+                className="absolute top-2 size-full"
+              >
+                <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+              </svg>
+            </a>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-900 text-sm">
+            <span className="font-semibold">{notification?.sender_name}</span>
+            {notification?.others && (
+              <span className="text-gray-600">
+                {" "}
+                + {notification.others} others
+              </span>
+            )}
+            {notification.content && (
+              <span
+                className={`text-gray-600 ${
+                  notification.is_read ? "" : "font-bold"
+                }`}
+              >
+                {" "}
+                {notification.content}
+              </span>
+            )}
+            {notification.created_at && (
+              <span className="text-gray-500"> {notification.createdAt}</span>
+            )}
+          </p>
+        </div>
+
+        {notification?.post?.media?.[0] && (
+          <div className="w-11 h-11 bg-gray-200 rounded flex items-center justify-center flex-shrink-0 text-xl">
+            {notification.thumbnail}
+            <img src={notification.post.media[0].media_url} alt="" />
+          </div>
+        )}
+
+        {notification?.type === "friend_request" && (
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={acceptFriend}
+              disabled={isLoadingAccept}
+              className="px-5 py-1.5 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+            >
+              {isLoadingAccept ? (
+                <svg
+                  className="w-4 h-4 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                  ></path>
+                </svg>
+              ) : (
+                "Accept"
+              )}
+            </button>
+
+            <button
+              onClick={declineFriend}
+              disabled={isLoadingDecline}
+              className="px-5 py-1.5 bg-gray-200 text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+            >
+              {isLoadingDecline ? (
+                <svg
+                  className="w-4 h-4 animate-spin text-gray-900"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                  ></path>
+                </svg>
+              ) : (
+                "Decline"
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
-      <div className="w-11 h-11 overflow-hidden bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 text-2xl">
-        <img className="w-full h-full" src={notification?.avatar} alt="" />
+    <a
+      href={`/post/${notification.entity_id || ""}/comments`}
+      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+    >
+      <div className="flex flex-col items-center flex-shrink-0">
+        {notification?.avatar ? (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer">
+            <img
+              src={notification?.avatar}
+              alt=""
+              className="size-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="relative overflow-hidden bg-gray-300 rounded-full size-10 flex justify-center items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="180px"
+              viewBox="0 -960 960 960"
+              width="180px"
+              fill="#797979ff"
+              className="absolute top-2 size-full"
+            >
+              <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+            </svg>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -147,7 +308,7 @@ const NotificationItem = ({
           </button>
         </div>
       )}
-    </div>
+    </a>
   );
 };
 
@@ -350,13 +511,13 @@ const Notification = () => {
   if (
     notificationsData &&
     notificationsData.new?.length === 0 &&
+    notificationsData.friendRequest?.length === 0 &&
     notificationsData.today?.length === 0 &&
     notificationsData.thisWeek?.length === 0 &&
     notificationsData.thisMonth?.length === 0
   ) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-white">
-        
         <div className="w-16 h-16 mb-4 text-gray-300">
           <svg
             xmlns="http://www.w3.org/2000/svg"

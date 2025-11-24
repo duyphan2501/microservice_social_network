@@ -11,11 +11,14 @@ const PasswordStrength = ({ password, setPasswordScore }) => {
   ];
 
   const criteria = [
-    { label: "Dài hơn 6 kí tự", pass: password.length >= 6 },
-    { label: "Chứa chữ in hoa", pass: /[A-Z]/.test(password) },
-    { label: "Chứa chữ in thường", pass: /[a-z]/.test(password) },
-    { label: "Chứa kí tự số", pass: /[0-9]/.test(password) },
-    { label: "Chứa kí tự đặc biệt", pass: /[^A-Za-z0-9]/.test(password) },
+    { label: "Longer than 6 characters", pass: password.length >= 6 },
+    { label: "Contains an uppercase letter", pass: /[A-Z]/.test(password) },
+    { label: "Contains a lowercase letter", pass: /[a-z]/.test(password) },
+    { label: "Contains a number", pass: /[0-9]/.test(password) },
+    {
+      label: "Contains a special character",
+      pass: /[^A-Za-z0-9]/.test(password),
+    },
   ];
 
   const passwordScore = criteria.filter((c) => c.pass).length;

@@ -25,7 +25,7 @@ const ResetPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (passwordScore < 5) {
-      toast.info("Mật khẩu chưu đủ mạnh");
+      toast.info("Password strength is not strong enough.");
       return;
     }
     if (isLoading.reset) return;
@@ -43,20 +43,20 @@ const ResetPassword = () => {
         <div className="w-100">
           <form className="p-5" onSubmit={handleResetPassword}>
             <h3 className="font-bold text-center mb-5 text-3xl uppercase title">
-              Khôi phục mật khẩu
+              Reset Password
             </h3>
             <div className="flex gap-5 flex-col">
               <PasswordTextField
                 size={"medium"}
                 value={formData.password}
                 handleChange={(value) => handleChange("password", value)}
-                label="Mật khẩu mới"
+                label="New Password"
               />
               <PasswordTextField
                 size={"medium"}
                 value={formData.confirmPassword}
                 handleChange={(value) => handleChange("confirmPassword", value)}
-                label="Xác nhận mật khẩu"
+                label="Confirm New Password"
               />
             </div>
             <div className="mt-5">
@@ -70,7 +70,7 @@ const ResetPassword = () => {
               className="!bg-gray-700 !text-white !min-h-10 !font-bold !uppercase gap-2 items-center !w-full !mt-5 hover:!bg-gray-900"
               type="submit"
             >
-              {!isLoading.reset ? "Đặt lại mật khẩu" : <BiLoader size={20} />}
+              {!isLoading.reset ? "Confirm" : <BiLoader size={20} />}
             </Button>
           </form>
         </div>

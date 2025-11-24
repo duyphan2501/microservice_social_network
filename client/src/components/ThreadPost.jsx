@@ -108,7 +108,10 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
     <article className="px-4 py-4 hover:bg-gray-50 transition bg-white">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer" onClick={() => navigate(`/profile/${author?.username}`)}>
+          <div
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer"
+            onClick={() => navigate(`/profile/${author?.username}`)}
+          >
             <img
               src={author?.avatar_url}
               alt=""
@@ -146,7 +149,7 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
                     >
                       Copy Post Link
                     </li>
-                    {post.user_id === user.id && (
+                    {post.user_id === user?.id && (
                       <li
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={handleDeletePost}

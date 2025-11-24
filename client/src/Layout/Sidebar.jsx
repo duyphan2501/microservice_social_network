@@ -114,6 +114,7 @@ const Sidebar = () => {
         if (user) return;
         if (persist) {
           await refreshToken();
+          console.log("refersh toiken");
         } else {
           await refreshUser();
         }

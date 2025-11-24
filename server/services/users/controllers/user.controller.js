@@ -46,12 +46,12 @@ const login = async (req, res, next) => {
     if (!foundUser)
       throw new createHttpError.NotFound("Người dùng không tồn tại");
 
-    // const isCorrectPassword = await comparePassword(
-    //   password,
-    //   foundUser.password_hash
-    // );
+    const isCorrectPassword = await comparePassword(
+      password,
+      foundUser.password_hash
+    );
 
-    const isCorrectPassword = password === foundUser.password_hash;
+    // const isCorrectPassword = password === foundUser.password_hash;
 
     if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
 
@@ -286,7 +286,7 @@ const updateUserInfo = async (req, res, next) => {
 
     const user = await UserModel.getUserByUserName(username);
 
-    if (user.id != userId) {
+    if (user && user?.id != userId) {
       throw createHttpError.BadRequest("This username already be used!");
     }
 
@@ -410,7 +410,7 @@ const getUserByUsername = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};  
+};
 
 export {
   login,

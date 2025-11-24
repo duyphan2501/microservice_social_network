@@ -22,15 +22,14 @@ const ForgotPassword = () => {
           <>
             <div className="p-5 w-96 flex flex-col items-center">
               <h3 className="font-bold text-center text-3xl uppercase title mb-3">
-                Yêu cầu thành công!
+                Request successfully!
               </h3>
               <p className="text-center">
-                Vui lòng kiểm tra email của bạn để nhận đường dẫn khôi phục mật
-                khẩu.
+                Please check your email for the password reset link.
               </p>
               <div className="bg-gray-800 text-center py-2 text-white text-sm px-3 rounded-lg mt-3">
                 <a href="/auth/login" className="italic hover:underline">
-                  Quay lại trang đăng nhập
+                  Back to Login
                 </a>
               </div>
             </div>
@@ -38,12 +37,12 @@ const ForgotPassword = () => {
               className="bg-gray-800 text-center py-2 text-white text-sm"
               onSubmit={handleSubmit}
             >
-              Chưa nhận được email?{" "}
+              Not receive email yet?{" "}
               <button
                 className="italic hover:underline cursor-pointer"
                 type="submit"
               >
-                {!isLoading.forgot ? "Gửi lại" : "Đang gửi..."}
+                {!isLoading.forgot ? "Send again" : "Sending..."}
               </button>
             </form>
           </>
@@ -53,11 +52,11 @@ const ForgotPassword = () => {
               <div className="w-100">
                 <form className="p-5" onSubmit={handleSubmit}>
                   <h3 className="font-bold text-center text-3xl uppercase title mb-3">
-                    Khôi phục mật khẩu
+                    Forgot Password
                   </h3>
                   <p className="text-center mb-5">
-                    Nhập địa chỉ email và chúng tôi sẽ gửi đường dẫn khôi phục
-                    mật khẩu đến bạn
+                    Enter your email address below and we'll send you a link to
+                    reset your password.
                   </p>
                   <div className="flex gap-5 flex-col">
                     <TextField
@@ -75,7 +74,7 @@ const ForgotPassword = () => {
                     type="submit"
                   >
                     {!isLoading.forgot ? (
-                      "Gửi đường dẫn"
+                      "Send Reset Link"
                     ) : (
                       <BiLoader size={20} />
                     )}

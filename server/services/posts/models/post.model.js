@@ -219,6 +219,7 @@ const PostModel = {
       connection.release();
     }
   },
+  
   deletePostById: async (postId, userId) => {
     const query = `UPDATE posts SET is_deleted = ? WHERE id = ? AND user_id = ?`;
     const [result] = await pool.query(query, [true, postId, userId]);

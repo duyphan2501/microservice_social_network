@@ -13,16 +13,16 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    if (!email) throw createHttpError.BadRequest("Vui lòng nhập email");
+    if (!email) throw createHttpError.BadRequest("Please provide email");
 
     const foundUser = await UserModel.getUserByEmail(email);
 
-    if (!foundUser) throw createHttpError.NotFound("Người dùng không tồn tại");
+    if (!foundUser) throw createHttpError.NotFound("User not found");
 
     await UserModel.sendForgotPasswordEmailtoUser(foundUser);
 
     return res.status(200).json({
-      message: "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến.",
+      message: "Successfully sent password reset email",
       success: true,
     });
   } catch (error) {
@@ -35,7 +35,7 @@ const login = async (req, res, next) => {
     const { account, password } = req.body;
 
     if (!account || !password)
-      throw new createHttpError.BadRequest("Vui lòng nhập đủ thông tin");
+      throw new createHttpError.BadRequest("Please provide account and password");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(account);
 
@@ -44,7 +44,7 @@ const login = async (req, res, next) => {
       : await UserModel.getUserByEmail(account);
 
     if (!foundUser)
-      throw new createHttpError.NotFound("Người dùng không tồn tại");
+      throw new createHttpError.NotFound("User does not exist");
 
     const isCorrectPassword = await comparePassword(
       password,
@@ -53,7 +53,7 @@ const login = async (req, res, next) => {
 
     // const isCorrectPassword = password === foundUser.password_hash;
 
-    if (!isCorrectPassword) throw new createHttpError("Mật khẩu không đúng");
+    if (!isCorrectPassword) throw new createHttpError.Unauthorized("Password is incorrect");
 
     // generate token and set cookie
     const accessToken = await generateAccessTokenAndSetCookie(
@@ -75,7 +75,7 @@ const login = async (req, res, next) => {
     );
 
     return res.status(200).json({
-      message: "Đăng nhập thành công",
+      message: "Login successfully",
       success: true,
       user: filterFieldUser(foundUser),
       accessToken,
@@ -146,7 +146,7 @@ const logout = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Đăng xuất thành công",
+      message: "Logout successfully",
       success: true,
     });
   } catch (error) {
@@ -158,14 +158,13 @@ const getUserInfo = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    if (!userId) throw createHttpError.BadRequest("Thiếu mã người dùng");
+    if (!userId) throw createHttpError.BadRequest("UserId parameter is required");
 
     const foundUser = await UserModel.getUserById(userId);
 
-    if (!foundUser) throw createHttpError.NotFound("Người dùng không tồn tại");
+    if (!foundUser) throw createHttpError.NotFound("User not found");
 
     return res.status(200).json({
-      message: "Lấy thông tin người dùng thành công",
       user: filterFieldUser(foundUser),
     });
   } catch (error) {
@@ -373,6 +372,9 @@ const refreshUser = async (req, res, next) => {
     const userId = req.user.userId;
 
     const user = await UserModel.getUserById(userId);
+
+    if (!user) throw createHttpError.NotFound("User not found");
+
     const accessToken = req.cookies.accessToken;
 
     return res.status(200).json({

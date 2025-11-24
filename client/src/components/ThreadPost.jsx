@@ -28,7 +28,7 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
   const axiosPrivate = useAxiosPrivate();
 
   const usersCache = useUserStore((state) => state.usersCache);
-  const author = postAuthor || usersCache[post.user_id];
+  const author = postAuthor || usersCache[post.user_id] || user;
 
   const updatePostLikes = (data) => {
     setLikeCount(data.likes_count);
@@ -108,16 +108,31 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
     <article className="px-4 py-4 hover:bg-gray-50 transition bg-white">
       <div className="flex gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
-          <div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer"
-            onClick={() => navigate(`/profile/${author?.username}`)}
-          >
-            <img
-              src={author?.avatar_url}
-              alt=""
-              className="size-full object-cover"
-            />
-          </div>
+          {author?.avatar_url ? (
+            <div
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer"
+              onClick={() => navigate(`/profile/${author?.username}`)}
+            >
+              <img
+                src={author?.avatar_url}
+                alt=""
+                className="size-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="relative overflow-hidden bg-gray-300 rounded-full size-10 flex justify-center items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="180px"
+                viewBox="0 -960 960 960"
+                width="180px"
+                fill="#797979ff"
+                className="absolute top-2 size-full"
+              >
+                <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+              </svg>
+            </div>
+          )}
         </div>
 
         <div className="flex-grow min-w-0">
@@ -149,7 +164,7 @@ const ThreadPost = ({ postAuthor = null, post, isCommentPage = false }) => {
                     >
                       Copy Post Link
                     </li>
-                    {post.user_id === user?.id && (
+                    {post.user_id === user.id && (
                       <li
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={handleDeletePost}

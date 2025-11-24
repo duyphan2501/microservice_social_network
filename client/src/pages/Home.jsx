@@ -72,9 +72,31 @@ const Home = () => {
         {/* New Post Button */}
         <div className="bg-white rounded-2xl border border-gray-200 px-4 py-4 mb-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
-              <img src={user?.avatar_url} alt="" />
-            </div>
+            {user?.avatar_url ? (
+              <div
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex-shrink-0 overflow-hidden cursor-pointer"
+                onClick={() => navigate(`/profile/${user?.username}`)}
+              >
+                <img
+                  src={user?.avatar_url}
+                  alt=""
+                  className="size-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="relative overflow-hidden bg-gray-300 rounded-full size-10 flex justify-center items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="180px"
+                  viewBox="0 -960 960 960"
+                  width="180px"
+                  fill="#797979ff"
+                  className="absolute top-2 size-full"
+                >
+                  <path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z" />
+                </svg>
+              </div>
+            )}
             <button
               onClick={handleClickNewPost}
               className="flex-grow text-left text-gray-400 text-[15px] py-2"

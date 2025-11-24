@@ -19,7 +19,7 @@ const PasswordTextField = ({size, value, handleChange, label="Password"}) => {
     event.preventDefault();
   };
 
-  return (
+  return (  
     <FormControl  variant="outlined" size={size}>
       <InputLabel htmlFor="outlined-adornment-password">{label}</InputLabel>
       <OutlinedInput

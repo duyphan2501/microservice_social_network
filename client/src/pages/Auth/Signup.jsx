@@ -5,46 +5,17 @@ import { MyContext } from "../../Context/MyContext";
 import { useNavigate } from "react-router-dom";
 import BiLoader from "../../components/Biloader";
 import useUserStore from "../../stores/useUserStore";
+import PasswordTextField from "../../components/PasswordTextField";
 
 const Signup = () => {
   const [user, setUser] = useState({
     email: "",
     fullname: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
   });
-  const [address, setAddress] = useState({
-    receiver: "",
-    phone: "",
-    province: "",
-    ward: "",
-    addressType: "home",
-    addressDetail: "",
-    isDefault: false,
-  });
-
-  const { setVerifyUser } = useContext(MyContext);
-
-  const checkValidAddress = (addr) => {
-    return (
-      addr.receiver &&
-      addr.phone &&
-      addr.province &&
-      addr.ward &&
-      addr.addressDetail
-    );
-  };
-
-  const clearAddress = () => {
-    setAddress({
-      receiver: "",
-      phone: "",
-      province: "",
-      ward: "",
-      addressType: "home",
-      addressDetail: "",
-      isDefault: false,
-    });
-  };
-
+ 
   const navigate = useNavigate();
 
   const { signUp, isLoading } = useUserStore();
@@ -67,7 +38,7 @@ const Signup = () => {
         <div className="w-100">
           <form className="p-5" onSubmit={handleSignUp}>
             <h3 className="font-bold text-center mb-5 text-3xl uppercase title">
-              Đăng ký tài khoản
+              Register account
             </h3>
             <div className="flex gap-5 flex-col">
               <TextField
@@ -90,29 +61,25 @@ const Signup = () => {
 
               <TextField
                 id="outlined-basic"
-                label="Họ tên"
+                label="Full name"
                 variant="outlined"
                 value={user.fullname}
                 onChange={(e) => handleUserChange("fullname", e.target.value)}
               />
 
-              <TextField
-                id="outlined-basic"
-                label="Mật khẩu"
-                variant="outlined"
+              <PasswordTextField
+                label="Password"
                 value={user.password}
                 type="password"
-                onChange={(e) => handleUserChange("password", e.target.value)}
+                handleChange={(value) => handleUserChange("password", value)}
               />
 
-              <TextField
-                id="outlined-basic"
-                label="Nhập lại mật khẩu"
-                variant="outlined"
+              <PasswordTextField
+                label="Confirm Password"
                 value={user.confirmPassword}
                 type="password"
-                onChange={(e) =>
-                  handleUserChange("confirmPassword", e.target.value)
+                handleChange={(value) =>
+                  handleUserChange("confirmPassword", value)
                 }
               />
             </div>
@@ -121,15 +88,15 @@ const Signup = () => {
               className="!bg-gray-700 !text-white !min-h-10 !font-bold !uppercase gap-2 items-center !w-full !mt-5 hover:!bg-gray-900"
               type="submit"
             >
-              {!isLoading.signUp ? "Đăng ký" : <BiLoader size={20} />}
+              {!isLoading.signUp ? "Register" : <BiLoader size={20} />}
             </Button>
           </form>
         </div>
       </div>
       <div className="bg-gray-800 text-center py-2 text-white text-sm">
-        Đã có tài khoản?{" "}
+        Have an account?{" "}
         <a href="/auth/login" className="italic hover:underline">
-          Đăng nhập ngay
+          Login now
         </a>
       </div>
     </div>

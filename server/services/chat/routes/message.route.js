@@ -17,6 +17,6 @@ messageRouter.post(
 );
 
 messageRouter.post("/send", checkAuth, sendMessage);
-messageRouter.post("/status", checkAuth, updateMessageStatus);
+messageRouter.put("/status", checkAuth, updateMessageStatus);
 
 export default messageRouter;

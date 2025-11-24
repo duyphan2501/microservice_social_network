@@ -11,9 +11,9 @@ const CommentModel = {
 
       const [rows] = await pool.execute(query, [commentId]);
 
-      if (rows.length == 0) return [];
+      if (rows.length == 0) return null;
 
-      return rows;
+      return rows[0];
     } catch (error) {}
   },
 };

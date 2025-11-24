@@ -32,7 +32,8 @@ const Sidebar = () => {
 
   const { refreshToken, isLoading, refreshUser } = useUserStore();
 
-  const { persist, setIsShowLoginNavigator } = useContext(MyContext);
+  const { persist, setIsShowLoginNavigator, setIsOpenNewPostModal } =
+    useContext(MyContext);
   const navigator = useNavigate();
   const location = useLocation();
   const user = useUserStore((state) => state.user);
@@ -241,7 +242,13 @@ const Sidebar = () => {
         </svg>
       ),
       label: "Create",
-      onClick: () => handleNavigation("/create"),
+      onClick: () => {
+        if (!user) {
+          setIsShowLoginNavigator(true);
+          return;
+        }
+        setIsOpenNewPostModal(true);
+      },
     },
     {
       icon: (
@@ -256,7 +263,7 @@ const Sidebar = () => {
         </div>
       ),
       label: "Profile",
-      onClick: () => handleNavigation("/profile"),
+      onClick: () => handleNavigation("/profile/" + user?.username),
     },
   ];
 
@@ -313,28 +320,12 @@ const Sidebar = () => {
                 </h1>
               )}
             </div>
-
-            {/* Navigation */}
-            {/* <nav className="flex-1 relative py-4 px-3 space-y-1">
-              {navItems.map((item, index) => (
-                <NavItem
-                  key={index}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={location.pathname === item.href}
-                  isCollapsed={isCollapsed}
-                  onClick={item.onClick}
-                />
-              ))}
-            </nav> */}
-
             <nav className="flex-1 py-4 px-3 space-y-1">
               {navItems.map((item, index) => {
                 if (item.label === "Notifications") {
                   return (
-                    <div className="relative">
+                    <div className="relative" key={index}>
                       <NavItem
-                        key={index}
                         icon={item.icon}
                         label={item.label}
                         isActive={location.pathname === item.href}

@@ -399,6 +399,19 @@ const searchUsers = async (req, res, next) => {
   }
 };
 
+const getUserByUsername = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    if (!username)
+      throw createHttpError.BadRequest("Username parameter is required");
+    const user = await UserModel.getUserByUserName(username);
+    if (!user) throw createHttpError.NotFound("User not found");
+    return res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};  
+
 export {
   login,
   refreshToken,
@@ -411,4 +424,5 @@ export {
   changeUserPassword,
   refreshUser,
   searchUsers,
+  getUserByUsername,
 };

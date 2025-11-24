@@ -169,7 +169,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
           {/* Avatar */}
           <div
             onClick={() => setOpenImage(true)}
-            className="block w-full flex justify-center cursor-pointer"
+            className=" w-full flex justify-center cursor-pointer"
           >
             {renderAvatar()}
           </div>

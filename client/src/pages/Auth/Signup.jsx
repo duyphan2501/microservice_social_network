@@ -21,7 +21,6 @@ const Signup = () => {
   const { signUp, isLoading } = useUserStore();
 
   const handleUserChange = (field, value) => {
-    console.log(field, value);
     setUser((prev) => ({ ...prev, [field]: value }));
   };
 

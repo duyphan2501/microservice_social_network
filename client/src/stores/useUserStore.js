@@ -1,8 +1,14 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
+import { safeToastError } from "../utils/toastLimiter";
 
 const useUserStore = create((set, get) => {
+  const handle504 = () => {
+    console.log("504 Gateway Timeout");
+    safeToastError("The system user is under maintenance. Please try again.");
+  };
+
   const login = async (user) => {
     set({ isLoading: { login: true } });
     try {
@@ -13,14 +19,14 @@ const useUserStore = create((set, get) => {
       return { success: true, loginUser: res.data.user };
     } catch (error) {
       if (error.response) {
-        const message = error.response.data?.message || message;
+        const message = error.response.data?.message;
         if (error.response.status === 401 && error.response.data.notVerified) {
-          console.log("Account not verified");
           const user = error.response.data?.user;
           toast.info(message || "Please verify your account");
           return { success: false, loginUser: user };
+        } else if (error.response.status === 504) {
+          handle504();
         } else {
-          console.error("Login error:", message);
           toast.error(message || "Failed to sign up");
         }
       }
@@ -40,6 +46,7 @@ const useUserStore = create((set, get) => {
       });
       return { accessToken: res.data.accessToken };
     } catch (error) {
+      if (error.response?.status === 504) handle504();
       throw error;
     } finally {
       set({ isLoading: { refresh: false } });
@@ -49,12 +56,12 @@ const useUserStore = create((set, get) => {
   const refreshUser = async () => {
     try {
       const res = await API.get("/users/refresh-user");
-
       set({
         user: res.data.user,
         accessToken: res.data.accessToken,
       });
     } catch (error) {
+      if (error.response?.status === 504) handle504();
       throw error;
     }
   };
@@ -69,8 +76,8 @@ const useUserStore = create((set, get) => {
     } catch (error) {
       console.error(error);
       if (error.response) {
-        const message = error.response.data?.message || "Failed to sign up";
-        toast.error(message);
+        if (error.response.status === 504) return handle504();
+        toast.error(error.response.data?.message || "Failed to sign up");
       }
     } finally {
       set({ isLoading: { signUp: false } });
@@ -84,7 +91,10 @@ const useUserStore = create((set, get) => {
       toast.success(res.data.message);
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(error.response?.data?.message || "Failed to verify account");
       return false;
     } finally {
@@ -95,13 +105,14 @@ const useUserStore = create((set, get) => {
   const sendVerificationEmail = async (email) => {
     set({ isLoading: { resend: true } });
     try {
-      const res = await API.put(`/users/resend-verification-email`, {
-        email,
-      });
+      const res = await API.put(`/users/resend-verification-email`, { email });
       toast.success(res.data.message);
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(
         error.response?.data?.message || "Failed to resend verification email"
       );
@@ -118,7 +129,10 @@ const useUserStore = create((set, get) => {
       toast.success(res.data.message);
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(
         error.response?.data?.message || "Failed to send forgot password email"
       );
@@ -139,7 +153,10 @@ const useUserStore = create((set, get) => {
       toast.success(res.data.message);
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(error.response?.data?.message || "Failed to reset password");
       return false;
     } finally {
@@ -154,7 +171,10 @@ const useUserStore = create((set, get) => {
       set({ user: null, accessToken: null });
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(error.response?.data?.message || "Failed to logout");
       return false;
     }
@@ -170,7 +190,10 @@ const useUserStore = create((set, get) => {
       set({ user: res.data.user });
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(error.response?.data?.message || "Failed to update");
       return false;
     }
@@ -183,7 +206,10 @@ const useUserStore = create((set, get) => {
       toast.success(res.data.message);
       return true;
     } catch (error) {
-      console.log(error);
+      if (error.response?.status === 504) {
+        handle504();
+        return false;
+      }
       toast.error(error.response?.data?.message || "Failed to change password");
       return false;
     } finally {
@@ -196,9 +222,8 @@ const useUserStore = create((set, get) => {
       const res = await API.get(`/users/get-info/${userId}`);
       return res.data.user;
     } catch (error) {
-      const message = error.response?.data?.message;
-      console.error(error);
-      toast.error(message);
+      if (error.response?.status === 504) return handle504();
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -210,9 +235,8 @@ const useUserStore = create((set, get) => {
       }));
       return res.data.user;
     } catch (error) {
-      const message = error.response?.data?.message;
-      console.error(error);
-      toast.error(message);
+      if (error.response?.status === 504) return handle504();
+      toast.error(error.response?.data?.message);
     }
   };
 
@@ -227,7 +251,6 @@ const useUserStore = create((set, get) => {
       const response = await API.get(`/users/get-info/${userId}`);
       const userInfo = response.data.user;
 
-      // Cập nhật cache
       set((state) => ({
         usersCache: {
           ...state.usersCache,
@@ -237,25 +260,34 @@ const useUserStore = create((set, get) => {
 
       return userInfo;
     } catch (error) {
+      if (error.response?.status === 504) handle504();
       console.error(`Could not fetch user ${userId}:`, error);
       return null;
     }
   };
 
   const searchUsers = async (term) => {
-    const res = await API.get(`/users/search?term=${term}`);
-    return res.data.users || [];
+    try {
+      const res = await API.get(`/users/search?term=${term}`);
+      return res.data.users || [];
+    } catch (error) {
+      if (error.response?.status === 504) handle504();
+      return [];
+    }
   };
 
   const getUserByUsername = async (username, axiosPrivate) => {
-    const res = await axiosPrivate.get(`/users/username/${username}`);
-    return res.data.user || null;
+    try {
+      const res = await axiosPrivate.get(`/users/username/${username}`);
+      return res.data.user || null;
+    } catch (error) {
+      if (error.response?.status === 504) handle504();
+      return null;
+    }
   };
 
   const setUser = (user) => {
-    set({
-      user,
-    });
+    set({ user });
   };
 
   return {

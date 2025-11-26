@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import axiosPrivate from "../API/axiosInstance.js";
 import useUserStore from "../stores/useUserStore.js";
 import { MyContext } from "../Context/MyContext.jsx";
+import { toast } from "react-toastify";
 
 const useAxiosPrivate = () => {
   const { refreshToken } = useUserStore();
@@ -38,7 +39,6 @@ const useAxiosPrivate = () => {
         ) {
           prevRequest._retry = true;
           try {
-            console.log("Attempting to refresh token...");
             const refreshed = await refreshToken();
             prevRequest.headers = {
               ...prevRequest.headers,
@@ -46,11 +46,15 @@ const useAxiosPrivate = () => {
             };
             return axiosPrivate(prevRequest);
           } catch (err) {
-            console.error("Token refresh failed:", err);
             // useUserStore.getState().logout();
             return Promise.reject(err);
           }
         }
+        // if (error.response?.status === 504) {
+        //   toast.error(
+        //     "The system is under maintenance. Please try again later."
+        //   );
+        // }
         return Promise.reject(error);
       }
     );

@@ -1,17 +1,25 @@
 import { create } from "zustand";
-import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
+import { safeToastError } from "../utils/toastLimiter";
+
+const handle504 = () => {
+  console.log("504 Gateway Timeout");
+  safeToastError("The system chat is under maintenance. Please try again.");
+};
 
 const useConversationStore = create((set, get) => ({
   isLoading: { getByUser: false },
-  getConversations: async (userId, status="active", axiosPrivate) => {
+  getConversations: async (userId, status = "active", axiosPrivate) => {
     try {
-      const res = await axiosPrivate.get(`/chat/conversations/user/${userId}?status=${status}`);
+      const res = await axiosPrivate.get(
+        `/chat/conversations/user/${userId}?status=${status}`
+      );
       return res.data.conversations;
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 
@@ -44,7 +52,8 @@ const useConversationStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
   createNewConversation: async (partnerId, axiosPrivate) => {
@@ -56,7 +65,8 @@ const useConversationStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 
@@ -69,7 +79,8 @@ const useConversationStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 }));

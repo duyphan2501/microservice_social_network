@@ -64,6 +64,8 @@ const ChatMain = () => {
       axiosPrivate
     );
 
+    if (!data) return;
+
     if (beforeId) {
       // Khi load thêm → prepend lên đầu
       setMessages((prev) => [...data, ...prev]);
@@ -353,13 +355,13 @@ const ChatMain = () => {
             <div className="p-4 rounded-full bg-black text-white size-20">
               <MessageCircleMore size={50} />
             </div>
-            <h5 className="font-medium text-lg">Tin nhắn của bạn</h5>
-            <p>Gửi ảnh hoặc tin nhắn cho bạn bè</p>
+            <h5 className="font-medium text-lg">Your Messages</h5>
+            <p>Send images or messages to yout friends</p>
             <button
               className="bg-black py-1 px-2  rounded-lg text-white cursor-pointer hover:bg-gray-700 active:bg-gray-800"
               onClick={() => setIsOpenNewMessage(true)}
             >
-              Gửi tin nhắn
+              Send Messages
             </button>
           </div>
         </section>

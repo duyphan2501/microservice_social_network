@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
+import { safeToastError } from "../utils/toastLimiter";
 
 const groupByDate = (items) => {
   const now = new Date();
@@ -35,6 +36,10 @@ const groupByDate = (items) => {
 
   return grouped;
 };
+const handle504 = () => {
+  console.log("504 Gateway Timeout");
+  safeToastError("The system notification is under maintenance. Please try again later.");
+};
 
 const useNotificationStore = create((set, get) => ({
   notifications: [],
@@ -54,7 +59,7 @@ const useNotificationStore = create((set, get) => ({
       return res.data.notifications;
     } catch (error) {
       console.error(error);
-      toast.error("Can't not load notifications");
+      if (error.response.status === 504) handle504();
     } finally {
       set({
         loading: false,
@@ -69,7 +74,6 @@ const useNotificationStore = create((set, get) => ({
       return res.data.success;
     } catch (error) {
       console.error(error);
-      toast.error("Can't read notifications");
     }
   },
 
@@ -106,6 +110,7 @@ const useNotificationStore = create((set, get) => ({
       return resNotification.data.success || false;
     } catch (error) {
       console.error("Error processing friend request:", error);
+      if (error.response.status === 504) handle504();
       return false;
     }
   },

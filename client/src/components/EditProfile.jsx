@@ -68,11 +68,11 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave, Loading }) => {
           />
         </div>
       );
-    } else if (!removeAvatar && profile.avatar_url) {
+    } else if (!removeAvatar && profile?.avatar_url) {
       return (
         <div className="bg-gray-300 rounded-full w-40 h-40 flex justify-center items-center overflow-hidden">
           <img
-            src={profile.avatar_url}
+            src={profile?.avatar_url}
             alt="avatar preview"
             className="w-full h-full object-cover"
           />
@@ -133,7 +133,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave, Loading }) => {
           />
           <div className="w-full border border-gray-200"></div>
 
-          {!removeAvatar && (profile.avatar_url || previewAvatar) && (
+          {!removeAvatar && (profile?.avatar_url || previewAvatar) && (
             <>
               <span
                 onClick={handleRemoveAvatar}

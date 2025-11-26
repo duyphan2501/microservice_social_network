@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
+import { safeToastError } from "../utils/toastLimiter";
+
+const handle504 = () => {
+  console.log("504 Gateway Timeout");
+  safeToastError("The system friends is under maintenance. Please try again.");
+};
+
 const useFriendStore = create((set, get) => ({
   friends: [],
   count: 0,
@@ -13,7 +20,11 @@ const useFriendStore = create((set, get) => ({
       return res.data.count;
     } catch (error) {
       console.error("Error fetching friend count:", error);
-      toast.error("Failed to fetch friend count");
+      if (error.response.status === 504) {
+        handle504();
+      } else {
+        toast.error("Failed to fetch friend count");
+      }
       return 0;
     }
   },
@@ -31,6 +42,10 @@ const useFriendStore = create((set, get) => ({
       }
     } catch (error) {
       console.error(error);
+      if (error.response.status === 504) {
+        handle504();
+        return;
+      } 
       toast.error("Failed to accept the request!");
     }
   },

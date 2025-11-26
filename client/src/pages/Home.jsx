@@ -27,7 +27,7 @@ const Home = () => {
     (entries) => {
       const target = entries[0];
 
-      if (target.isIntersecting && hasMore && !isLoading) {
+      if (target.isIntersecting && hasMore && !isLoading && posts.length > 0) {
         fetchPosts(axiosPrivate);
       }
     },
@@ -57,7 +57,7 @@ const Home = () => {
     if (posts.length === 0) {
       fetchPosts(axiosPrivate);
     }
-  }, [posts.length, axiosPrivate, fetchPosts]);
+  }, [posts.length]);
 
   // reset posts khi rời trang
   useEffect(() => {

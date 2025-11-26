@@ -58,7 +58,7 @@ const ProfilePage = () => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading && hasMore) {
+        if (entries[0].isIntersecting && !loading && hasMore && posts.length > 0) {
           loadPosts();
         }
       },
@@ -87,6 +87,7 @@ const ProfilePage = () => {
         setUser(data);
       } catch (error) {
         console.error("Error fetching user:", error);
+        toast.error("The system is under maintenance. Please try again later.")
       } finally {
         setLoading(false);
       }
@@ -123,10 +124,11 @@ const ProfilePage = () => {
         await refreshUserInfo(user.id, axiosPrivate);
       }
 
-      setLoadingEdit(false);
     } catch (error) {
       const message = error?.response?.data?.message || "Update failed!";
       toast.error(message);
+    } finally {
+      setLoadingEdit(false);
     }
   };
 

@@ -1,6 +1,10 @@
 import { create } from "zustand";
-import API from "../API/axiosInstance";
 import { toast } from "react-toastify";
+import { safeToastError } from "../utils/toastLimiter";
+const handle504 = () => {
+  console.log("504 Gateway Timeout");
+  safeToastError("The system chat is under maintenance. Please try again.");
+};
 
 const useMessageStore = create((set, get) => ({
   uploadMessageImages: async (imagesData, axiosPrivate) => {
@@ -13,7 +17,8 @@ const useMessageStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 
@@ -24,7 +29,8 @@ const useMessageStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 
@@ -45,7 +51,8 @@ const useMessageStore = create((set, get) => ({
     } catch (error) {
       const message = error.response?.data?.message;
       console.error(error);
-      toast.error(message);
+      if (error.response.status === 504) handle504();
+      else toast.error(message);
     }
   },
 }));

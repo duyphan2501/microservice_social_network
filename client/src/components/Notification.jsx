@@ -407,7 +407,7 @@ export function formatTime(dateString) {
   return `${years}y`;
 }
 
-const Notification = () => {
+const Notification = ({isShow}) => {
   const notifications = useNotificationStore((s) => s.notifications);
   const getNotifications = useNotificationStore((s) => s.getNotifications);
   const viewNotifications = useNotificationStore((s) => s.viewNotifications);
@@ -459,13 +459,16 @@ const Notification = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isShow) return;
     const fetchNotificationData = async () => {
       if (!user?.id) return;
 
       setloading(true);
       const notifications = await getNotifications(user?.id);
-
+      if (!notifications || notifications.length === 0) {
+        setloading(false)
+        return;
+      }
       const notificationsWithData = await Promise.all(
         notifications.map(async (n) => {
           const userInfo = await fetchUserIfNeeded(n.sender_id);
@@ -490,7 +493,7 @@ const Notification = () => {
     return async () => {
       await getNotifications(user?.id);
     };
-  }, [user]);
+  }, [user, isShow]);
 
   // Skeleton khi notifications chưa load
   if (loading) {
@@ -515,7 +518,7 @@ const Notification = () => {
     notificationsData.friendRequest?.length === 0 &&
     notificationsData.today?.length === 0 &&
     notificationsData.thisWeek?.length === 0 &&
-    notificationsData.thisMonth?.length === 0) || !user
+    notificationsData.thisMonth?.length === 0) || !user || notificationsData.length === 0
   ) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-white">

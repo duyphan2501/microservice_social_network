@@ -278,7 +278,7 @@ function SearchPage() {
       }
     } catch (err) {
       console.error("Error loading users:", err);
-      setError(err.response?.data?.message || "Failed to load users");
+      setError(err.response?.data?.message || "The system is under maintenance. Please try again later.");
     } finally {
       setLoading(false);
     }

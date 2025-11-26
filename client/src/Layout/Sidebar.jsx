@@ -29,6 +29,28 @@ const NavItem = ({ icon, label, isActive = false, isCollapsed, onClick }) => {
 // Sidebar Component
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+  const handleResize = () => {
+    const width = window.innerWidth;
+    setScreenWidth(width);
+
+    if (width < 780) {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+    }
+  };
+
+  handleResize();
+
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
 
   const { refreshToken, isLoading, refreshUser } = useUserStore();
 
@@ -113,7 +135,6 @@ const Sidebar = () => {
         if (user) return;
         if (persist) {
           await refreshToken();
-          console.log("refersh toiken");
         } else {
           await refreshUser();
         }
@@ -468,7 +489,7 @@ const Sidebar = () => {
           {/* Main Content */}
           <main
             className={`flex-1 overflow-auto bg-gray-50 pb-16 lg:pb-0 transition-all duration-300 ${
-              isCollapsed ? "ml-22" : "lg:ml-64"
+              isCollapsed ? "ml-20" : "md:ml-64"
             }`}
           >
             <Outlet />
@@ -494,7 +515,7 @@ const Sidebar = () => {
                 isCollapsed ? "left-20" : "left-64"
               }`}
             >
-              <Notification />
+              <Notification isShow={showNotifications}/>
             </div>
           )}
         </div>

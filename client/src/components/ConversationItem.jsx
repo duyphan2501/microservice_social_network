@@ -25,15 +25,15 @@ const ConversationItem = ({
         <div className="w-13 rounded-full">
           <img
             src={
-              otherUser.avatar_url ||
+              otherUser?.avatar_url ||
               "https://img.daisyui.com/images/profile/demo/gordon@192.webp"
             }
-            alt={otherUser.full_name}
+            alt={otherUser?.full_name}
           />
         </div>
       </div>
       <div className="md:flex flex-1 flex-col justify-center gap-1 hidden ">
-        <p className="font-medium text-sm">{otherUser.full_name}</p>
+        <p className="font-medium text-sm">{otherUser?.full_name}</p>
         <div
           className={`flex items-center gap-2 text-nowrap text-gray-500 ${
             conversation.message_status != "read" &&

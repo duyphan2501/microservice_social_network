@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS message_statuses (
     message_id BIGINT UNSIGNED NOT NULL,
     receiver_id BIGINT UNSIGNED NOT NULL,
     status ENUM('sent', 'delivered', 'read') NOT NULL DEFAULT 'sent',
-    read_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (message_id, receiver_id),
     FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
     INDEX idx_receiver_id (receiver_id)

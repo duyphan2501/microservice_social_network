@@ -3,7 +3,7 @@ import {
   sendQueue,
   consumeQueue,
   publishDirect,
-} from "../../../gateway/messages/rabbitMQ.js";
+} from "../messages/rabbitMQ.js";
 import NotificationModel from "../models/notification.model.js";
 import friendListService from "./friendlist.service.js";
 import { getSenderInfo } from "./user.service.js";

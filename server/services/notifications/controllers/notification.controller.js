@@ -1,4 +1,4 @@
-import { publishDirect } from "../../../gateway/messages/rabbitMQ.js";
+import { publishDirect } from "../messages/rabbitMQ.js";
 import NotificationModel from "../models/notification.model.js";
 
 const getAllNotification = async (req, res, next) => {

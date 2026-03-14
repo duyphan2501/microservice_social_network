@@ -4,7 +4,7 @@ import { MyContext } from "../../Context/MyContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
-import BiLoader from "../../components/Biloader";
+import BiLoader from "../../components/BiLoader";
 import PasswordStrength from "../../components/PasswordStrength";
 import useUserStore from "../../stores/useUserStore";
 

@@ -1,7 +1,7 @@
 import { Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { X } from "lucide-react";
-import BiLoader from "./Biloader";
+import BiLoader from "./BiLoader";
 import useUserStore from "../stores/useUserStore";
 
 const VerificationEmailDialog = ({closeDialog}) => {

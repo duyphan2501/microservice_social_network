@@ -1,6 +1,6 @@
 import { Button, TextField } from "@mui/material";
 import { useState } from "react";
-import BiLoader from "../../components/Biloader";
+import BiLoader from "../../components/BiLoader";
 import useUserStore from "../../stores/useUserStore";
 
 const ForgotPassword = () => {

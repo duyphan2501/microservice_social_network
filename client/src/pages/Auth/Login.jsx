@@ -6,7 +6,7 @@ import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
 import { useNavigate } from "react-router-dom";
 import { MyContext } from "../../Context/MyContext";
-import BiLoader from "../../components/Biloader";
+import BiLoader from "../../components/BiLoader";
 import useUserStore from "../../stores/useUserStore";
 
 const Login = () => {

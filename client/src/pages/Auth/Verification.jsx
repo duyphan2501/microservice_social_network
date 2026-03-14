@@ -7,7 +7,7 @@ import { MyContext } from "../../Context/MyContext";
 import PasswordStrength from "../../components/PasswordStrength";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BiLoader from "../../components/Biloader";
+import BiLoader from "../../components/BiLoader";
 import useUserStore from "../../stores/useUserStore";
 import VerificationEmailDialog from "../../components/VerificationEmailDialog";
 

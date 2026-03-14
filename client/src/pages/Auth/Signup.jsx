@@ -1,11 +1,10 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { MyContext } from "../../Context/MyContext";
 import { useNavigate } from "react-router-dom";
-import BiLoader from "../../components/Biloader";
 import useUserStore from "../../stores/useUserStore";
 import PasswordTextField from "../../components/PasswordTextField";
+import BiLoader from "../../components/BiLoader";
 
 const Signup = () => {
   const [user, setUser] = useState({

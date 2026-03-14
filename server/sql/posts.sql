@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS posts (
     likes_count INT UNSIGNED NOT NULL DEFAULT 0,
     comments_count INT UNSIGNED NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at),
     is_deleted BOOLEAN DEFAULT FALSE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bảng post_media mới để lưu trữ nhiều tệp media cho một bài đăng
@@ -39,7 +39,6 @@ CREATE TABLE IF NOT EXISTS comments (
     post_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     parent_comment_id BIGINT UNSIGNED NULL,
-    likes_count INT UNSIGNED DEFAULT 0,
     content TEXT NOT NULL,	
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
@@ -129,4 +128,4 @@ INSERT INTO comments (post_id, user_id, parent_comment_id, content) VALUES
 (2, 4, 2, 'Mình cũng thích góc chụp ấy nè.');
 
 
-
+select * from posts where id = 2;

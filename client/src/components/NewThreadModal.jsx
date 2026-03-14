@@ -4,7 +4,7 @@ import MediaUpload from "./MediaUpload.jsx";
 import useUserStore from "../stores/useUserStore.js";
 import usePostStore from "../stores/usePostStore.js";
 import useAxiosPrivate from "../hooks/useAxiosPrivate.js";
-import BiLoader from "./Biloader.jsx";
+import BiLoader from "./BiLoader.jsx";
 import { toast } from "react-toastify";
 import { useContext } from "react";
 import { MyContext } from "../Context/MyContext.jsx";

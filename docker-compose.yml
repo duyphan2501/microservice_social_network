@@ -1,0 +1,187 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "5173:80"
+    networks:
+      - finalsoa
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped
+
+  mysqldb:
+    image: mysql:8.0
+    container_name: mysqldb
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - finalsoa
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max_connections=500
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    networks:
+      - finalsoa
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  users:
+    build: ./server/services/users
+    networks:
+      - finalsoa
+    ports:
+      - "3001:3001"
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: ${USER_PORT}
+      MYSQL_DB_NAME: ${MYSQL_USERDB_NAME}
+
+  chat:
+    build: ./server/services/chat
+    networks:
+      - finalsoa
+    ports:
+      - "3002:3002"
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: ${CHAT_PORT}
+      MYSQL_DB_NAME: ${MYSQL_CHATDB_NAME}
+
+  friends:
+    build: ./server/services/friend
+    networks:
+      - finalsoa
+    ports:
+      - "3003:3003"
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: ${FRIEND_PORT}
+      MYSQL_DB_NAME: ${MYSQL_FRIENDDB_NAME}
+
+  posts:
+    build: ./server/services/posts
+    networks:
+      - finalsoa
+    ports:
+      - "3004:3004"
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: ${POST_PORT}
+      MYSQL_DB_NAME: ${MYSQL_POSTDB_NAME}
+
+  notifications:
+    build: ./server/services/notifications
+    networks:
+      - finalsoa
+    ports:
+      - "3005:3005"
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: ${NOTIFICATION_PORT}
+      MYSQL_DB_NAME: ${MYSQL_NOTIFICATIONDB_NAME}
+
+  gateway:
+    build: ./server/gateway
+    networks:
+      - finalsoa
+    restart: on-failure
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      users:
+        condition: service_started
+      chat:
+        condition: service_started
+      friends:
+        condition: service_started
+      notifications:
+        condition: service_started
+      posts:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: ${GATEWAY_PORT}
+
+  client:
+    build: ./client
+    restart: on-failure
+    networks:
+      - finalsoa
+    depends_on:
+      gateway:
+        condition: service_started
+
+networks:
+  finalsoa:
+    driver: bridge
+
+volumes:
+  mysql_data:

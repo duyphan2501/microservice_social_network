@@ -2,7 +2,7 @@
 import FriendModel from "../models/friend.model.js";
 import { FriendEventPublisher } from "../messages/friendEvents.js";
 import userServiceMQ from "../messages/userService.js";
-import { publishDirect } from "../../../gateway/messages/rabbitMQ.js";
+import { publishDirect } from "../messages/rabbitMQ.js";
 
 const FriendController = {
   // Gửi lời mời kết bạn

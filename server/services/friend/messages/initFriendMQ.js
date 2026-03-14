@@ -1,8 +1,4 @@
-import {
-  subscribeDirect,
-  sendQueue,
-  consumeQueue,
-} from "../../../gateway/messages/rabbitMQ.js";
+import { sendQueue, consumeQueue } from "../messages/rabbitMQ.js";
 import FriendModel from "../models/friend.model.js";
 
 const initFriendMQ = async () => {
@@ -16,7 +12,7 @@ const initFriendMQ = async () => {
 
       sendQueue(
         "get_friend_list",
-        JSON.stringify({ friendList, userId: data })
+        JSON.stringify({ friendList, userId: data }),
       );
     });
   } catch (error) {

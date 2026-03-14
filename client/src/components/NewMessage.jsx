@@ -5,7 +5,7 @@ import SearchedUserItem from "./SearchedUserItem";
 import useUserStore from "../stores/useUserStore";
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import useConversationStore from "../stores/useConversationStore";
-import BiLoader from "./Biloader";
+import BiLoader from "./BiLoader";
 
 const NewMessage = () => {
   const {

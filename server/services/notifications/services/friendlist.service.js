@@ -1,4 +1,4 @@
-import { sendQueue, consumeQueue } from "../../../gateway/messages/rabbitMQ.js";
+import { sendQueue, consumeQueue } from "../messages/rabbitMQ.js";
 
 const friendListService = (() => {
   let isConsuming = false;
